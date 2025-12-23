@@ -1,0 +1,264 @@
+<mxfile host="app.diagrams.net" modified="2024-01-01T00:00:00.000Z" agent="5.0" etag="abc123" version="22.1.16" type="device">
+  <diagram name="Construction Management ERD" id="construction-erd">
+    <mxGraphModel dx="2074" dy="1196" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="2336" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Projects Table -->
+        <mxCell id="projects" value="PROJECTS&#xa;&#xa;PK: id (UUID)&#xa;name (VARCHAR)&#xa;code (VARCHAR) UNIQUE&#xa;description (TEXT)&#xa;project_type (ENUM)&#xa;status (ENUM)&#xa;start_date (DATE)&#xa;planned_end_date (DATE)&#xa;actual_end_date (DATE)&#xa;budget (DECIMAL)&#xa;client_id (UUID)&#xa;project_manager_id (UUID)&#xa;location (TEXT)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="200" height="280" as="geometry" />
+        </mxCell>
+        
+        <!-- WBS Nodes Table -->
+        <mxCell id="wbs_nodes" value="WBS_NODES&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;FK: parent_id (UUID)&#xa;code (VARCHAR) UNIQUE&#xa;name (VARCHAR)&#xa;description (TEXT)&#xa;node_type (ENUM)&#xa;level (INTEGER)&#xa;sequence_order (INTEGER)&#xa;budget_allocation (DECIMAL)&#xa;planned_hours (DECIMAL)&#xa;responsible_user_id (UUID)&#xa;start_date (DATE)&#xa;end_date (DATE)&#xa;is_active (BOOLEAN)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="350" y="50" width="200" height="320" as="geometry" />
+        </mxCell>
+        
+        <!-- Activities Table -->
+        <mxCell id="activities" value="ACTIVITIES&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;FK: wbs_node_id (UUID)&#xa;code (VARCHAR) UNIQUE&#xa;name (VARCHAR)&#xa;description (TEXT)&#xa;planned_start_date (DATE)&#xa;planned_end_date (DATE)&#xa;actual_start_date (DATE)&#xa;actual_end_date (DATE)&#xa;planned_hours (DECIMAL)&#xa;budget_amount (DECIMAL)&#xa;responsible_user_id (UUID)&#xa;is_active (BOOLEAN)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="650" y="50" width="200" height="300" as="geometry" />
+        </mxCell>
+        
+        <!-- Tasks Table -->
+        <mxCell id="tasks" value="TASKS&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;FK: wbs_node_id (UUID)&#xa;FK: activity_id (UUID)&#xa;name (VARCHAR)&#xa;description (TEXT)&#xa;status (ENUM)&#xa;priority (ENUM)&#xa;planned_start_date (DATE)&#xa;planned_end_date (DATE)&#xa;actual_start_date (DATE)&#xa;actual_end_date (DATE)&#xa;planned_hours (DECIMAL)&#xa;actual_hours (DECIMAL)&#xa;progress_percentage (DECIMAL)&#xa;assigned_to (UUID)&#xa;created_by (UUID)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="950" y="50" width="200" height="360" as="geometry" />
+        </mxCell>
+        
+        <!-- Cost Objects Table -->
+        <mxCell id="cost_objects" value="COST_OBJECTS&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;FK: wbs_node_id (UUID)&#xa;FK: activity_id (UUID)&#xa;FK: task_id (UUID)&#xa;code (VARCHAR) UNIQUE&#xa;name (VARCHAR)&#xa;cost_type (ENUM)&#xa;budget_amount (DECIMAL)&#xa;actual_amount (DECIMAL)&#xa;committed_amount (DECIMAL)&#xa;is_active (BOOLEAN)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="50" width="200" height="280" as="geometry" />
+        </mxCell>
+        
+        <!-- BOQ Categories Table -->
+        <mxCell id="boq_categories" value="BOQ_CATEGORIES&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;FK: parent_category_id (UUID)&#xa;name (VARCHAR)&#xa;code (VARCHAR) UNIQUE&#xa;description (TEXT)&#xa;sequence_order (INTEGER)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="50" y="400" width="200" height="160" as="geometry" />
+        </mxCell>
+        
+        <!-- BOQ Items Table -->
+        <mxCell id="boq_items" value="BOQ_ITEMS&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;FK: wbs_node_id (UUID)&#xa;FK: category_id (UUID)&#xa;item_code (VARCHAR) UNIQUE&#xa;description (TEXT)&#xa;specification (TEXT)&#xa;unit (VARCHAR)&#xa;quantity (DECIMAL)&#xa;rate (DECIMAL)&#xa;amount (DECIMAL) GENERATED&#xa;is_provisional (BOOLEAN)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="350" y="400" width="200" height="260" as="geometry" />
+        </mxCell>
+        
+        <!-- Vendors Table -->
+        <mxCell id="vendors" value="VENDORS&#xa;&#xa;PK: id (UUID)&#xa;name (VARCHAR)&#xa;code (VARCHAR) UNIQUE&#xa;contact_person (VARCHAR)&#xa;email (VARCHAR)&#xa;phone (VARCHAR)&#xa;address (TEXT)&#xa;tax_id (VARCHAR)&#xa;status (ENUM)&#xa;credit_limit (DECIMAL)&#xa;payment_terms (VARCHAR)&#xa;specializations (TEXT[])&#xa;rating (DECIMAL)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="50" y="750" width="200" height="280" as="geometry" />
+        </mxCell>
+        
+        <!-- Subcontractors Table -->
+        <mxCell id="subcontractors" value="SUBCONTRACTORS&#xa;&#xa;PK: id (UUID)&#xa;FK: vendor_id (UUID)&#xa;license_number (VARCHAR)&#xa;license_expiry (DATE)&#xa;insurance_policy (VARCHAR)&#xa;insurance_expiry (DATE)&#xa;safety_rating (DECIMAL)&#xa;performance_bond_required (BOOLEAN)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="350" y="750" width="200" height="200" as="geometry" />
+        </mxCell>
+        
+        <!-- Purchase Orders Table -->
+        <mxCell id="purchase_orders" value="PURCHASE_ORDERS&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;FK: vendor_id (UUID)&#xa;po_number (VARCHAR) UNIQUE&#xa;po_type (ENUM)&#xa;status (ENUM)&#xa;issue_date (DATE)&#xa;delivery_date (DATE)&#xa;total_amount (DECIMAL)&#xa;tax_amount (DECIMAL)&#xa;grand_total (DECIMAL) GENERATED&#xa;payment_terms (VARCHAR)&#xa;delivery_terms (TEXT)&#xa;created_by (UUID)&#xa;approved_by (UUID)&#xa;approved_date (TIMESTAMP)&#xa;notes (TEXT)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="650" y="750" width="200" height="360" as="geometry" />
+        </mxCell>
+        
+        <!-- PO Lines Table -->
+        <mxCell id="po_lines" value="PO_LINES&#xa;&#xa;PK: id (UUID)&#xa;FK: po_id (UUID)&#xa;FK: boq_item_id (UUID)&#xa;line_number (INTEGER)&#xa;description (TEXT)&#xa;specification (TEXT)&#xa;quantity (DECIMAL)&#xa;unit (VARCHAR)&#xa;unit_rate (DECIMAL)&#xa;line_total (DECIMAL) GENERATED&#xa;received_quantity (DECIMAL)&#xa;pending_quantity (DECIMAL) GENERATED&#xa;delivery_date (DATE)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="950" y="750" width="200" height="260" as="geometry" />
+        </mxCell>
+        
+        <!-- Stores Table -->
+        <mxCell id="stores" value="STORES&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;name (VARCHAR)&#xa;code (VARCHAR) UNIQUE&#xa;location (TEXT)&#xa;store_keeper_id (UUID)&#xa;is_active (BOOLEAN)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1150" width="200" height="180" as="geometry" />
+        </mxCell>
+        
+        <!-- Goods Receipts Table -->
+        <mxCell id="goods_receipts" value="GOODS_RECEIPTS&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;FK: po_id (UUID)&#xa;FK: store_id (UUID)&#xa;FK: vendor_id (UUID)&#xa;grn_number (VARCHAR) UNIQUE&#xa;receipt_date (DATE)&#xa;received_by (UUID)&#xa;status (ENUM)&#xa;delivery_note_number (VARCHAR)&#xa;vehicle_number (VARCHAR)&#xa;driver_name (VARCHAR)&#xa;total_received_value (DECIMAL)&#xa;notes (TEXT)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="350" y="1150" width="200" height="300" as="geometry" />
+        </mxCell>
+        
+        <!-- GRN Lines Table -->
+        <mxCell id="grn_lines" value="GRN_LINES&#xa;&#xa;PK: id (UUID)&#xa;FK: grn_id (UUID)&#xa;FK: po_line_id (UUID)&#xa;ordered_quantity (DECIMAL)&#xa;received_quantity (DECIMAL)&#xa;accepted_quantity (DECIMAL)&#xa;rejected_quantity (DECIMAL)&#xa;unit_rate (DECIMAL)&#xa;line_value (DECIMAL) GENERATED&#xa;quality_status (ENUM)&#xa;batch_number (VARCHAR)&#xa;expiry_date (DATE)&#xa;notes (TEXT)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="650" y="1150" width="200" height="260" as="geometry" />
+        </mxCell>
+        
+        <!-- Stock Items Table -->
+        <mxCell id="stock_items" value="STOCK_ITEMS&#xa;&#xa;PK: id (UUID)&#xa;item_code (VARCHAR) UNIQUE&#xa;description (TEXT)&#xa;category (VARCHAR)&#xa;unit (VARCHAR)&#xa;reorder_level (DECIMAL)&#xa;maximum_level (DECIMAL)&#xa;minimum_level (DECIMAL)&#xa;is_active (BOOLEAN)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="950" y="1150" width="200" height="220" as="geometry" />
+        </mxCell>
+        
+        <!-- Stock Balances Table -->
+        <mxCell id="stock_balances" value="STOCK_BALANCES&#xa;&#xa;PK: id (UUID)&#xa;FK: store_id (UUID)&#xa;FK: stock_item_id (UUID)&#xa;current_quantity (DECIMAL)&#xa;reserved_quantity (DECIMAL)&#xa;available_quantity (DECIMAL) GENERATED&#xa;average_cost (DECIMAL)&#xa;total_value (DECIMAL) GENERATED&#xa;last_movement_date (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="1150" width="200" height="200" as="geometry" />
+        </mxCell>
+        
+        <!-- Stock Movements Table -->
+        <mxCell id="stock_movements" value="STOCK_MOVEMENTS&#xa;&#xa;PK: id (UUID)&#xa;FK: store_id (UUID)&#xa;FK: stock_item_id (UUID)&#xa;movement_type (ENUM)&#xa;reference_number (VARCHAR)&#xa;reference_type (VARCHAR)&#xa;reference_id (UUID)&#xa;quantity (DECIMAL)&#xa;unit_cost (DECIMAL)&#xa;total_cost (DECIMAL) GENERATED&#xa;movement_date (DATE)&#xa;created_by (UUID)&#xa;notes (TEXT)&#xa;created_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fad7ac;strokeColor=#b46504;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1500" width="200" height="280" as="geometry" />
+        </mxCell>
+        
+        <!-- Timesheets Table -->
+        <mxCell id="timesheets" value="TIMESHEETS&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;user_id (UUID)&#xa;week_ending_date (DATE)&#xa;status (ENUM)&#xa;total_hours (DECIMAL)&#xa;total_overtime_hours (DECIMAL)&#xa;submitted_date (TIMESTAMP)&#xa;approved_by (UUID)&#xa;approved_date (TIMESTAMP)&#xa;rejection_reason (TEXT)&#xa;created_at (TIMESTAMP)&#xa;updated_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d0cee2;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="350" y="1500" width="200" height="260" as="geometry" />
+        </mxCell>
+        
+        <!-- Timesheet Entries Table -->
+        <mxCell id="timesheet_entries" value="TIMESHEET_ENTRIES&#xa;&#xa;PK: id (UUID)&#xa;FK: timesheet_id (UUID)&#xa;FK: task_id (UUID)&#xa;FK: activity_id (UUID)&#xa;FK: cost_object_id (UUID)&#xa;entry_date (DATE)&#xa;entry_type (ENUM)&#xa;hours (DECIMAL)&#xa;description (TEXT)&#xa;billable (BOOLEAN)&#xa;created_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d0cee2;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="650" y="1500" width="200" height="220" as="geometry" />
+        </mxCell>
+        
+        <!-- Actual Costs Table -->
+        <mxCell id="actual_costs" value="ACTUAL_COSTS&#xa;&#xa;PK: id (UUID)&#xa;FK: project_id (UUID)&#xa;FK: cost_object_id (UUID)&#xa;FK: wbs_node_id (UUID)&#xa;FK: activity_id (UUID)&#xa;FK: task_id (UUID)&#xa;cost_type (ENUM)&#xa;cost_status (ENUM)&#xa;amount (DECIMAL)&#xa;cost_date (DATE)&#xa;reference_number (VARCHAR)&#xa;reference_type (VARCHAR)&#xa;reference_id (UUID)&#xa;description (TEXT)&#xa;created_by (UUID)&#xa;created_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="950" y="1500" width="200" height="320" as="geometry" />
+        </mxCell>
+        
+        <!-- Task Dependencies Table -->
+        <mxCell id="task_dependencies" value="TASK_DEPENDENCIES&#xa;&#xa;PK: id (UUID)&#xa;FK: predecessor_task_id (UUID)&#xa;FK: successor_task_id (UUID)&#xa;dependency_type (ENUM)&#xa;lag_days (INTEGER)&#xa;created_at (TIMESTAMP)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="1500" width="200" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- Relationships -->
+        
+        <!-- Projects to WBS Nodes (1:M) -->
+        <mxCell id="rel_projects_wbs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="projects" target="wbs_nodes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- WBS Nodes self-referencing (1:M) -->
+        <mxCell id="rel_wbs_self" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="wbs_nodes" target="wbs_nodes">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="30" />
+              <mxPoint x="320" y="30" />
+              <mxPoint x="320" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- WBS Nodes to Activities (1:M) -->
+        <mxCell id="rel_wbs_activities" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="wbs_nodes" target="activities">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Activities to Tasks (1:M) -->
+        <mxCell id="rel_activities_tasks" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="activities" target="tasks">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Tasks to Cost Objects (1:M) -->
+        <mxCell id="rel_tasks_cost_objects" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="tasks" target="cost_objects">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Projects to BOQ Categories (1:M) -->
+        <mxCell id="rel_projects_boq_categories" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="projects" target="boq_categories">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- BOQ Categories to BOQ Items (1:M) -->
+        <mxCell id="rel_boq_categories_items" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="boq_categories" target="boq_items">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Vendors to Subcontractors (1:1) -->
+        <mxCell id="rel_vendors_subcontractors" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERone;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="vendors" target="subcontractors">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Vendors to Purchase Orders (1:M) -->
+        <mxCell id="rel_vendors_po" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="vendors" target="purchase_orders">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Purchase Orders to PO Lines (1:M) -->
+        <mxCell id="rel_po_po_lines" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="purchase_orders" target="po_lines">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- BOQ Items to PO Lines (1:M) -->
+        <mxCell id="rel_boq_po_lines" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="boq_items" target="po_lines">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Projects to Stores (1:M) -->
+        <mxCell id="rel_projects_stores" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="projects" target="stores">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Purchase Orders to Goods Receipts (1:M) -->
+        <mxCell id="rel_po_grn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="purchase_orders" target="goods_receipts">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Stores to Goods Receipts (1:M) -->
+        <mxCell id="rel_stores_grn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="stores" target="goods_receipts">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Goods Receipts to GRN Lines (1:M) -->
+        <mxCell id="rel_grn_grn_lines" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="goods_receipts" target="grn_lines">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- PO Lines to GRN Lines (1:M) -->
+        <mxCell id="rel_po_lines_grn_lines" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="po_lines" target="grn_lines">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Stock Items to Stock Balances (1:M) -->
+        <mxCell id="rel_stock_items_balances" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="stock_items" target="stock_balances">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Stores to Stock Balances (1:M) -->
+        <mxCell id="rel_stores_balances" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="stores" target="stock_balances">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Stores to Stock Movements (1:M) -->
+        <mxCell id="rel_stores_movements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="stores" target="stock_movements">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Stock Items to Stock Movements (1:M) -->
+        <mxCell id="rel_stock_items_movements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="stock_items" target="stock_movements">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Projects to Timesheets (1:M) -->
+        <mxCell id="rel_projects_timesheets" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="projects" target="timesheets">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Timesheets to Timesheet Entries (1:M) -->
+        <mxCell id="rel_timesheets_entries" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="timesheets" target="timesheet_entries">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Tasks to Timesheet Entries (1:M) -->
+        <mxCell id="rel_tasks_timesheet_entries" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="tasks" target="timesheet_entries">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Cost Objects to Timesheet Entries (1:M) -->
+        <mxCell id="rel_cost_objects_timesheet_entries" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="cost_objects" target="timesheet_entries">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Cost Objects to Actual Costs (1:M) -->
+        <mxCell id="rel_cost_objects_actual_costs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="cost_objects" target="actual_costs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Tasks to Task Dependencies (1:M) - Predecessor -->
+        <mxCell id="rel_tasks_dependencies_pred" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="tasks" target="task_dependencies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Tasks to Task Dependencies (1:M) - Successor -->
+        <mxCell id="rel_tasks_dependencies_succ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;" edge="1" parent="1" source="tasks" target="task_dependencies">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend" value="LEGEND&#xa;&#xa;Blue: Core Project Structure&#xa;Green: Work Breakdown&#xa;Yellow: Cost Management&#xa;Purple: BOQ/Estimation&#xa;Red: Procurement&#xa;Orange: Inventory&#xa;Light Purple: Time Tracking&#xa;&#xa;PK = Primary Key&#xa;FK = Foreign Key&#xa;GENERATED = Computed Column" style="swimlane;fontStyle=1;align=left;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="50" width="200" height="200" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
