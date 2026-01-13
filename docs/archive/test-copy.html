@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Chart of Accounts Copy</title>
+</head>
+<body>
+    <h1>Chart of Accounts Copy Test</h1>
+    <p>Source Company: C001 → Destination Company: B001</p>
+    
+    <button onclick="testCopy()">Test Copy Function</button>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+
+    <script>
+        async function testCopy() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Testing copy operation...';
+            
+            try {
+                const response = await fetch('/api/tiles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'copyChartOfAccounts',
+                        sourceCompany: 'C001',
+                        destinationCompany: 'B001'
+                    })
+                });
+
+                const result = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <h3>Test Results:</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Success:</strong> ${result.success ? '✅ Yes' : '❌ No'}</p>
+                    <p><strong>Message:</strong> ${result.message || result.error || 'No message'}</p>
+                    <p><strong>Records Copied:</strong> ${result.recordsCopied || 'N/A'}</p>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <h3>Error:</h3>
+                    <p style="color: red;">${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

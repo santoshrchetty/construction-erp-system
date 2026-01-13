@@ -1,0 +1,18 @@
+{
+  "scripts": {
+    "test:install": "npx playwright install",
+    "test:api": "npx playwright test --project=api-tests",
+    "test:e2e": "npx playwright test --project=e2e-critical",
+    "test:all": "npx playwright test",
+    "test:dev": "TEST_ENV=DEV npx playwright test",
+    "test:test": "TEST_ENV=TEST npx playwright test",
+    "test:report": "npx playwright show-report tests/reports/html",
+    "test:cleanup": "node tests/utils/manual-cleanup.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@supabase/supabase-js": "^2.38.0",
+    "uuid": "^9.0.0",
+    "@types/uuid": "^9.0.0"
+  }
+}

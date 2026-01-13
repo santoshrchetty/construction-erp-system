@@ -1,61 +1,77 @@
--- Populate Account Determination directly
--- First check what data we have
-SELECT 'Company Codes:' as table_name, company_code, id FROM company_codes
-UNION ALL
-SELECT 'Valuation Classes:', class_code, id FROM valuation_classes  
-UNION ALL
-SELECT 'Account Keys:', account_key_code, id FROM account_keys
-UNION ALL
-SELECT 'GL Accounts:', account_code, id FROM gl_accounts WHERE account_code IN ('140000', '160000', '500000', '150000', '510000', '530000');
+-- Account Determination Data Population
+-- Run this after schema alignment fixes to populate account determination
 
--- Delete existing account determination
-DELETE FROM account_determination;
+-- Insert sample GL accounts if missing
+INSERT INTO public.chart_of_accounts (id, coa_code, account_code, account_name, account_type, company_code) VALUES
+(gen_random_uuid(), 'INCA', '140000', 'Raw Materials Inventory', 'ASSET', 'C001'),
+(gen_random_uuid(), 'INCA', '150000', 'Finished Goods Inventory', 'ASSET', 'C001'),
+(gen_random_uuid(), 'INCA', '500000', 'Material Consumption', 'EXPENSE', 'C001'),
+(gen_random_uuid(), 'INCA', '510000', 'Cost of Goods Sold', 'EXPENSE', 'C001'),
+(gen_random_uuid(), 'INCA', '540000', 'Price Differences', 'EXPENSE', 'C001'),
+(gen_random_uuid(), 'INCA', '191000', 'GR/IR Clearing', 'LIABILITY', 'C001'),
+(gen_random_uuid(), 'INCA', '130000', 'Work in Progress', 'ASSET', 'C001')
+ON CONFLICT (account_code) DO NOTHING;
 
--- Insert account determination with actual IDs
-WITH company AS (SELECT id as company_id FROM company_codes WHERE company_code = '1000' LIMIT 1),
-     val_3000 AS (SELECT id as val_id FROM valuation_classes WHERE class_code = '3000' LIMIT 1),
-     val_7900 AS (SELECT id as val_id FROM valuation_classes WHERE class_code = '7900' LIMIT 1), 
-     val_7920 AS (SELECT id as val_id FROM valuation_classes WHERE class_code = '7920' LIMIT 1),
-     val_9000 AS (SELECT id as val_id FROM valuation_classes WHERE class_code = '9000' LIMIT 1),
-     key_bsx AS (SELECT id as key_id FROM account_keys WHERE account_key_code = 'BSX' LIMIT 1),
-     key_gbb AS (SELECT id as key_id FROM account_keys WHERE account_key_code = 'GBB' LIMIT 1),
-     key_wrx AS (SELECT id as key_id FROM account_keys WHERE account_key_code = 'WRX' LIMIT 1),
-     gl_140000 AS (SELECT id as gl_id FROM gl_accounts WHERE account_code = '140000' LIMIT 1),
-     gl_160000 AS (SELECT id as gl_id FROM gl_accounts WHERE account_code = '160000' LIMIT 1),
-     gl_500000 AS (SELECT id as gl_id FROM gl_accounts WHERE account_code = '500000' LIMIT 1),
-     gl_150000 AS (SELECT id as gl_id FROM gl_accounts WHERE account_code = '150000' LIMIT 1),
-     gl_510000 AS (SELECT id as gl_id FROM gl_accounts WHERE account_code = '510000' LIMIT 1),
-     gl_530000 AS (SELECT id as gl_id FROM gl_accounts WHERE account_code = '530000' LIMIT 1)
+-- Insert valuation classes if missing
+INSERT INTO public.valuation_classes (id, class_code, class_name, description) VALUES
+(gen_random_uuid(), 'MAT001', 'Raw Materials', 'Construction raw materials - cement, steel, aggregates'),
+(gen_random_uuid(), 'MAT002', 'Finished Goods', 'Prefab components and completed assemblies')
+ON CONFLICT (class_code) DO NOTHING;
 
-INSERT INTO account_determination (company_code_id, valuation_class_id, account_key_id, gl_account_id) 
-SELECT company_id, val_id, key_id, gl_id FROM company, val_3000, key_bsx, gl_140000
-UNION ALL
-SELECT company_id, val_id, key_id, gl_id FROM company, val_3000, key_gbb, gl_160000
-UNION ALL  
-SELECT company_id, val_id, key_id, gl_id FROM company, val_3000, key_wrx, gl_500000
-UNION ALL
-SELECT company_id, val_id, key_id, gl_id FROM company, val_7900, key_bsx, gl_140000
-UNION ALL
-SELECT company_id, val_id, key_id, gl_id FROM company, val_7900, key_gbb, gl_160000
-UNION ALL
-SELECT company_id, val_id, key_id, gl_id FROM company, val_7900, key_wrx, gl_510000
-UNION ALL
-SELECT company_id, val_id, key_id, gl_id FROM company, val_7920, key_bsx, gl_150000
-UNION ALL
-SELECT company_id, val_id, key_id, gl_id FROM company, val_7920, key_gbb, gl_160000
-UNION ALL
-SELECT company_id, val_id, key_id, gl_id FROM company, val_9000, key_wrx, gl_530000;
+-- Insert account keys if missing
+INSERT INTO public.account_keys (id, account_key_code, account_key_name, description, debit_credit_indicator) VALUES
+(gen_random_uuid(), 'BSX', 'Stock Account', 'Stock valuation for inventory', 'D'),
+(gen_random_uuid(), 'GBB', 'Consumption Account', 'Direct consumption/cost allocation', 'C'),
+(gen_random_uuid(), 'PRD', 'Price Difference', 'Purchase price variances', 'D'),
+(gen_random_uuid(), 'INV', 'GR/IR Clearing', 'Goods receipt/invoice receipt clearing', 'C'),
+(gen_random_uuid(), 'WIP', 'Work in Progress', 'Project material allocation', 'D')
+ON CONFLICT (account_key_code) DO NOTHING;
 
--- Verify the data
-SELECT 
-    cc.company_code,
-    vc.class_code as valuation_class,
-    ak.account_key_code as account_key,
-    gl.account_code as gl_account,
-    gl.account_name
-FROM account_determination ad
-JOIN company_codes cc ON ad.company_code_id = cc.id
-JOIN valuation_classes vc ON ad.valuation_class_id = vc.id  
-JOIN account_keys ak ON ad.account_key_id = ak.id
-JOIN gl_accounts gl ON ad.gl_account_id = gl.id
-ORDER BY vc.class_code, ak.account_key_code;
+-- Get company code ID
+WITH company AS (SELECT id FROM public.company_codes WHERE company_code = 'C001' LIMIT 1),
+     val_raw AS (SELECT id FROM public.valuation_classes WHERE class_code = 'MAT001' LIMIT 1),
+     val_fin AS (SELECT id FROM public.valuation_classes WHERE class_code = 'MAT002' LIMIT 1),
+     acc_bsx AS (SELECT id FROM public.account_keys WHERE account_key_code = 'BSX' LIMIT 1),
+     acc_gbb AS (SELECT id FROM public.account_keys WHERE account_key_code = 'GBB' LIMIT 1),
+     acc_prd AS (SELECT id FROM public.account_keys WHERE account_key_code = 'PRD' LIMIT 1),
+     acc_inv AS (SELECT id FROM public.account_keys WHERE account_key_code = 'INV' LIMIT 1),
+     acc_wip AS (SELECT id FROM public.account_keys WHERE account_key_code = 'WIP' LIMIT 1),
+     gl_140 AS (SELECT id FROM public.chart_of_accounts WHERE account_code = '140000' LIMIT 1),
+     gl_150 AS (SELECT id FROM public.chart_of_accounts WHERE account_code = '150000' LIMIT 1),
+     gl_500 AS (SELECT id FROM public.chart_of_accounts WHERE account_code = '500000' LIMIT 1),
+     gl_510 AS (SELECT id FROM public.chart_of_accounts WHERE account_code = '510000' LIMIT 1),
+     gl_540 AS (SELECT id FROM public.chart_of_accounts WHERE account_code = '540000' LIMIT 1),
+     gl_191 AS (SELECT id FROM public.chart_of_accounts WHERE account_code = '191000' LIMIT 1),
+     gl_130 AS (SELECT id FROM public.chart_of_accounts WHERE account_code = '130000' LIMIT 1)
+
+-- Insert account determination mappings
+INSERT INTO public.account_determination (company_code_id, valuation_class_id, account_key_id, gl_account_id, is_active) 
+SELECT * FROM (
+    -- Raw Materials (MAT001) mappings
+    SELECT company.id, val_raw.id, acc_bsx.id, gl_140.id, true FROM company, val_raw, acc_bsx, gl_140
+    UNION ALL
+    SELECT company.id, val_raw.id, acc_gbb.id, gl_500.id, true FROM company, val_raw, acc_gbb, gl_500
+    UNION ALL
+    SELECT company.id, val_raw.id, acc_prd.id, gl_540.id, true FROM company, val_raw, acc_prd, gl_540
+    UNION ALL
+    SELECT company.id, val_raw.id, acc_inv.id, gl_191.id, true FROM company, val_raw, acc_inv, gl_191
+    UNION ALL
+    SELECT company.id, val_raw.id, acc_wip.id, gl_130.id, true FROM company, val_raw, acc_wip, gl_130
+    UNION ALL
+    -- Finished Goods (MAT002) mappings
+    SELECT company.id, val_fin.id, acc_bsx.id, gl_150.id, true FROM company, val_fin, acc_bsx, gl_150
+    UNION ALL
+    SELECT company.id, val_fin.id, acc_gbb.id, gl_510.id, true FROM company, val_fin, acc_gbb, gl_510
+    UNION ALL
+    SELECT company.id, val_fin.id, acc_prd.id, gl_540.id, true FROM company, val_fin, acc_prd, gl_540
+    UNION ALL
+    SELECT company.id, val_fin.id, acc_inv.id, gl_191.id, true FROM company, val_fin, acc_inv, gl_191
+    UNION ALL
+    SELECT company.id, val_fin.id, acc_wip.id, gl_130.id, true FROM company, val_fin, acc_wip, gl_130
+) AS mappings
+ON CONFLICT (company_code_id, valuation_class_id, account_key_id) DO NOTHING;
+
+-- Verify data was inserted
+SELECT 'Account Determination populated successfully!' as status,
+       COUNT(*) as total_mappings
+FROM public.account_determination;

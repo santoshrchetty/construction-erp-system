@@ -1,0 +1,1 @@
+Error: Failed to run sql query: ERROR: 42703: column "component_path" does not exist LINE 8: component_path, ^

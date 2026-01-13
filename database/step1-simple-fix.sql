@@ -1,0 +1,83 @@
+-- STEP 1: FIX BASE PO SCHEMA ISSUES (SIMPLIFIED)
+
+-- Add missing base columns to purchase_orders table (without constraints first)
+ALTER TABLE purchase_orders 
+ADD COLUMN IF NOT EXISTS po_number VARCHAR(20),
+ADD COLUMN IF NOT EXISTS po_date DATE DEFAULT CURRENT_DATE,
+ADD COLUMN IF NOT EXISTS vendor_code VARCHAR(20),
+ADD COLUMN IF NOT EXISTS project_code VARCHAR(20),
+ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'DRAFT',
+ADD COLUMN IF NOT EXISTS delivery_date DATE,
+ADD COLUMN IF NOT EXISTS payment_terms VARCHAR(50) DEFAULT 'NET30',
+ADD COLUMN IF NOT EXISTS tax_amount DECIMAL(15,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS discount_amount DECIMAL(15,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS net_amount DECIMAL(15,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS currency VARCHAR(3) DEFAULT 'INR',
+ADD COLUMN IF NOT EXISTS delivery_address TEXT,
+ADD COLUMN IF NOT EXISTS terms_conditions TEXT,
+ADD COLUMN IF NOT EXISTS remarks TEXT,
+ADD COLUMN IF NOT EXISTS priority VARCHAR(10) DEFAULT 'NORMAL',
+ADD COLUMN IF NOT EXISTS department VARCHAR(50),
+ADD COLUMN IF NOT EXISTS cost_center VARCHAR(20),
+ADD COLUMN IF NOT EXISTS budget_code VARCHAR(20),
+ADD COLUMN IF NOT EXISTS created_by VARCHAR(50),
+ADD COLUMN IF NOT EXISTS approved_by VARCHAR(50),
+ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+
+-- Add missing fields to purchase_order_items table
+ALTER TABLE purchase_order_items
+ADD COLUMN IF NOT EXISTS material_code VARCHAR(50),
+ADD COLUMN IF NOT EXISTS unit VARCHAR(10) DEFAULT 'EA',
+ADD COLUMN IF NOT EXISTS tax_code VARCHAR(10) DEFAULT 'GST18',
+ADD COLUMN IF NOT EXISTS tax_rate DECIMAL(5,2) DEFAULT 18.00,
+ADD COLUMN IF NOT EXISTS tax_amount DECIMAL(15,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS discount_percent DECIMAL(5,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS discount_amount DECIMAL(15,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS net_amount DECIMAL(15,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS delivery_date DATE,
+ADD COLUMN IF NOT EXISTS plant_code VARCHAR(10),
+ADD COLUMN IF NOT EXISTS storage_location VARCHAR(10),
+ADD COLUMN IF NOT EXISTS gl_account VARCHAR(20),
+ADD COLUMN IF NOT EXISTS cost_center VARCHAR(20),
+ADD COLUMN IF NOT EXISTS wbs_element VARCHAR(20),
+ADD COLUMN IF NOT EXISTS received_quantity DECIMAL(10,3) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS invoiced_quantity DECIMAL(10,3) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS item_status VARCHAR(20) DEFAULT 'OPEN';
+
+-- Generate PO numbers for existing records
+UPDATE purchase_orders 
+SET po_number = 'PO' || TO_CHAR(CURRENT_DATE, 'YY') || TO_CHAR(CURRENT_DATE, 'MM') || LPAD(id::TEXT, 4, '0')
+WHERE po_number IS NULL OR po_number = '';
+
+-- Create supporting tables
+CREATE TABLE IF NOT EXISTS goods_receipts (
+    id SERIAL PRIMARY KEY,
+    gr_number VARCHAR(20) UNIQUE NOT NULL,
+    po_number VARCHAR(20) NOT NULL,
+    vendor_code VARCHAR(20),
+    gr_date DATE DEFAULT CURRENT_DATE,
+    delivery_note VARCHAR(50),
+    total_amount DECIMAL(15,2) DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'POSTED',
+    created_by VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS material_price_history (
+    id SERIAL PRIMARY KEY,
+    material_code VARCHAR(50),
+    vendor_code VARCHAR(20),
+    price DECIMAL(12,2),
+    unit VARCHAR(10),
+    currency VARCHAR(3) DEFAULT 'INR',
+    valid_from DATE DEFAULT CURRENT_DATE,
+    valid_to DATE DEFAULT '9999-12-31',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add basic indexes
+CREATE INDEX IF NOT EXISTS idx_po_vendor ON purchase_orders(vendor_code);
+CREATE INDEX IF NOT EXISTS idx_po_project ON purchase_orders(project_code);
+CREATE INDEX IF NOT EXISTS idx_po_status ON purchase_orders(status);
+
+SELECT 'STEP 1 COMPLETE - BASE PO SCHEMA FIXED' as status;

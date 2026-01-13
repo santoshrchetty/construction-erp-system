@@ -1,5 +1,7 @@
-import ERPModulesNavigation from '../../components/ERPModulesNavigation'
+'use client'
+
+import EnhancedConstructionTiles from '../../components/tiles/EnhancedConstructionTiles'
 
 export default function ERPModulesPage() {
-  return <ERPModulesNavigation />
+  return <EnhancedConstructionTiles />
 }

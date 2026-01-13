@@ -7,7 +7,7 @@ import ProjectDashboard from '../../components/ProjectDashboard';
 import TaskBoard from '../../components/TaskBoard';
 import ProjectForm from '../../components/ProjectForm';
 import WBSBuilder from '../../components/WBSBuilder';
-import ActivityManager from '../../components/ActivityManager';
+import ActivitiesList from '../../components/activities/ActivitiesListSimple';
 import TaskManager from '../../components/TaskManager';
 import SchedulingManager from '../../components/SchedulingManager';
 import CostManager from '../../components/CostManager';
@@ -144,9 +144,11 @@ export default function EngineerDashboard() {
         {activeTab === 'activities' && (
           <div>
             {selectedProjectId ? (
-              <div>
-
-                <ActivityManager projectId={selectedProjectId} />
+              <div className="p-6">
+                <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+                  Debug: Project ID = {selectedProjectId}
+                </div>
+                <ActivitiesList projectId={selectedProjectId} />
               </div>
             ) : (
               <div className="p-6 text-center py-12">

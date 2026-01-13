@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "backup": "node -e \"const {createBackup} = require('./lib/restorePoint'); createBackup('Manual backup')\"",
+    "backup:auto": "node -e \"const {restoreManager} = require('./lib/restorePoint'); restoreManager.autoBackup()\"",
+    "restore:list": "node -e \"const {listBackups} = require('./lib/restorePoint'); listBackups()\"",
+    "restore:cli": "node restore-cli.js",
+    "restore:quick": "node -e \"const {restoreManager} = require('./lib/restorePoint'); const points = restoreManager.listRestorePoints(); if(points[0]) restoreManager.restoreFromPoint(points[0].id); else console.log('No restore points found')\""
+  }
+}

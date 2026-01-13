@@ -1,10 +1,10 @@
 import ProtectedRoute from '../../components/auth/ProtectedRoute'
-import ERPConfigFixed from '../../components/ERPConfigFixed'
+import ERPConfigurationPage from './ERPConfigurationPage'
 
 export default function ERPConfigPage() {
   return (
     <ProtectedRoute allowedRoles={['Admin', 'Manager']}>
-      <ERPConfigFixed />
+      <ERPConfigurationPage />
     </ProtectedRoute>
   )
 }

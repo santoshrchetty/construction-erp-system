@@ -1,13 +1,20 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '../supabase/database.types'
 
+interface UserContext {
+  userId: string
+  role: string
+}
+
 export abstract class BaseRepository<T extends keyof Database['public']['Tables']> {
   protected supabase: SupabaseClient<Database>
   protected tableName: T
+  protected userContext?: UserContext
 
-  constructor(supabase: SupabaseClient<Database>, tableName: T) {
+  constructor(supabase: SupabaseClient<Database>, tableName: T, userContext?: UserContext) {
     this.supabase = supabase
     this.tableName = tableName
+    this.userContext = userContext
   }
 
   async findById(id: string): Promise<Database['public']['Tables'][T]['Row'] | null> {
