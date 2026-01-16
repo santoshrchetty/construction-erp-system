@@ -5,8 +5,8 @@ import { FinanceRepository } from '@/data/FinanceRepository'
 
 export interface GLEntry {
   account_code: string
-  debit_amount: number
-  credit_amount: number
+  debit_credit: 'D' | 'C'
+  transaction_amount: number
   cost_center?: string
   project_code?: string
   wbs_element?: string
@@ -91,8 +91,8 @@ export class FinanceService {
       }
 
       // Calculate totals
-      const totalDebit = document.entries.reduce((sum, entry) => sum + (entry.debit_amount || 0), 0)
-      const totalCredit = document.entries.reduce((sum, entry) => sum + (entry.credit_amount || 0), 0)
+      const totalDebit = document.entries.reduce((sum, entry) => sum + (entry.debit_credit === 'D' ? entry.transaction_amount || 0 : 0), 0)
+      const totalCredit = document.entries.reduce((sum, entry) => sum + (entry.debit_credit === 'C' ? entry.transaction_amount || 0 : 0), 0)
 
       if (Math.abs(totalDebit - totalCredit) > 0.01) {
         return { 
@@ -107,9 +107,8 @@ export class FinanceService {
           return { is_valid: false, error_message: 'All entries must have an account code' }
         }
 
-        if ((entry.debit_amount > 0 && entry.credit_amount > 0) || 
-            (entry.debit_amount === 0 && entry.credit_amount === 0)) {
-          return { is_valid: false, error_message: 'Each entry must have either debit or credit amount (not both or neither)' }
+        if (!entry.debit_credit || !entry.transaction_amount) {
+          return { is_valid: false, error_message: 'Each entry must have debit_credit indicator and transaction amount' }
         }
       }
 
@@ -137,7 +136,7 @@ export class FinanceService {
           document.company_code,
           entry.account_code,
           'POST',
-          Math.max(entry.debit_amount || 0, entry.credit_amount || 0)
+          entry.transaction_amount || 0
         )
 
         if (!hasAuth) {
@@ -172,7 +171,7 @@ export class FinanceService {
 
       // Step 3: Check if approval required
       const totalAmount = document.entries.reduce((sum, entry) => 
-        sum + Math.max(entry.debit_amount || 0, entry.credit_amount || 0), 0
+        sum + (entry.transaction_amount || 0), 0
       )
 
       const requiresApproval = await this.repository.checkApprovalRequired(

@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { DataPreloaderProvider, usePreloadedData } from '@/contexts/DataPreloaderContext'
 import * as Icons from 'lucide-react'
+import ProjectForm from '../ui/forms/ProjectForm'
 
 // Loading component for lazy-loaded modules
 function ModuleLoader() {
@@ -17,38 +18,30 @@ function ModuleLoader() {
 }
 // Lazy-loaded components with error handling
 const ProjectDashboard = lazy(() => 
-  import('../projects/ProjectDashboard')
-    .then(module => ({ default: module.ProjectsOverviewDashboard }))
+  import('../projects/ProjectDashboard').then(module => ({ default: module.ProjectsOverviewDashboard }))
     .catch(error => {
       console.error('Failed to load ProjectDashboard:', error)
       return { default: () => <div className="p-6 text-red-600">Failed to load Projects Dashboard</div> }
     })
 )
-// Enhanced lazy loading with data preloading
-const ProjectForm = lazy(() => 
-  import('../ProjectForm').then(module => {
-    // Preload dropdown data when component is imported
-    return { default: module.default }
-  })
-)
-const ProjectMaster = lazy(() => import('../ProjectMaster'))
-const WBSBuilder = lazy(() => import('../WBSBuilder'))
+const ProjectMaster = lazy(() => import('../features/projects/ProjectMaster'))
+const WBSBuilder = lazy(() => import('../features/projects/WBSBuilder'))
 const ActivitiesList = lazy(() => import('../activities/ActivitiesListSimple'))
-const TaskManager = lazy(() => import('../TaskManager'))
-const SchedulingManager = lazy(() => import('../SchedulingManager'))
-const CostManager = lazy(() => import('../CostManager'))
-const PurchaseOrderManager = lazy(() => import('../PurchaseOrderManager'))
-const MaterialMaster = lazy(() => import('../MaterialMaster'))
-const VendorManager = lazy(() => import('../VendorManager'))
-const InventoryManager = lazy(() => import('../InventoryManager'))
-const SAPConfig = lazy(() => import('../SAPConfig'))
-const ERPConfigurationModuleComplete = lazy(() => import('../ERPConfigurationModuleComplete'))
-const UserManagement = lazy(() => import('./UserManagement'))
-const RoleManagement = lazy(() => import('./RoleManagement'))
-const UserRoleAssignment = lazy(() => import('./UserRoleAssignment'))
-const AuthorizationObjects = lazy(() => import('./AuthorizationObjects'))
-const CostCenterAccounting = lazy(() => import('./CostCenterAccounting'))
-const ChartOfAccounts = lazy(() => import('./ChartOfAccounts'))
+const TaskManager = lazy(() => import('../features/projects/TaskManager'))
+const SchedulingManager = lazy(() => import('../features/projects/SchedulingManager'))
+const CostManager = lazy(() => import('../features/projects/CostManager'))
+const PurchaseOrderManager = lazy(() => import('../features/procurement/PurchaseOrderManager'))
+const MaterialMaster = lazy(() => import('../features/inventory/MaterialMaster'))
+const VendorManager = lazy(() => import('../features/procurement/VendorManager'))
+const InventoryManager = lazy(() => import('../features/inventory/InventoryManager'))
+const SAPConfig = lazy(() => import('../shared/config/SAPConfig'))
+const ERPConfigurationModuleComplete = lazy(() => import('../shared/config/ERPConfigurationModuleComplete'))
+const UserManagement = lazy(() => import('../features/administration/UserManagement'))
+const RoleManagement = lazy(() => import('../features/administration/RoleManagement'))
+const UserRoleAssignment = lazy(() => import('../features/administration/UserRoleAssignment'))
+const AuthorizationObjects = lazy(() => import('../features/administration/AuthorizationObjects'))
+const CostCenterAccounting = lazy(() => import('../features/finance/CostCenterAccounting'))
+const ChartOfAccounts = lazy(() => import('../features/finance/ChartOfAccounts'))
 const CreateMaterialMaster = lazy(() => import('./MaterialMasterComponents').then(module => ({ default: module.CreateMaterialMaster })))
 const MaintainMaterialMaster = lazy(() => import('./MaterialMasterComponents').then(module => ({ default: module.MaintainMaterialMaster })))
 const GoodsReceipt = lazy(() => import('./InventoryComponents').then(module => ({ default: module.GoodsReceipt })))
@@ -56,16 +49,20 @@ const GoodsIssue = lazy(() => import('./InventoryComponents').then(module => ({ 
 const GoodsTransfer = lazy(() => import('./InventoryComponents').then(module => ({ default: module.GoodsTransfer })))
 const PhysicalInventory = lazy(() => import('./InventoryComponents').then(module => ({ default: module.PhysicalInventory })))
 const InventoryAdjustments = lazy(() => import('./InventoryComponents').then(module => ({ default: module.InventoryAdjustments })))
-const GLPostingComponent = lazy(() => import('./GLPosting'))
+const GLPostingComponent = lazy(() => import('../features/finance/GLPosting'))
 const TrialBalanceComponent = lazy(() => import('./FinanceComponents').then(module => ({ default: module.TrialBalanceComponent })))
 const ProfitLossComponent = lazy(() => import('./FinanceComponents').then(module => ({ default: module.ProfitLossComponent })))
-const MaterialStockOverview = lazy(() => import('./MaterialStockOverview'))
+const MaterialStockOverview = lazy(() => import('../features/inventory/MaterialStockOverview'))
 const ExtendMaterialToPlant = lazy(() => import('./MaterialPlantComponents').then(module => ({ default: module.ExtendMaterialToPlant })))
 const MaterialPlantParameters = lazy(() => import('./MaterialPlantComponents').then(module => ({ default: module.MaterialPlantParameters })))
 const MaterialReservations = lazy(() => import('./MaterialReservationsComponent').then(module => ({ default: module.MaterialReservations })))
 const UnifiedMaterialRequest = lazy(() => import('./UnifiedMaterialRequestComponent').then(module => ({ default: module.UnifiedMaterialRequest })))
-const ApprovalConfiguration = lazy(() => import('./approval-configuration'))
-const WBSManagement = lazy(() => import('./WBSManagement').then(module => ({ default: module.WBSManagement })))
+const ApprovalConfiguration = lazy(() => import('../features/approvals/approval-configuration'))
+const WBSManagement = lazy(() => import('../features/projects/WBSManagementWithSelector'))
+const ActivitiesManagement = lazy(() => import('../features/projects/ActivitiesManagementWithSelector'))
+const TasksManagement = lazy(() => import('../features/projects/TasksManagementWithSelector'))
+const ScheduleManagement = lazy(() => import('../features/projects/ScheduleManagementWithSelector'))
+const CostManagement = lazy(() => import('../features/projects/CostManagementWithSelector'))
 
 interface ConstructionTile {
   id: string
@@ -89,6 +86,7 @@ export default function EnhancedConstructionTiles() {
   const [activeComponent, setActiveComponent] = useState<string | null>(null)
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [selectedProjectName, setSelectedProjectName] = useState<string>('')
+  const [showUserMenu, setShowUserMenu] = useState(false)
 
   const supabase = createClient()
 
@@ -182,16 +180,12 @@ export default function EnhancedConstructionTiles() {
       // Project Management
       case 'Create Project':
         return (
-          <DataPreloaderProvider>
-            <Suspense fallback={<ModuleLoader />}>
-              <ProjectForm 
-                onClose={() => setActiveComponent(null)} 
-                onSuccess={() => {
-                  setActiveComponent('Projects Dashboard')
-                }} 
-              />
-            </Suspense>
-          </DataPreloaderProvider>
+          <ProjectForm 
+            onClose={() => setActiveComponent(null)} 
+            onSuccess={() => {
+              setActiveComponent('Projects Dashboard')
+            }} 
+          />
         )
       case 'Project Master':
         return <ProjectMaster />
@@ -218,51 +212,13 @@ export default function EnhancedConstructionTiles() {
       case 'WBS Management':
         return <WBSManagement />
       case 'Activities':
-        return selectedProjectId ? (
-          <div className="p-6">
-            <ActivitiesList projectId={selectedProjectId} />
-          </div>
-        ) : (
-          <div className="p-6 text-center py-12">
-            <p className="text-gray-500 mb-4">Select a project first from Projects Dashboard</p>
-            <button onClick={() => setActiveComponent('Projects Dashboard')} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-              Go to Projects
-            </button>
-          </div>
-        )
+        return <ActivitiesManagement />
       case 'Tasks':
-        return selectedProjectId ? (
-          <TaskManager projectId={selectedProjectId} />
-        ) : (
-          <div className="p-6 text-center py-12">
-            <p className="text-gray-500 mb-4">Select a project first from Projects Dashboard</p>
-            <button onClick={() => setActiveComponent('Projects Dashboard')} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-              Go to Projects
-            </button>
-          </div>
-        )
+        return <TasksManagement />
       case 'Schedule':
-        return selectedProjectId ? (
-          <SchedulingManager projectId={selectedProjectId} />
-        ) : (
-          <div className="p-6 text-center py-12">
-            <p className="text-gray-500 mb-4">Select a project first from Projects Dashboard</p>
-            <button onClick={() => setActiveComponent('Projects Dashboard')} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-              Go to Projects
-            </button>
-          </div>
-        )
+        return <ScheduleManagement />
       case 'Cost Management':
-        return selectedProjectId ? (
-          <CostManager projectId={selectedProjectId} />
-        ) : (
-          <div className="p-6 text-center py-12">
-            <p className="text-gray-500 mb-4">Select a project first from Projects Dashboard</p>
-            <button onClick={() => setActiveComponent('Projects Dashboard')} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-              Go to Projects
-            </button>
-          </div>
-        )
+        return <CostManagement />
       case 'Reports':
         return (
           <div className="p-6">
@@ -633,7 +589,7 @@ export default function EnhancedConstructionTiles() {
 
   if (activeComponent) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#F7F7F7]">
         <div className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -644,10 +600,11 @@ export default function EnhancedConstructionTiles() {
             </div>
             <button
               onClick={() => setActiveComponent(null)}
-              className="flex items-center text-gray-600 hover:text-gray-800"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Back to Modules"
+              aria-label="Back to Modules"
             >
-              <Icons.ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Modules
+              <Icons.ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
           </div>
         </div>
@@ -659,32 +616,61 @@ export default function EnhancedConstructionTiles() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-[#F7F7F7] p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Construction Management System</h1>
-              <p className="text-gray-600">Access authorized modules based on your role permissions</p>
+              <h1 className="text-3xl md:text-4xl font-light text-[#32363A] mb-2 tracking-tight">Nexus ERP</h1>
+              <div className="h-1 w-20 bg-gradient-to-r from-[#0A6ED1] to-[#0080FF] rounded-full mb-2"></div>
+              <p className="text-sm text-[#6A6D70] font-light">Enterprise Resource Planning for Construction</p>
             </div>
-            <button
-              onClick={async () => {
-                if (loggingOut) return
-                setLoggingOut(true)
-                try {
-                  await signOut()
-                } catch (error) {
-                  console.error('Logout error:', error)
-                } finally {
-                  setLoggingOut(false)
-                }
-              }}
-              disabled={loggingOut}
-              className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-            >
-              <Icons.LogOut className="w-4 h-4 mr-2" />
-              {loggingOut ? 'Signing out...' : 'Logout'}
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center space-x-3 px-4 py-2 hover:bg-[#F5F5F5] rounded-lg transition-colors duration-200"
+              >
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0A6ED1] to-[#0080FF] flex items-center justify-center text-white font-medium shadow-sm">
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-medium text-[#32363A]">{user?.email?.split('@')[0] || 'User'}</p>
+                  <p className="text-xs text-[#6A6D70]">{user?.email || ''}</p>
+                </div>
+                <Icons.ChevronDown className={`w-4 h-4 text-[#6A6D70] transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showUserMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.15)] border border-[#E5E5E5] py-2 z-20">
+                    <div className="px-4 py-3 border-b border-[#E5E5E5]">
+                      <p className="text-sm font-medium text-[#32363A]">{user?.email?.split('@')[0] || 'User'}</p>
+                      <p className="text-xs text-[#6A6D70] mt-1">{user?.email || ''}</p>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (loggingOut) return
+                        setLoggingOut(true)
+                        setShowUserMenu(false)
+                        try {
+                          await signOut()
+                        } catch (error) {
+                          console.error('Logout error:', error)
+                        } finally {
+                          setLoggingOut(false)
+                        }
+                      }}
+                      disabled={loggingOut}
+                      className="w-full flex items-center px-4 py-3 text-[#32363A] hover:bg-[#F5F5F5] transition-colors duration-200 disabled:opacity-50"
+                    >
+                      <Icons.LogOut className="w-4 h-4 mr-3 text-[#6A6D70]" />
+                      <span className="text-sm">{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -694,10 +680,10 @@ export default function EnhancedConstructionTiles() {
               <button
                 key={category.key}
                 onClick={() => setSelectedCategory(category.key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   selectedCategory === category.key
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                    ? 'bg-[#0A6ED1] text-white shadow-sm'
+                    : 'bg-white text-[#32363A] border border-[#E5E5E5] hover:border-[#0A6ED1]'
                 }`}
               >
                 <span className="mr-2">{category.icon}</span>
@@ -708,38 +694,34 @@ export default function EnhancedConstructionTiles() {
         </div>
 
         {filteredTiles.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredTiles.map((tile) => (
               <div
                 key={tile.id}
                 onClick={() => handleTileClick(tile)}
-                className="bg-white rounded-lg shadow-sm border-2 p-6 transition-all duration-200 hover:shadow-md hover:border-blue-300 cursor-pointer transform hover:scale-105"
+                className="bg-white rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-[#E5E5E5] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] hover:border-[#0A6ED1] hover:scale-[1.02] transition-all duration-200 cursor-pointer group"
               >
-                <div className="flex items-center mb-4">
-                  {(() => {
-                    const IconComponent = getIcon(tile.icon)
-                    return <IconComponent className="w-8 h-8 mr-3 text-blue-600" />
-                  })()}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900">{tile.title}</h3>
-                      {tile.auth_object && (
-                        <span className="text-xs text-gray-400 font-mono">
-                          {tile.auth_object}
-                        </span>
-                      )}
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-[#32363A] text-base group-hover:text-[#0A6ED1] transition-colors truncate">
+                        {tile.title}
+                      </h3>
+                      <p className="text-sm text-[#6A6D70] mt-1 line-clamp-2">
+                        {tile.subtitle}
+                      </p>
                     </div>
-                    <span className="text-xs text-blue-600 font-medium">{tile.module_code}</span>
+                    <Icons.ExternalLink className="w-4 h-4 text-[#6A6D70] group-hover:text-[#0A6ED1] transition-colors flex-shrink-0 ml-2" />
                   </div>
-                </div>
-                
-                <p className="text-sm text-gray-600 mb-4">{tile.subtitle}</p>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                    {tile.construction_action}
-                  </span>
-                  <span className="text-blue-600 text-sm font-medium">Open →</span>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs bg-[#F5F5F5] text-[#32363A] px-2 py-1 rounded font-medium">
+                      {tile.module_code}
+                    </span>
+                    <span className="text-xs text-[#6A6D70]">
+                      {tile.tile_category}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

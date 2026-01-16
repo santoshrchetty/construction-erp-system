@@ -36,9 +36,10 @@ export async function POST(request: NextRequest) {
       data: result
     })
   } catch (error) {
+    console.error('POST /api/wbs error:', error)
     return NextResponse.json({
       error: 'WBS operation failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : JSON.stringify(error)
     }, { status: 500 })
   }
 }

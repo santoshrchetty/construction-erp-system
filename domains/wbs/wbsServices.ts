@@ -1,289 +1,153 @@
-// WBS Services - Domain Layer
-import { createClient } from '@supabase/supabase-js'
+import { WBSRepository } from './repositories/wbsRepository';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables')
+export interface WBSNode {
+  id: string;
+  project_id: string;
+  code: string;
+  name: string;
+  node_type: string;
+  level: number;
+  sequence_order: number;
+  parent_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey)
+export interface Activity {
+  id: string;
+  project_id: string;
+  wbs_node_id: string;
+  code: string;
+  name: string;
+  activity_type: string;
+  status: string;
+  priority: string;
+  duration_days?: number;
+  budget_amount?: number;
+  actual_cost?: number;
+  planned_start_date?: string;
+  planned_end_date?: string;
+  actual_start_date?: string;
+  actual_end_date?: string;
+  progress_percentage?: number;
+  assigned_to?: string;
+  vendor_id?: string;
+  dependencies?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
-export async function getProjects(companyCode: string = 'C001') {
-  try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('id, code, name, status')
-      .order('code')
+export interface Task {
+  id: string;
+  project_id: string;
+  activity_id: string;
+  name: string;
+  status: string;
+  priority: string;
+  checklist_item: boolean;
+  assigned_to?: string;
+  due_date?: string;
+  completed_date?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
-    if (error) throw error
-    return data || []
-  } catch (error) {
-    console.error('Error getting projects:', error)
-    return []
+export class WBSService {
+  private repository: WBSRepository;
+
+  constructor() {
+    this.repository = new WBSRepository();
   }
-}
 
-export async function getWBSElements(projectCode: string, companyCode: string = 'C001') {
-  try {
-    const { data, error } = await supabase
-      .from('universal_journal')
-      .select(`
-        wbs_element,
-        debit_credit,
-        company_amount,
-        posting_date
-      `)
-      .eq('company_code', companyCode)
-      .eq('project_code', projectCode)
-      .not('wbs_element', 'is', null)
-      .order('posting_date', { ascending: false })
-
-    if (error) throw error
-
-    // Group by WBS element
-    const wbsSummary = data.reduce((acc, entry) => {
-      const wbs = entry.wbs_element
-      if (!acc[wbs]) {
-        acc[wbs] = {
-          wbs_element: wbs,
-          wbs_description: null,
-          total_debits: 0,
-          total_credits: 0,
-          net_amount: 0,
-          transaction_count: 0,
-          last_posting_date: entry.posting_date
-        }
-      }
-
-      acc[wbs].transaction_count++
-      if (entry.debit_credit === 'D') {
-        acc[wbs].total_debits += parseFloat(entry.company_amount)
-      } else {
-        acc[wbs].total_credits += parseFloat(entry.company_amount)
-      }
-      acc[wbs].net_amount = acc[wbs].total_debits - acc[wbs].total_credits
-
-      return acc
-    }, {})
-
-    return Object.values(wbsSummary)
-  } catch (error) {
-    console.error('Error getting WBS elements:', error)
-    return []
+  // WBS Node Services
+  async getWBSNodes(projectId: string): Promise<WBSNode[]> {
+    return this.repository.getWBSNodes(projectId);
   }
-}
 
-// WBS Nodes CRUD
-export async function getWBSNodes(projectId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('wbs_nodes')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('level', { ascending: true })
-      .order('sequence_order', { ascending: true })
-
-    if (error) throw error
-    return data || []
-  } catch (error) {
-    console.error('Error getting WBS nodes:', error)
-    return []
+  async createWBSNode(data: Omit<WBSNode, 'id' | 'created_at' | 'updated_at'>): Promise<WBSNode> {
+    const code = await this.generateWBSCode(data.project_id, data.parent_id, data.level);
+    return this.repository.createWBSNode({ ...data, code });
   }
-}
 
-export async function createWBSNode(nodeData: any) {
-  try {
-    const { data, error } = await supabase
-      .from('wbs_nodes')
-      .insert(nodeData)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error creating WBS node:', error)
-    throw error
+  async updateWBSNode(id: string, data: Partial<WBSNode>): Promise<WBSNode> {
+    return this.repository.updateWBSNode(id, data);
   }
-}
 
-export async function updateWBSNode(id: string, nodeData: any) {
-  try {
-    const { data, error } = await supabase
-      .from('wbs_nodes')
-      .update(nodeData)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error updating WBS node:', error)
-    throw error
+  async deleteWBSNode(id: string): Promise<void> {
+    return this.repository.deleteWBSNode(id);
   }
-}
 
-export async function deleteWBSNode(id: string) {
-  try {
-    const { error } = await supabase
-      .from('wbs_nodes')
-      .delete()
-      .eq('id', id)
-
-    if (error) throw error
-    return { success: true }
-  } catch (error) {
-    console.error('Error deleting WBS node:', error)
-    throw error
+  // Activity Services
+  async getActivities(projectId: string, wbsNodeId?: string): Promise<Activity[]> {
+    if (wbsNodeId) {
+      return this.repository.getActivitiesByWBSNode(wbsNodeId);
+    }
+    return this.repository.getActivities(projectId);
   }
-}
 
-// Activities CRUD
-export async function getActivities(projectId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('activities')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at')
-
-    if (error) throw error
-    return data || []
-  } catch (error) {
-    console.error('Error getting activities:', error)
-    return []
+  async createActivity(data: Omit<Activity, 'id' | 'created_at' | 'updated_at' | 'code'>): Promise<Activity> {
+    const code = await this.generateActivityCode(data.project_id, data.wbs_node_id);
+    return this.repository.createActivity({ ...data, code });
   }
-}
 
-export async function createActivity(activityData: any) {
-  try {
-    const { data, error } = await supabase
-      .from('activities')
-      .insert(activityData)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error creating activity:', error)
-    throw error
+  async updateActivity(id: string, data: Partial<Activity>): Promise<Activity> {
+    return this.repository.updateActivity(id, data);
   }
-}
 
-export async function updateActivity(id: string, activityData: any) {
-  try {
-    const { data, error } = await supabase
-      .from('activities')
-      .update(activityData)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error updating activity:', error)
-    throw error
+  async deleteActivity(id: string): Promise<void> {
+    return this.repository.deleteActivity(id);
   }
-}
 
-export async function deleteActivity(id: string) {
-  try {
-    const { error } = await supabase
-      .from('activities')
-      .delete()
-      .eq('id', id)
-
-    if (error) throw error
-    return { success: true }
-  } catch (error) {
-    console.error('Error deleting activity:', error)
-    throw error
+  // Task Services
+  async getTasks(projectId: string, activityId?: string): Promise<Task[]> {
+    return this.repository.getTasks(projectId, activityId);
   }
-}
 
-// Tasks CRUD
-export async function getTasks(projectId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at')
-
-    if (error) throw error
-    return data || []
-  } catch (error) {
-    console.error('Error getting tasks:', error)
-    return []
+  async createTask(data: Omit<Task, 'id' | 'created_at' | 'updated_at'>): Promise<Task> {
+    return this.repository.createTask(data);
   }
-}
 
-export async function createTask(taskData: any) {
-  try {
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert(taskData)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error creating task:', error)
-    throw error
+  async updateTask(id: string, data: Partial<Task>): Promise<Task> {
+    return this.repository.updateTask(id, data);
   }
-}
 
-export async function updateTask(id: string, taskData: any) {
-  try {
-    const { data, error } = await supabase
-      .from('tasks')
-      .update(taskData)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error('Error updating task:', error)
-    throw error
+  async deleteTask(id: string): Promise<void> {
+    return this.repository.deleteTask(id);
   }
-}
 
-export async function deleteTask(id: string) {
-  try {
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', id)
-
-    if (error) throw error
-    return { success: true }
-  } catch (error) {
-    console.error('Error deleting task:', error)
-    throw error
+  // Helper Services
+  async getVendors() {
+    return this.repository.getVendors();
   }
-}
 
-// Vendors
-export async function getVendors() {
-  try {
-    const { data, error } = await supabase
-      .from('vendors')
-      .select('id, vendor_name as name, vendor_code as code')
-      .eq('is_active', true)
-      .order('vendor_name')
+  // Code Generation Logic
+  private async generateWBSCode(projectId: string, parentId: string | undefined, level: number): Promise<string> {
+    const projectCode = await this.repository.getProjectCode(projectId);
+    
+    if (!parentId) {
+      // Root level node
+      const siblings = await this.repository.getWBSNodesByParent(projectId, null);
+      const nextSequence = siblings.length + 1;
+      return `${projectCode}.${String(nextSequence).padStart(2, '0')}`;
+    }
 
-    if (error) throw error
-    return data || []
-  } catch (error) {
-    console.error('Error getting vendors:', error)
-    return []
+    // Child node
+    const parent = await this.repository.getWBSNodeById(parentId);
+    if (!parent) throw new Error('Parent node not found');
+    
+    const siblings = await this.repository.getWBSNodesByParent(projectId, parentId);
+    const nextSequence = siblings.length + 1;
+    return `${parent.code}.${String(nextSequence).padStart(2, '0')}`;
+  }
+
+  private async generateActivityCode(projectId: string, wbsNodeId: string): Promise<string> {
+    const wbsNode = await this.repository.getWBSNodeById(wbsNodeId);
+    if (!wbsNode) throw new Error('WBS node not found');
+    
+    const activities = await this.repository.getActivitiesByWBSNode(wbsNodeId);
+    const nextSequence = activities.length + 1;
+    return `${wbsNode.code}-A${String(nextSequence).padStart(2, '0')}`;
   }
 }

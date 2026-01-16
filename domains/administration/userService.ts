@@ -1,4 +1,6 @@
-import { createServiceClient } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase/server'
+
+// Fixed import path for server-side operations
 
 export interface CreateUserRequest {
   email: string
@@ -20,25 +22,25 @@ export interface UpdateUserRequest {
 }
 
 export class UserService {
-  private supabase = createServiceClient()
+  private async getClient() {
+    return await createServiceClient()
+  }
 
   async getUsers() {
-    // Get users first
-    const { data: users, error: usersError } = await this.supabase
+    const client = await this.getClient()
+    const { data: users, error: usersError } = await client
       .from('users')
       .select('*')
       .order('created_at', { ascending: false })
     
     if (usersError) throw usersError
     
-    // Get roles separately
-    const { data: roles, error: rolesError } = await this.supabase
+    const { data: roles, error: rolesError } = await client
       .from('roles')
       .select('*')
     
     if (rolesError) throw rolesError
     
-    // Join manually
     return users.map(user => ({
       ...user,
       roles: roles.find(role => role.id === user.role_id) || null
@@ -46,7 +48,8 @@ export class UserService {
   }
 
   async getRoles() {
-    const { data, error } = await this.supabase
+    const client = await this.getClient()
+    const { data, error } = await client
       .from('roles')
       .select('id, name, description')
       .order('name')
@@ -56,7 +59,8 @@ export class UserService {
   }
 
   async getDepartments() {
-    const { data, error } = await this.supabase
+    const client = await this.getClient()
+    const { data, error } = await client
       .from('departments')
       .select('id, name, code, description')
       .eq('is_active', true)
@@ -67,7 +71,8 @@ export class UserService {
   }
 
   async createUser(userData: CreateUserRequest) {
-    const { data: authUser, error: authError } = await this.supabase.auth.admin.createUser({
+    const client = await this.getClient()
+    const { data: authUser, error: authError } = await client.auth.admin.createUser({
       email: userData.email,
       password: userData.password,
       email_confirm: true
@@ -75,7 +80,7 @@ export class UserService {
 
     if (authError) throw authError
 
-    const { data: user, error: userError } = await this.supabase
+    const { data: user, error: userError } = await client
       .from('users')
       .insert({
         id: authUser.user.id,
@@ -95,7 +100,8 @@ export class UserService {
   }
 
   async updateUser(userId: string, userData: UpdateUserRequest) {
-    const { data, error } = await this.supabase
+    const client = await this.getClient()
+    const { data, error } = await client
       .from('users')
       .update({
         first_name: userData.first_name,
@@ -114,7 +120,8 @@ export class UserService {
   }
 
   async deactivateUser(userId: string) {
-    const { data, error } = await this.supabase
+    const client = await this.getClient()
+    const { data, error } = await client
       .from('users')
       .update({ is_active: false })
       .eq('id', userId)
@@ -126,7 +133,8 @@ export class UserService {
   }
 
   async assignRole(userId: string, roleId: string) {
-    const { data, error } = await this.supabase
+    const client = await this.getClient()
+    const { data, error } = await client
       .from('users')
       .update({ role_id: roleId })
       .eq('id', userId)
@@ -138,7 +146,8 @@ export class UserService {
   }
 
   async removeRole(userId: string) {
-    const { data, error } = await this.supabase
+    const client = await this.getClient()
+    const { data, error } = await client
       .from('users')
       .update({ role_id: null })
       .eq('id', userId)

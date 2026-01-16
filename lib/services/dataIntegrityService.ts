@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export interface DataIntegrityIssue {
   table_name: string
@@ -30,12 +30,12 @@ export class DataIntegrityService {
   /**
    * Validate company exists before creating/updating plant
    */
-  async validateCompanyExists(companyCodeId: string): Promise<boolean> {
+  async validateCompanyExists(companyCode: string): Promise<boolean> {
     try {
       const { data, error } = await this.supabase
         .from('company_codes')
-        .select('id')
-        .eq('id', companyCodeId)
+        .select('company_code')
+        .eq('company_code', companyCode)
         .single()
       
       if (error && error.code !== 'PGRST116') throw error
@@ -108,30 +108,20 @@ export class DataIntegrityService {
   }
 
   /**
-   * Fix orphaned plant relationships by inferring from plant codes
+   * Fix orphaned plant relationships by setting company_code from plant patterns
    */
   async fixOrphanedPlants(): Promise<{ fixed: number; errors: string[] }> {
     const errors: string[] = []
     let fixed = 0
 
     try {
-      // Get orphaned plants
+      // Get plants without company_code
       const { data: orphanedPlants } = await this.supabase
         .from('plants')
-        .select('id, plant_code, company_code_id')
-        .is('company_code_id', null)
+        .select('id, plant_code, company_code')
+        .is('company_code', null)
 
       if (!orphanedPlants) return { fixed: 0, errors: [] }
-
-      // Get all companies for mapping
-      const { data: companies } = await this.supabase
-        .from('company_codes')
-        .select('id, company_code')
-
-      const companyMap = companies?.reduce((acc, company) => {
-        acc[company.company_code] = company.id
-        return acc
-      }, {} as Record<string, string>) || {}
 
       // Fix each orphaned plant
       for (const plant of orphanedPlants) {
@@ -143,12 +133,10 @@ export class DataIntegrityService {
           else if (plant.plant_code.startsWith('C') || plant.plant_code.startsWith('P')) inferredCompanyCode = 'C001'
           else if (plant.plant_code.startsWith('B')) inferredCompanyCode = 'B001'
 
-          const companyId = companyMap[inferredCompanyCode]
-          
-          if (companyId) {
+          if (inferredCompanyCode) {
             const { error } = await this.supabase
               .from('plants')
-              .update({ company_code_id: companyId })
+              .update({ company_code: inferredCompanyCode })
               .eq('id', plant.id)
 
             if (error) {

@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase/server'
 import { getExchangeRate, convertCurrency } from './currencyService'
 
 export interface ConsolidationGroup {

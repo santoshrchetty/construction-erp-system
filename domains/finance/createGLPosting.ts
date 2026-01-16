@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export interface GLPostingPayload {
   company_code: string
@@ -11,8 +11,8 @@ export interface GLPostingPayload {
 
 export interface GLEntry {
   account_code: string
-  debit_amount?: number
-  credit_amount?: number
+  debit_credit: 'D' | 'C'
+  transaction_amount: number
   cost_center?: string
   project_code?: string
   description: string
@@ -23,8 +23,8 @@ export async function createGLPosting(payload: GLPostingPayload, userId: string)
   
   // Validate document balance
   const entries = payload.entries || []
-  const totalDebit = entries.reduce((sum, entry) => sum + (entry.debit_amount || 0), 0)
-  const totalCredit = entries.reduce((sum, entry) => sum + (entry.credit_amount || 0), 0)
+  const totalDebit = entries.reduce((sum, entry) => sum + (entry.debit_credit === 'D' ? entry.transaction_amount || 0 : 0), 0)
+  const totalCredit = entries.reduce((sum, entry) => sum + (entry.debit_credit === 'C' ? entry.transaction_amount || 0 : 0), 0)
   
   if (Math.abs(totalDebit - totalCredit) > 0.01) {
     throw new Error('Document must be balanced: debits must equal credits')
@@ -57,8 +57,8 @@ export async function createGLPosting(payload: GLPostingPayload, userId: string)
     const glEntries = entries.map(entry => ({
       document_id: document.id,
       account_code: entry.account_code,
-      debit_amount: entry.debit_amount || 0,
-      credit_amount: entry.credit_amount || 0,
+      debit_credit: entry.debit_credit,
+      transaction_amount: entry.transaction_amount,
       cost_center: entry.cost_center,
       project_code: entry.project_code,
       description: entry.description

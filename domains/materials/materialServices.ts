@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export interface CreateMaterialPayload {
   code: string
@@ -53,7 +53,7 @@ export async function getStockOverview(companyCode: string, filters: any) {
           plants!storage_locations_plant_id_fkey (
             plant_code,
             plant_name,
-            company_codes!plants_company_code_id_fkey (
+            company_codes!plants_company_code_fkey (
               company_code,
               company_name,
               currency

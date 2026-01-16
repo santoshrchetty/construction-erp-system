@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/lib/contexts/AuthContext'
-import { PermissionProvider } from '@/components/ui-permissions/PermissionContext'
-import ErrorBoundary from '@/components/ErrorBoundary'
+import { PermissionProvider } from '@/components/shared/permissions/PermissionContext'
+import ErrorBoundary from '@/components/ui/feedback/ErrorBoundary'
 
 export const metadata: Metadata = {
   title: 'Construction Management SaaS',

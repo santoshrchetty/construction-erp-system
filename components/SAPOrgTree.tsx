@@ -26,9 +26,9 @@ export default function SAPOrgTree() {
       const [companies, controlling, plants, storage, purchasing] = await Promise.all([
         supabase.from('company_codes').select('*').order('company_code'),
         supabase.from('controlling_areas').select('*').order('cocarea_code'),
-        supabase.from('plants').select('*, company:company_codes!company_code_id(company_code)').order('plant_code'),
+        supabase.from('plants').select('*, company_code').order('plant_code'),
         supabase.from('storage_locations').select('*, plant:plants(plant_code)').order('sloc_code'),
-        supabase.from('purchasing_organizations').select('*, company:company_codes!company_code_id(company_code)').order('porg_code')
+        supabase.from('purchasing_organizations').select('*, company_code').order('porg_code')
       ]);
 
       const tree: OrgNode[] = [];

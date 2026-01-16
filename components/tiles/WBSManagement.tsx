@@ -91,13 +91,7 @@ export function WBSManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">WBS Management</h1>
-          <p className="text-gray-600 mt-2">Manage Work Breakdown Structure elements by project</p>
-        </div>
+    <div className="p-6">
 
         {/* Project Selection */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
@@ -237,7 +231,6 @@ export function WBSManagement() {
             <p className="text-gray-600">Choose a project from the dropdown above to view and manage its WBS elements</p>
           </div>
         )}
-      </div>
     </div>
   )
 }

@@ -49,9 +49,9 @@ export default function SAPOrgTreeCRUD() {
       const [companies, controlling, plants, storage, purchasing] = await Promise.all([
         supabase.from('company_codes').select('*').order('company_code'),
         supabase.from('controlling_areas').select('*').order('cocarea_code'),
-        supabase.from('plants').select('*, company:company_codes!company_code_id(company_code)').order('plant_code'),
+        supabase.from('plants').select('*, company_code').order('plant_code'),
         supabase.from('storage_locations').select('*, plant:plants(plant_code)').order('sloc_code'),
-        supabase.from('purchasing_organizations').select('*, company:company_codes!company_code_id(company_code)').order('porg_code')
+        supabase.from('purchasing_organizations').select('*, company_code').order('porg_code')
       ]);
 
       const tree: OrgNode[] = [];
@@ -81,7 +81,7 @@ export default function SAPOrgTreeCRUD() {
         });
 
         plants.data?.forEach(plant => {
-          if (plant.company?.company_code === company.company_code) {
+          if (plant.company_code === company.company_code) {
             const plantNode: OrgNode = {
               id: plant.id,
               code: plant.plant_code,
@@ -111,7 +111,7 @@ export default function SAPOrgTreeCRUD() {
         });
 
         purchasing.data?.forEach(porg => {
-          if (porg.company?.company_code === company.company_code) {
+          if (porg.company_code === company.company_code) {
             companyNode.children?.push({
               id: porg.id,
               code: porg.porg_code,
@@ -550,7 +550,7 @@ export default function SAPOrgTreeCRUD() {
                           if (createNewPlant) {
                             const companyId = selectedNode?.id || formData.get('company_id') as string;
                             const { error } = await supabase.from('plants').insert({
-                              company_code_id: companyId,
+                              company_code: selectedNode?.data?.company_code || formData.get('company_code') as string,
                               plant_code: code,
                               plant_name: name,
                               plant_type: formData.get('plant_type') || 'PROJECT',
@@ -580,7 +580,7 @@ export default function SAPOrgTreeCRUD() {
                         } else if (createNodeType === 'purchasing') {
                           if (createNewPurchasing) {
                             const { error } = await supabase.from('purchasing_organizations').insert({
-                              company_code_id: selectedNode?.id,
+                              company_code: selectedNode?.data?.company_code,
                               porg_code: code,
                               porg_name: name,
                               is_active: true

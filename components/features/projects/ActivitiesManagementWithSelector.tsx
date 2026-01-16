@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Activity, Search, X, Filter } from 'lucide-react';
+import { ExportButton } from '@/components/shared/ExportButton';
+import { exportToExcel, generateExportFilename } from '@/lib/excel-export';
 
 interface Project {
   id: string;
@@ -145,6 +147,30 @@ export default function ActivitiesManagementWithSelector() {
       'critical': 'text-red-600',
     };
     return colors[priority] || 'text-gray-600';
+  };
+
+  const handleExport = () => {
+    const data = filteredActivities.map(a => ({
+      'Code': a.code,
+      'Name': a.name,
+      'Type': a.activity_type,
+      'Status': a.status,
+      'Priority': a.priority,
+      'Duration (Days)': a.duration_days || 0,
+      'Start Date': a.planned_start_date || '',
+      'Finish Date': a.planned_end_date || '',
+      'Progress %': a.progress_percentage || 0,
+      'Budget': a.budget_amount || 0,
+      'WBS Code': a.wbs_nodes?.code || '',
+      'WBS Name': a.wbs_nodes?.name || ''
+    }));
+    
+    const filename = generateExportFilename(
+      selectedProject?.code || 'PROJECT',
+      'Activities'
+    );
+    
+    exportToExcel(data, filename, 'Activities');
   };
 
   if (loading) {
@@ -313,41 +339,49 @@ export default function ActivitiesManagementWithSelector() {
           />
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          <select
-            value={wbsFilter}
-            onChange={(e) => setWBSFilter(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All WBS</option>
-            {wbsNodes.map(node => (
-              <option key={node.id} value={node.id}>{node.code}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap gap-2 items-center justify-between">
+          <div className="flex flex-wrap gap-2">
+            <select
+              value={wbsFilter}
+              onChange={(e) => setWBSFilter(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All WBS</option>
+              {wbsNodes.map(node => (
+                <option key={node.id} value={node.id}>{node.code}</option>
+              ))}
+            </select>
+            
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="not_started">Not Started</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="on_hold">On Hold</option>
+            </select>
+            
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
           
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Status</option>
-            <option value="not_started">Not Started</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="on_hold">On Hold</option>
-          </select>
-          
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Priority</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
-          </select>
+          <ExportButton 
+            onClick={handleExport} 
+            count={filteredActivities.length}
+            disabled={filteredActivities.length === 0}
+          />
         </div>
       </div>
 

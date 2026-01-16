@@ -1,6 +1,6 @@
 // Restore Point System for Construction App
-const { writeFileSync, readFileSync, existsSync, mkdirSync } = require('fs')
-const { join } = require('path')
+import { readdirSync, writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs'
+import { join } from 'path'
 
 interface RestorePoint {
   id: string
@@ -62,7 +62,7 @@ export class RestorePointManager {
   // List all restore points
   listRestorePoints(): RestorePoint[] {
     try {
-      const files = require('fs').readdirSync(this.restoreDir)
+      const files = readdirSync(this.restoreDir)
       return files
         .filter((f: string) => f.endsWith('.json'))
         .map((f: string) => {
@@ -141,4 +141,4 @@ const restoreBackup = (id) => {
   return restoreManager.restoreFromPoint(id)
 }
 
-module.exports = { RestorePointManager, restoreManager, createBackup, listBackups, restoreBackup }
+export { RestorePointManager, restoreManager, createBackup, listBackups, restoreBackup }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Building, DollarSign, TrendingUp, Activity, RefreshCw, Play, CheckCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 
 interface ProjectSummary {
   totalProjects: number
@@ -68,6 +68,7 @@ export function ProjectsOverviewDashboard() {
     totalBudget: 0
   })
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([])
+  const [categories, setCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   const loadDashboardData = async () => {
@@ -169,6 +170,25 @@ export function ProjectsOverviewDashboard() {
     }
   }
 
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('category_code')
+        .not('category_code', 'is', null)
+
+      if (error) {
+        console.error('Error fetching categories:', error)
+        return
+      }
+      
+      const uniqueCategories = [...new Set(data?.map(p => p.category_code) || [])]
+      setCategories(uniqueCategories)
+    } catch (error) {
+      console.error('Failed to load categories:', error)
+    }
+  }
+
   const handleProjectClick = async (project: Project) => {
     if (project.expanded) {
       // Collapse - remove WBS details
@@ -208,6 +228,7 @@ export function ProjectsOverviewDashboard() {
     loadDashboardData()
     fetchStats()
     fetchRecentProjects()
+    fetchCategories()
   }, [])
 
   return (
@@ -265,7 +286,9 @@ export function ProjectsOverviewDashboard() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
               <select className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500">
                 <option value="">All Categories</option>
-                {/* Dynamic options from API */}
+                {categories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
               </select>
             </div>
             <div className="col-span-1">
@@ -438,8 +461,8 @@ export function ProjectsOverviewDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {projects.map((project) => (
-                    <React.Fragment key={project.project_code}>
+                  {projects.map((project, index) => (
+                    <React.Fragment key={project.project_code || `project-${index}`}>
                       <tr className="hover:bg-gray-50 cursor-pointer"
                           onClick={() => handleProjectClick(project)}>
                         <td className="px-4 py-3 font-medium text-blue-600 hover:text-blue-800">
@@ -451,16 +474,16 @@ export function ProjectsOverviewDashboard() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right">${project.budget?.toLocaleString() || 'N/A'}</td>
-                        <td className="px-4 py-3 text-right">${project.total_costs.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right">${project.total_revenue.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right">${(project.total_costs || project.actual_cost || 0).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right">${(project.total_revenue || project.revenue || 0).toLocaleString()}</td>
                         <td className={`px-4 py-3 text-right font-medium ${
-                          project.net_amount >= 0 ? 'text-green-600' : 'text-red-600'
+                          (project.net_amount || (project.revenue || 0) - (project.actual_cost || 0)) >= 0 ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          ${project.net_amount.toLocaleString()}
+                          ${(project.net_amount || (project.revenue || 0) - (project.actual_cost || 0)).toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-right">{project.transaction_count}</td>
+                        <td className="px-4 py-3 text-right">{project.transaction_count || 0}</td>
                         <td className="px-4 py-3 text-sm text-gray-600">
-                          {new Date(project.last_posting_date).toLocaleDateString()}
+                          {project.last_posting_date ? new Date(project.last_posting_date).toLocaleDateString() : 'N/A'}
                         </td>
                       </tr>
                       {project.expanded && project.wbs_details?.map((wbs) => (
@@ -469,16 +492,16 @@ export function ProjectsOverviewDashboard() {
                             └─ {wbs.wbs_element}
                           </td>
                           <td className="px-4 py-3 text-right text-sm">-</td>
-                          <td className="px-4 py-3 text-right text-sm">${wbs.total_debits.toLocaleString()}</td>
-                          <td className="px-4 py-3 text-right text-sm">${wbs.total_credits.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-right text-sm">${(wbs.total_debits || 0).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-right text-sm">${(wbs.total_credits || 0).toLocaleString()}</td>
                           <td className={`px-4 py-3 text-right text-sm font-medium ${
-                            wbs.net_amount >= 0 ? 'text-green-600' : 'text-red-600'
+                            (wbs.net_amount || 0) >= 0 ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            ${wbs.net_amount.toLocaleString()}
+                            ${(wbs.net_amount || 0).toLocaleString()}
                           </td>
-                          <td className="px-4 py-3 text-right text-sm">{wbs.transaction_count}</td>
+                          <td className="px-4 py-3 text-right text-sm">{wbs.transaction_count || 0}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">
-                            {new Date(wbs.last_posting_date).toLocaleDateString()}
+                            {wbs.last_posting_date ? new Date(wbs.last_posting_date).toLocaleDateString() : 'N/A'}
                           </td>
                         </tr>
                       ))}

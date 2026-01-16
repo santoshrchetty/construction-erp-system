@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { repositories } from '@/lib/repositories'
+import { wbsApi } from '@/lib/wbs-api'
 
 interface ActivityFormProps {
   projectId: string
@@ -20,7 +20,10 @@ export default function ActivityForm({ projectId, wbsNodes, onSuccess, onCancel 
     planned_end_date: '',
     duration_days: 1,
     planned_hours: 0,
-    budget_amount: 0
+    budget_amount: 0,
+    activity_type: 'INTERNAL',
+    status: 'not_started',
+    priority: 'medium'
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,21 +31,23 @@ export default function ActivityForm({ projectId, wbsNodes, onSuccess, onCancel 
     setLoading(true)
 
     try {
-      await repositories.activities.create({
+      await wbsApi.createActivity({
         project_id: projectId,
         wbs_node_id: formData.wbs_node_id,
-        code: `ACT-${Date.now()}`,
         name: formData.name,
-        description: formData.description,
         planned_start_date: formData.planned_start_date,
         planned_end_date: formData.planned_end_date,
         duration_days: formData.duration_days,
         planned_hours: formData.planned_hours,
-        budget_amount: formData.budget_amount
+        budget_amount: formData.budget_amount,
+        activity_type: formData.activity_type,
+        status: formData.status,
+        priority: formData.priority
       })
       onSuccess()
     } catch (error) {
       console.error('Failed to create activity:', error)
+      alert('Failed to create activity. Please try again.')
     } finally {
       setLoading(false)
     }

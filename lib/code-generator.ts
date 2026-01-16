@@ -1,17 +1,10 @@
 // Code Generator Utilities
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables')
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey)
+import { createClient } from '@/lib/supabase/client'
 
 export async function generateActivityCode(projectId: string, wbsNodeId: string): Promise<string> {
   try {
+    const supabase = createClient()
+    
     // Get WBS node code
     const { data: wbsNode } = await supabase
       .from('wbs_nodes')
@@ -43,6 +36,8 @@ export async function generateActivityCode(projectId: string, wbsNodeId: string)
 
 export async function generateWBSCode(projectId: string, parentId?: string): Promise<string> {
   try {
+    const supabase = createClient()
+    
     // Get project code
     const { data: project } = await supabase
       .from('projects')

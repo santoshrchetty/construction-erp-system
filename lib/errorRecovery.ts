@@ -1,6 +1,8 @@
 // Error Recovery Middleware
 import { NextRequest, NextResponse } from 'next/server'
-import { restoreManager } from '@/lib/restorePoint'
+import { RestorePointManager } from '@/lib/restorePoint'
+
+const restoreManager = new RestorePointManager()
 
 interface ErrorRecoveryOptions {
   autoBackup?: boolean

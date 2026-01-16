@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { ProjectsRepository } from '@/types/repositories/projects.repository'
 import { WBSRepository } from '@/types/repositories/wbs.repository'
 import { BOQRepository } from '@/types/repositories/boq.repository'

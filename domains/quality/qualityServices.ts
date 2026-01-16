@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export async function getQualityInspections(companyCode: string, filters: any = {}) {
   const supabase = createServiceClient()

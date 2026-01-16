@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckSquare, Search, X, User } from 'lucide-react';
+import { ExportButton } from '@/components/shared/ExportButton';
+import { exportToExcel, generateExportFilename } from '@/lib/excel-export';
 
 interface Project {
   id: string;
@@ -138,6 +140,26 @@ export default function TasksManagementWithSelector() {
       'critical': 'text-red-600',
     };
     return colors[priority] || 'text-gray-600';
+  };
+
+  const handleExport = () => {
+    const data = filteredTasks.map(t => ({
+      'Activity Code': t.activities?.code || '',
+      'Activity Name': t.activities?.name || '',
+      'Task Name': t.name,
+      'Status': t.status,
+      'Priority': t.priority,
+      'Assigned To': t.assigned_to || '',
+      'Progress %': t.progress_percentage || 0,
+      'Checklist Item': t.checklist_item ? 'Yes' : 'No'
+    }));
+    
+    const filename = generateExportFilename(
+      selectedProject?.code || 'PROJECT',
+      'Tasks'
+    );
+    
+    exportToExcel(data, filename, 'Tasks');
   };
 
   if (loading) {
@@ -306,41 +328,49 @@ export default function TasksManagementWithSelector() {
           />
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setMyTasksOnly(!myTasksOnly)}
-            className={`px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 transition-colors ${
-              myTasksOnly 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <User className="w-3.5 h-3.5" />
-            My Tasks
-          </button>
+        <div className="flex flex-wrap gap-2 items-center justify-between">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setMyTasksOnly(!myTasksOnly)}
+              className={`px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 transition-colors ${
+                myTasksOnly 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              My Tasks
+            </button>
+            
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="not_started">Not Started</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="blocked">Blocked</option>
+            </select>
+            
+            <select
+              value={activityFilter}
+              onChange={(e) => setActivityFilter(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Activities</option>
+              {activities.map(activity => (
+                <option key={activity.id} value={activity.id}>{activity.code}</option>
+              ))}
+            </select>
+          </div>
           
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Status</option>
-            <option value="not_started">Not Started</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="blocked">Blocked</option>
-          </select>
-          
-          <select
-            value={activityFilter}
-            onChange={(e) => setActivityFilter(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Activities</option>
-            {activities.map(activity => (
-              <option key={activity.id} value={activity.id}>{activity.code}</option>
-            ))}
-          </select>
+          <ExportButton 
+            onClick={handleExport} 
+            count={filteredTasks.length}
+            disabled={filteredTasks.length === 0}
+          />
         </div>
       </div>
 

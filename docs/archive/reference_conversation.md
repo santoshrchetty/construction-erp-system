@@ -60,6 +60,21 @@
 ## Development Guidelines
 **Minimal Code Implementation Rule**: Write only the ABSOLUTE MINIMAL amount of code needed to address the requirement correctly, avoid verbose implementations and any code that doesn't directly contribute to the solution
 
+**Coding Instructions**:
+- DO NOT REMOVE ANY USER'S CODE INCLUDING TEST CASES unless explicitly requested or strongly necessary
+- DO NOT modify the same file in consecutive steps with small incremental changes - modify files with ALL necessary changes AT ONCE
+- DO NOT automatically add tests unless explicitly requested by the user
+- Try to respond with 1 to 3 implementation approaches before suggesting code
+- Always clarify requirements before diving into implementation
+- Always include import statements, dependencies, and configurations required
+- Make sure to include proper dependency management when developing
+- Do not generate long hash or binary code
+- Before writing to files, outline what sections will be modified and how
+- Prefer coding in the same style as existing code, refer to linter configurations
+- Make sure code is syntactically correct and can be run or compiled
+- Respect the project's existing architecture patterns
+- Minimize comments by making code itself readable and intuitive
+
 ## Root Cause: Tile Component Loading Issue
 **Primary Issue**: Component File Name Mismatch
 - Tile system maps `tiles.construction_action` → `components/tiles/{construction_action}.tsx`

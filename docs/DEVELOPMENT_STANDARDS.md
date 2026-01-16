@@ -156,6 +156,125 @@ export function updateProjectStatus(
 - Prefer simple, direct solutions over comprehensive frameworks
 - Only add features when explicitly requested by user
 
+### Server-Side Code Generation
+
+**CRITICAL RULE**: All code generation (project codes, activity codes, WBS codes, etc.) MUST happen server-side in the service layer.
+
+**Why Server-Side Generation**:
+
+**1. Security**
+- Database credentials protected - client never has direct database access
+- Business logic hidden - code generation rules not exposed to browser
+- Prevents tampering - users can't manipulate code generation in DevTools
+
+**2. Data Integrity**
+- Single source of truth - server has authoritative view of existing codes
+- Race condition prevention - server handles concurrent requests properly
+- Atomic operations - code generation + insertion happens in one transaction
+- No duplicate codes - server ensures uniqueness before committing
+
+**3. Performance**
+- Reduced client bundle - no database client library in browser
+- Faster page loads - less JavaScript to parse and execute
+- Better caching - API responses can be cached at CDN/proxy level
+
+**4. Consistency**
+- Centralized logic - one place to update code generation rules
+- Uniform behavior - all clients (web, mobile, API) use same logic
+- Easier testing - test once on server vs. multiple client platforms
+
+**5. Reliability**
+- No client-side failures - network issues don't break code generation
+- Proper error handling - server can retry database queries
+- Transaction support - rollback if code generation or insert fails
+
+**Race Condition Example**:
+```typescript
+// ❌ CLIENT-SIDE PROBLEM:
+// User A: Queries DB → Sees 3 activities → Generates "A04"
+// User B: Queries DB → Sees 3 activities → Generates "A04" (same time)
+// User A: Inserts "A04" → Success
+// User B: Inserts "A04" → DUPLICATE ERROR ❌
+
+// ✅ SERVER-SIDE SOLUTION:
+// User A: Sends data → Server locks → Queries → Generates "A04" → Inserts → Unlocks
+// User B: Sends data → Server locks → Queries → Generates "A05" → Inserts → Unlocks
+// Both succeed ✅
+```
+
+**Implementation Pattern**:
+
+```typescript
+// ❌ WRONG: Client-side code generation
+// components/ActivityForm.tsx
+import { supabase } from '@/lib/supabase/client'
+
+const handleSubmit = async () => {
+  // Client queries database
+  const { data: activities } = await supabase
+    .from('activities')
+    .select('code')
+    .eq('wbs_node_id', wbsNodeId)
+  
+  // Client generates code
+  const nextCode = `${wbsCode}-A${String(activities.length + 1).padStart(2, '0')}`
+  
+  // Client sends code to API
+  await fetch('/api/activities', {
+    method: 'POST',
+    body: JSON.stringify({ ...data, code: nextCode })
+  })
+}
+
+// ✅ CORRECT: Server-side code generation
+// components/ActivityForm.tsx
+const handleSubmit = async () => {
+  // Client sends only business data (NO code)
+  await fetch('/api/activities', {
+    method: 'POST',
+    body: JSON.stringify(data) // No code field
+  })
+}
+
+// domains/wbs/wbsServices.ts
+export class WBSService {
+  async createActivity(data: Omit<Activity, 'id' | 'code'>): Promise<Activity> {
+    // Server generates code atomically
+    const code = await this.generateActivityCode(data.project_id, data.wbs_node_id)
+    
+    // Server inserts with generated code
+    return this.repository.createActivity({ ...data, code })
+  }
+  
+  private async generateActivityCode(projectId: string, wbsNodeId: string): Promise<string> {
+    const wbsNode = await this.repository.getWBSNodeById(wbsNodeId)
+    const activities = await this.repository.getActivitiesByWBSNode(wbsNodeId)
+    return `${wbsNode.code}-A${String(activities.length + 1).padStart(2, '0')}`
+  }
+}
+```
+
+**Enforcement Rules**:
+1. **Client components** MUST NOT generate codes - only send business data
+2. **Service layer** MUST handle all code generation logic
+3. **Code generation** MUST happen in same transaction as data insertion
+4. **Repository layer** MUST provide helper methods for code generation queries
+5. **API routes** MUST NOT accept codes from client - service generates them
+
+**Migration Checklist**:
+- [ ] Remove client-side code generation functions
+- [ ] Remove code field from client forms
+- [ ] Add code generation to service layer
+- [ ] Update API to reject client-provided codes
+- [ ] Test concurrent requests for race conditions
+
+**This Prevents**:
+- Duplicate codes from race conditions
+- Security vulnerabilities from exposed database access
+- Client-side failures breaking code generation
+- Inconsistent code formats across different clients
+- Performance issues from large client bundles
+
 ## Standardization Rules
 
 ### 1. Naming Conventions

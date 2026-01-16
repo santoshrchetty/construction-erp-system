@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { handleProjects } from './handler'
 
 export async function GET(request: NextRequest) {
   try {
+    const url = new URL(request.url)
+    const action = url.searchParams.get('action')
+    
+    if (action) {
+      const result = await handleProjects(action, {}, 'GET')
+      return NextResponse.json({ success: true, data: result })
+    }
+    
     const supabase = await createServiceClient()
     const { data, error } = await supabase
       .from('projects')
@@ -19,10 +28,26 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('POST request received')
+  
   try {
-    const body = await request.json()
-    const supabase = await createServiceClient()
+    const url = new URL(request.url)
+    const action = url.searchParams.get('action')
+    console.log('Action:', action)
     
+    const body = await request.json()
+    console.log('Body:', body)
+    
+    console.log('Supabase client created')
+
+    if (action) {
+      console.log(`Processing ${action} action`)
+      const result = await handleProjects(action, body, 'POST')
+      return NextResponse.json({ success: true, data: result })
+    }
+
+    // Default: Create new project
+    const supabase = await createServiceClient()
     const { data, error } = await supabase
       .from('projects')
       .insert(body)
@@ -33,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ project: data })
   } catch (error) {
-    console.error('Project creation error:', error)
-    return NextResponse.json({ error: 'Failed to create project' }, { status: 500 })
+    console.error('Projects API error:', error)
+    return NextResponse.json({ error: 'Failed to process request' }, { status: 500 })
   }
 }

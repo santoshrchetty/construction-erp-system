@@ -53,11 +53,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#F7F7F7] via-white to-[#F0F8FF] flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-8 md:p-10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Construction Management</h1>
-          <p className="text-gray-600">Sign in to continue</p>
+          <h1 className="text-4xl font-light text-[#32363A] mb-3 tracking-tight">Nexus ERP</h1>
+          <div className="h-1 w-16 bg-gradient-to-r from-[#0A6ED1] to-[#0080FF] mx-auto mb-4 rounded-full"></div>
+          <p className="text-[#6A6D70] font-light">Sign in to continue</p>
         </div>
 
         {error && (
@@ -69,9 +70,6 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
             <input
               id="email"
               type="email"
@@ -82,13 +80,11 @@ export default function LoginPage() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               placeholder="Enter your email"
               disabled={loading}
+              aria-label="Email Address"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
             <div className="relative">
               <input
                 id="password"
@@ -100,6 +96,7 @@ export default function LoginPage() {
                 className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="Enter your password"
                 disabled={loading}
+                aria-label="Password"
               />
               <button
                 type="button"
@@ -115,7 +112,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading || attempts >= 5}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-[#0A6ED1] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#0080FF] focus:ring-2 focus:ring-[#0A6ED1] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-[0_2px_8px_rgba(10,110,209,0.3)] hover:shadow-[0_4px_12px_rgba(10,110,209,0.4)]"
           >
             {loading ? (
               <div className="flex items-center justify-center">

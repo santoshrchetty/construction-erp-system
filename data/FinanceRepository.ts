@@ -134,8 +134,8 @@ export class FinanceRepository {
         header_text: document.header_text,
         currency_code: document.currency_code || 'USD',
         status: document.status,
-        total_debit: document.entries.reduce((sum, e) => sum + (e.debit_amount || 0), 0),
-        total_credit: document.entries.reduce((sum, e) => sum + (e.credit_amount || 0), 0),
+        total_debit: document.entries.reduce((sum, e) => sum + (e.debit_credit === 'D' ? e.transaction_amount || 0 : 0), 0),
+        total_credit: document.entries.reduce((sum, e) => sum + (e.debit_credit === 'C' ? e.transaction_amount || 0 : 0), 0),
         created_by: userId,
         posted_by: document.status === 'POSTED' ? userId : null,
         posted_at: document.status === 'POSTED' ? new Date().toISOString() : null
@@ -149,8 +149,8 @@ export class FinanceRepository {
     const entriesData = document.entries.map(entry => ({
       document_id: docData.id,
       account_code: entry.account_code,
-      debit_amount: entry.debit_amount || 0,
-      credit_amount: entry.credit_amount || 0,
+      debit_credit: entry.debit_credit || (entry.debit_amount > 0 ? 'D' : 'C'),
+      transaction_amount: entry.transaction_amount || Math.max(entry.debit_amount || 0, entry.credit_amount || 0),
       cost_center: entry.cost_center,
       project_code: entry.project_code,
       wbs_element: entry.wbs_element,
@@ -221,8 +221,7 @@ export class FinanceRepository {
     // Reverse entries (swap debit/credit)
     const reversalEntries = originalDoc.entries.map((entry: any) => ({
       ...entry,
-      debit_amount: entry.credit_amount,
-      credit_amount: entry.debit_amount,
+      debit_credit: entry.debit_credit === 'D' ? 'C' : 'D',
       description: `Reversal: ${entry.description}`
     }))
 

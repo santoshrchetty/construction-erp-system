@@ -22,10 +22,13 @@ export interface AuthField {
 }
 
 export class RoleService {
-  private supabase = createServiceClient()
+  private async getClient() {
+    return await createServiceClient()
+  }
 
   async getRoles(): Promise<Role[]> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('roles')
       .select('*')
       .order('name')
@@ -35,7 +38,8 @@ export class RoleService {
   }
 
   async createRole(role: Omit<Role, 'id'>): Promise<Role> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('roles')
       .insert(role)
       .select()
@@ -46,7 +50,8 @@ export class RoleService {
   }
 
   async updateRole(roleId: string, role: Partial<Role>): Promise<Role> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('roles')
       .update(role)
       .eq('id', roleId)
@@ -58,7 +63,8 @@ export class RoleService {
   }
 
   async deleteRole(roleId: string): Promise<void> {
-    const { error } = await this.supabase
+    const supabase = await this.getClient()
+    const { error } = await supabase
       .from('roles')
       .delete()
       .eq('id', roleId)
