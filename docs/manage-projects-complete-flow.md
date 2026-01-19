@@ -374,3 +374,108 @@ database/setup-manage-projects-tile.sql
 - ✅ `database/setup-manage-projects-tile.sql` - Ready to run
 
 **Next Step:** Run the SQL script to create the tile in the database!
+
+
+## 🗄️ Database Schema Reference
+
+### Table: `companies` (Parent/Group Companies)
+```sql
+- company_id (UUID, PK)
+- grpcompany_name (VARCHAR) ← Group name: "ABC Construction Group", "Bramen Group"
+- industry (VARCHAR)
+- country (VARCHAR)
+- is_active (BOOLEAN)
+- created_at (TIMESTAMP)
+```
+
+### Table: `company_codes` (Individual Companies)
+```sql
+- id (UUID, PK)
+- company_code (VARCHAR) ← "C001", "C002", "B001", "N001"
+- company_name (VARCHAR) ← "ABC Construction Ltd", "ABC Infrastructure"
+- company_id (UUID, FK → companies.company_id)
+- legal_entity_name (VARCHAR)
+- currency (VARCHAR)
+- country (VARCHAR)
+- is_active (BOOLEAN)
+```
+
+### Table: `projects`
+```sql
+- id (UUID, PK)
+- code (VARCHAR) ← Project code: "P001", "HW0001"
+- name (VARCHAR)
+- company_code_id (UUID, FK → company_codes.id)
+- project_type (VARCHAR)
+- status (VARCHAR)
+- start_date (DATE)
+- planned_end_date (DATE)
+- budget (NUMERIC)
+- created_at (TIMESTAMP)
+```
+
+### Key Relationships
+```
+companies (1) ──< (N) company_codes
+  └─ grpcompany_name        └─ company_code, company_name
+
+company_codes (1) ──< (N) projects
+  └─ id                     └─ company_code_id
+```
+
+## 📊 Data Flow Example
+
+**User creates a project:**
+```
+1. User selects: "C001 - ABC Construction Ltd" from dropdown
+2. Frontend sends: { company_code: "C001", ... }
+3. Backend queries company_codes to get id
+4. Saves project with company_code_id = <uuid of C001>
+5. When listing projects, joins:
+   projects.company_code_id → company_codes.id
+   to fetch company_code and company_name
+```
+
+**Display in UI:**
+```
+Projects List Table:
+┌──────────────┬──────────────┬─────────────────────┐
+│ Project Code │ Company Code │ Name                │
+├──────────────┼──────────────┼─────────────────────┤
+│ P001         │ C001         │ Highway Project     │
+│ HW0001       │ C002         │ Bridge Construction │
+└──────────────┴──────────────┴─────────────────────┘
+```
+
+## 🔑 Important Notes
+
+### Column Naming Convention
+- `companies.grpcompany_name` = Parent/Group company name
+- `company_codes.company_name` = Individual company name
+- `company_codes.company_code` = Company identifier code
+- `projects.code` = Project identifier code
+
+### Why grpcompany_name?
+To avoid confusion with `company_codes.company_name`. The "grp" prefix clearly indicates this is the parent group company name.
+
+### Foreign Key Strategy
+- Projects reference `company_codes.id` (not company_code string)
+- This ensures referential integrity
+- Allows company_code changes without breaking project links
+
+## 🎯 UI Labels (Final)
+
+**Projects List Table Headers:**
+- "Project Code" (displays `projects.code`)
+- "Company Code" (displays `company_codes.company_code` via join)
+- "Name" (displays `projects.name`)
+
+**Create/Edit Form Labels:**
+- "Project Code *" (input for `projects.code`)
+- "Company Code *" (dropdown showing `company_code - company_name`)
+- "Project Name *" (input for `projects.name`)
+
+---
+
+**Last Updated:** After grpcompany_name migration
+**Status:** ✅ Production Ready
