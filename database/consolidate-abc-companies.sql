@@ -3,11 +3,11 @@
 
 -- Step 1: Move C004 to ABC Construction Group to consolidate all ABC companies
 UPDATE company_codes 
-SET company_id = (SELECT company_id FROM companies WHERE company_name = 'ABC Construction Group' LIMIT 1)
+SET company_id = (SELECT company_id FROM companies WHERE grpcompany_name = 'ABC Construction Group' LIMIT 1)
 WHERE company_code = 'C004';
 
 -- Step 2: Remove the unused "ABC Group" parent company
-DELETE FROM companies WHERE company_name = 'ABC Group';
+DELETE FROM companies WHERE grpcompany_name = 'ABC Group';
 
 -- Step 3: Add company_code to all master data tables
 ALTER TABLE project_categories ADD COLUMN IF NOT EXISTS company_code VARCHAR(10) DEFAULT 'C001';
@@ -77,14 +77,14 @@ $$ LANGUAGE plpgsql;
 
 -- Step 5: Final verification - should show consolidated structure
 SELECT 
-    c.company_name as parent_company,
+    c.grpcompany_name as parent_company,
     COUNT(*) as company_codes_count,
     STRING_AGG(cc.company_code, ', ' ORDER BY cc.company_code) as company_codes
 FROM companies c
 JOIN company_codes cc ON c.company_id = cc.company_id
 WHERE cc.is_active = true
-GROUP BY c.company_name
-ORDER BY c.company_name;
+GROUP BY c.grpcompany_name
+ORDER BY c.grpcompany_name;
 
 -- Step 6: Test copy function within ABC Construction Group
 -- SELECT copy_project_master_data('C001', 'C002');

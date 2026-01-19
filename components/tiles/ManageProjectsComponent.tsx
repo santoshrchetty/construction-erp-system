@@ -192,7 +192,8 @@ export function ManageProjectsComponent() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project Code</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -204,6 +205,7 @@ export function ManageProjectsComponent() {
                   {projects.map((project) => (
                     <tr key={project.id} className="hover:bg-gray-50">
                       <td className="px-4 py-4 text-sm font-mono">{project.code}</td>
+                      <td className="px-4 py-4 text-sm font-mono">{project.company?.company_code || '-'}</td>
                       <td className="px-4 py-4 text-sm font-medium">{project.name}</td>
                       <td className="px-4 py-4 text-sm capitalize">{project.project_type}</td>
                       <td className="px-4 py-4 text-sm">

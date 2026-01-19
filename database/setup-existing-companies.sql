@@ -7,7 +7,7 @@ ALTER TABLE company_codes ADD COLUMN IF NOT EXISTS company_id UUID;
 -- Step 2: Create companies table (parent companies)
 CREATE TABLE IF NOT EXISTS companies (
     company_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_name VARCHAR(200) NOT NULL,
+    grpcompany_name VARCHAR(200) NOT NULL,
     industry VARCHAR(50),
     country VARCHAR(2),
     is_active BOOLEAN DEFAULT true,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS companies (
 );
 
 -- Step 3: Insert parent companies based on your existing data
-INSERT INTO companies (company_name, industry, country) 
+INSERT INTO companies (grpcompany_name, industry, country) 
 VALUES 
 ('ABC Group', 'CONSTRUCTION', 'IN'),  -- Parent for C001, C002
 ('Bramen Group', 'CONSTRUCTION', 'IN') -- Parent for B001
@@ -23,11 +23,11 @@ ON CONFLICT DO NOTHING;
 
 -- Step 4: Link existing company codes to parent companies
 UPDATE company_codes 
-SET company_id = (SELECT company_id FROM companies WHERE company_name = 'ABC Group')
+SET company_id = (SELECT company_id FROM companies WHERE grpcompany_name = 'ABC Group')
 WHERE company_code IN ('C001', 'C002') AND company_id IS NULL;
 
 UPDATE company_codes 
-SET company_id = (SELECT company_id FROM companies WHERE company_name = 'Bramen Group')
+SET company_id = (SELECT company_id FROM companies WHERE grpcompany_name = 'Bramen Group')
 WHERE company_code = 'B001' AND company_id IS NULL;
 
 -- Step 5: Add company_code to project master data tables
@@ -98,7 +98,7 @@ SELECT
     cc.company_code,
     cc.company_name,
     cc.legal_entity_name,
-    c.company_name as parent_company,
+    c.grpcompany_name as parent_company,
     cc.currency,
     cc.country
 FROM company_codes cc
