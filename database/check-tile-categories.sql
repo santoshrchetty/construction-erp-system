@@ -1,12 +1,9 @@
--- Check current tile categories
+-- Check all unique tile categories in the database
 SELECT DISTINCT tile_category, COUNT(*) as tile_count
-FROM tiles 
+FROM tiles
 WHERE is_active = true
 GROUP BY tile_category
 ORDER BY tile_category;
 
--- Check approval configuration tile specifically
-SELECT title, tile_category, auth_object
-FROM tiles 
-WHERE title ILIKE '%approval%config%' OR title ILIKE '%config%approval%'
-ORDER BY title;
+-- Check if categories match the hardcoded list
+-- Hardcoded: Administration, Project Management, Procurement, Materials, Warehouse, Finance, Quality, Safety, Human Resources, Configuration

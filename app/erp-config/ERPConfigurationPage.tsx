@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Settings, Database, Users, Shield, FileText, BarChart3 } from 'lucide-react';
-import { NumberRangeMaintenance } from '../../components/features/administration/NumberRangeMaintenance';
+import NumberRangeMaintenance from '../../components/features/administration/NumberRangeMaintenance';
 
 const ERPConfigurationPage: React.FC = () => {
   const [activeModule, setActiveModule] = useState('number-ranges');

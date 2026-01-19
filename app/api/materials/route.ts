@@ -10,28 +10,82 @@ const supabase = createClient(
 export const GET = withAuth(async (request: NextRequest, context) => {
   try {
     const { searchParams } = new URL(request.url)
-    const company = searchParams.get('company') || 'C001'
     const id = searchParams.get('id')
     const search = searchParams.get('search')
+    const plantId = searchParams.get('plantId')
+    const storageLocationId = searchParams.get('storageLocationId')
+    const withStock = searchParams.get('withStock') === 'true'
+    const limit = parseInt(searchParams.get('limit') || '50')
     
-    let query = supabase
-      .from('material_master')
-      .select('*')
-      .eq('company_code', company)
-      .eq('is_active', true)
-    
+    // Single material lookup
     if (id) {
-      query = query.eq('material_code', id)
-      const { data, error } = await query.single()
+      const { data, error } = await supabase
+        .from('material_master_view')
+        .select('*')
+        .eq('material_code', id)
+        .eq('is_active', true)
+        .single()
       if (error) throw error
       return NextResponse.json({ success: true, data })
     }
     
-    if (search) {
-      query = query.ilike('material_name', `%${search}%`)
+    // Search with optional stock info
+    if (withStock) {
+      let query = supabase
+        .from('materials')
+        .select(`
+          id,
+          material_code,
+          material_name,
+          description,
+          base_uom,
+          standard_price,
+          material_group,
+          category,
+          material_storage_data(
+            current_stock,
+            reserved_stock,
+            available_stock,
+            storage_location_id,
+            storage_locations(sloc_code, sloc_name, plant_id)
+          )
+        `)
+        .eq('is_active', true)
+      
+      if (search) {
+        query = query.or(`material_code.ilike.%${search}%,material_name.ilike.%${search}%`)
+      }
+      
+      const { data, error } = await query.limit(limit)
+      if (error) throw error
+      
+      // Filter by plant/storage location
+      let filteredData = data
+      if (plantId || storageLocationId) {
+        filteredData = data?.map(material => ({
+          ...material,
+          material_storage_data: material.material_storage_data?.filter((stock: any) => {
+            if (storageLocationId) return stock.storage_location_id === storageLocationId
+            if (plantId) return stock.storage_locations?.plant_id === plantId
+            return true
+          })
+        })).filter(m => m.material_storage_data && m.material_storage_data.length > 0)
+      }
+      
+      return NextResponse.json({ success: true, data: filteredData })
     }
     
-    const { data, error } = await query.order('material_name').limit(50)
+    // Simple search from view
+    let query = supabase
+      .from('material_master_view')
+      .select('*')
+      .eq('is_active', true)
+    
+    if (search) {
+      query = query.or(`material_code.ilike.%${search}%,material_name.ilike.%${search}%`)
+    }
+    
+    const { data, error } = await query.order('material_name').limit(limit)
     if (error) throw error
     return NextResponse.json({ success: true, data })
   } catch (error) {

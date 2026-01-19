@@ -1,15 +1,34 @@
 // Handler Layer - Business Orchestration Only
 import * as projectFinanceServices from '@/domains/projects/projectFinanceServices'
 import * as projectCreationServices from '@/domains/projects/projectCreationService'
+import * as projectCrudService from '@/domains/projects/projectCrudService'
 
 export async function handleProjects(action: string, body: any, method: string = 'GET') {
   try {
     switch (action) {
+      case 'list':
+        return await projectCrudService.getAllProjects(body.companyId)
+      
+      case 'get':
+        return await projectCrudService.getProjectById(body.id)
+      
       case 'create':
         if (method === 'POST') {
-          return await projectCreationServices.createProject(body)
+          return await projectCrudService.createProject(body, body.userId)
         }
         return { error: 'POST method required for create action' }
+      
+      case 'update':
+        if (method === 'PUT' || method === 'POST') {
+          return await projectCrudService.updateProject(body.id, body, body.userId)
+        }
+        return { error: 'PUT/POST method required for update action' }
+      
+      case 'delete':
+        if (method === 'DELETE' || method === 'POST') {
+          return await projectCrudService.deleteProject(body.id)
+        }
+        return { error: 'DELETE/POST method required for delete action' }
 
       case 'categories':
         return await projectCreationServices.getProjectCategories()

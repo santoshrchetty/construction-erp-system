@@ -52,15 +52,15 @@ export default function ProjectMaster() {
   }, []);
 
   const fetchProjects = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('projects')
       .select(`
         *,
-        company:company_codes(company_code, company_name),
-        purchasing_org:purchasing_organizations(porg_code, porg_name)
+        company:company_code_id(company_code, company_name)
       `)
       .order('created_at', { ascending: false });
     
+    if (error) console.error('Error fetching projects:', error);
     if (data) setProjects(data);
   };
 
@@ -83,25 +83,48 @@ export default function ProjectMaster() {
   const saveProject = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingProject) {
-      await supabase
-        .from('projects')
-        .update(formData)
-        .eq('id', editingProject.id);
-    } else {
-      await supabase
-        .from('projects')
-        .insert(formData);
-    }
+    try {
+      if (editingProject) {
+        const response = await fetch(`/api/projects?action=update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...formData, id: editingProject.id })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
+      } else {
+        const response = await fetch(`/api/projects?action=create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
+      }
 
-    resetForm();
-    fetchProjects();
+      resetForm();
+      fetchProjects();
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('Failed to save project');
+    }
   };
 
   const deleteProject = async (id: string) => {
     if (confirm('Delete this project? This will also delete all related data.')) {
-      await supabase.from('projects').delete().eq('id', id);
-      fetchProjects();
+      try {
+        const response = await fetch(`/api/projects?action=delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
+        fetchProjects();
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Failed to delete project');
+      }
     }
   };
 
@@ -155,24 +178,15 @@ export default function ProjectMaster() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold">
-            {action === 'create' ? 'Create New Project' : 
-             action === 'edit' ? 'Modify Projects' : 'Project Master'}
-          </h1>
-          <p className="text-gray-600">
-            {action === 'create' ? 'Add a new construction project' :
-             action === 'edit' ? 'Edit existing project details' :
-             'Manage all construction projects'}
-          </p>
+          <h1 className="text-2xl font-bold">Manage Projects</h1>
+          <p className="text-gray-600">Create, view, edit, and manage construction projects</p>
         </div>
-        {action !== 'create' && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Add Project
-          </button>
-        )}
+        <button
+          onClick={() => setShowForm(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Add Project
+        </button>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -232,7 +246,17 @@ export default function ProjectMaster() {
               {editingProject ? 'Edit Project' : 'Add Project'}
             </h3>
             <form onSubmit={saveProject} className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Project Code</label>
+                  <input
+                    type="text"
+                    value={formData.code}
+                    onChange={(e) => setFormData({...formData, code: e.target.value})}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Company Code</label>
                   <select
@@ -248,32 +272,6 @@ export default function ProjectMaster() {
                       </option>
                     ))}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Purchasing Org</label>
-                  <select
-                    value={formData.purchasing_org_id}
-                    onChange={(e) => setFormData({...formData, purchasing_org_id: e.target.value})}
-                    className="w-full border rounded px-3 py-2"
-                    required
-                  >
-                    <option value="">Select Purch Org</option>
-                    {purchasingOrgs.map((org) => (
-                      <option key={org.id} value={org.id}>
-                        {org.porg_code} - {org.porg_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Project Code</label>
-                  <input
-                    type="text"
-                    value={formData.code}
-                    onChange={(e) => setFormData({...formData, code: e.target.value})}
-                    className="w-full border rounded px-3 py-2"
-                    required
-                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

@@ -63,6 +63,7 @@ const ActivitiesManagement = lazy(() => import('../features/projects/ActivitiesM
 const TasksManagement = lazy(() => import('../features/projects/TasksManagementWithSelector'))
 const ScheduleManagement = lazy(() => import('../features/projects/ScheduleManagementWithSelector'))
 const CostManagement = lazy(() => import('../features/projects/CostManagementWithSelector'))
+const ResourcePlanningManager = lazy(() => import('../features/projects/ResourcePlanningWithSelector'))
 
 interface ConstructionTile {
   id: string
@@ -98,8 +99,10 @@ export default function EnhancedConstructionTiles() {
 
   const fetchTiles = async () => {
     try {
-      const response = await fetch('/api/tiles-list')
+      const response = await fetch('/api/tiles')
       const data = await response.json()
+      
+      console.log('API Response:', data)
       
       if (response.ok && data.success) {
         setTiles(data.tiles || [])
@@ -145,29 +148,53 @@ export default function EnhancedConstructionTiles() {
     return iconMap[iconName] || Icons.Square
   }
 
+  // Generate categories dynamically from tiles with proper ordering
+  const categoryIcons: { [key: string]: string } = {
+    'Configuration': '🔧',
+    'Administration': '⚙️',
+    'Finance': '💰',
+    'Materials': '📦',
+    'Procurement': '🛒',
+    'Warehouse': '🏪',
+    'Project Management': '📋',
+    'Quality': '✅',
+    'Safety': '🛡️',
+    'Human Resources': '👥',
+    'Reporting': '📊'
+  }
+
+  const categoryOrder: { [key: string]: number } = {
+    'Configuration': 1,
+    'Administration': 2,
+    'Finance': 3,
+    'Materials': 4,
+    'Procurement': 5,
+    'Warehouse': 6,
+    'Project Management': 7,
+    'Quality': 8,
+    'Safety': 9,
+    'Human Resources': 10,
+    'Reporting': 11
+  }
+
+  const uniqueCategories = Array.from(new Set(tiles.map(t => t.tile_category).filter(Boolean)))
+    .sort((a, b) => (categoryOrder[a] || 999) - (categoryOrder[b] || 999))
+  
   const categories = [
     { key: 'all', label: 'All Modules', icon: '🏗️' },
-    { key: 'Administration', label: 'Administration', icon: '⚙️' },
-    { key: 'Project Management', label: 'Project Management', icon: '📋' },
-    { key: 'Procurement', label: 'Procurement', icon: '🛒' },
-    { key: 'Materials', label: 'Materials', icon: '📦' },
-    { key: 'Warehouse', label: 'Warehouse', icon: '🏪' },
-    { key: 'Finance', label: 'Finance', icon: '💰' },
-    { key: 'Quality', label: 'Quality', icon: '✅' },
-    { key: 'Safety', label: 'Safety', icon: '🛡️' },
-    { key: 'Human Resources', label: 'Human Resources', icon: '👥' },
-    { key: 'Configuration', label: 'Configuration', icon: '🔧' }
+    ...uniqueCategories.map(cat => ({
+      key: cat,
+      label: cat,
+      icon: categoryIcons[cat] || '📁'
+    }))
   ]
 
-  const authorizedTiles = tiles.filter(tile => tile.has_authorization)
   const filteredTiles = selectedCategory === 'all' 
-    ? authorizedTiles 
-    : authorizedTiles.filter(tile => tile.tile_category === selectedCategory)
+    ? tiles 
+    : tiles.filter(tile => tile.tile_category === selectedCategory)
 
   const handleTileClick = (tile: ConstructionTile) => {
-    if (tile.has_authorization) {
-      setActiveComponent(tile.title)
-    }
+    setActiveComponent(tile.title)
   }
 
   const handleProjectSelect = (projectId: string, projectName: string) => {
@@ -178,6 +205,9 @@ export default function EnhancedConstructionTiles() {
   const renderActiveComponent = () => {
     switch (activeComponent) {
       // Project Management
+      case 'Manage Projects':
+        const { ManageProjectsComponent } = require('./ManageProjectsComponent')
+        return <ManageProjectsComponent />
       case 'Create Project':
         return (
           <ProjectForm 
@@ -217,6 +247,8 @@ export default function EnhancedConstructionTiles() {
         return <TasksManagement />
       case 'Schedule':
         return <ScheduleManagement />
+      case 'Resource Planning':
+        return <ResourcePlanningManager />
       case 'Cost Management':
         return <CostManagement />
       case 'Reports':

@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single()
       
       if (error) {
-        console.error('Profile fetch error:', error)
+        // Silently handle - profile is optional for tiles functionality
         return
       }
       

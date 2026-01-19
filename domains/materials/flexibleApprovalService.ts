@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 export interface ApprovalLevel {
   id?: string
@@ -33,7 +33,7 @@ export interface ApprovalPath {
 }
 
 class FlexibleApprovalService {
-  private supabase = createServiceClient()
+  private supabase = createClient()
 
   // Get available templates
   async getApprovalTemplates(customerType?: string, industryType?: string): Promise<{ success: boolean; data?: ApprovalTemplate[]; error?: string }> {

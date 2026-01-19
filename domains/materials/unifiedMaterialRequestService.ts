@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 export interface MaterialRequestItem {
   line_number: number
@@ -53,7 +53,7 @@ export interface RequestTemplate {
 }
 
 class UnifiedMaterialRequestService {
-  private supabase = createServiceClient()
+  private supabase = createClient()
 
   // Generate request number based on type
   generateRequestNumber(type: string, companyCode: string): string {

@@ -9,6 +9,18 @@ const authRoutes = ['/login', '/signup']
 const publicRoutes = ['/', '/about', '/contact']
 
 export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
+  
+  // Skip auth check for static files and API routes
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.includes('.') ||
+    publicRoutes.includes(pathname)
+  ) {
+    return NextResponse.next()
+  }
+  
   const res = NextResponse.next()
   
   // Create a Supabase client configured to use cookies
@@ -35,9 +47,12 @@ export async function middleware(req: NextRequest) {
     error
   } = await supabase.auth.getSession()
   
-  const { pathname } = req.nextUrl
+  // Handle authentication errors - only log once, don't spam
+  if (error && error.status === 429) {
+    // Rate limited - allow through to avoid infinite loop
+    return NextResponse.next()
+  }
   
-  // Handle authentication errors
   if (error) {
     console.error('Middleware auth error:', error)
     if (protectedRoutes.some(route => pathname.startsWith(route))) {

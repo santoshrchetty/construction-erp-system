@@ -43,9 +43,9 @@ export async function handlePurchaseOrders(action: string, request: NextRequest,
         return await poServices.purchaseOrderService.rejectPO(rejectPoNumber, rejectApproverId, rejectComments)
 
       case 'pending-approvals':
-        const approverId = searchParams.get('approverId')
-        if (!approverId) throw new Error('Approver ID required')
-        return await poServices.purchaseOrderService.getPendingApprovals(approverId)
+        const pendingApproverId = searchParams.get('approverId')
+        if (!pendingApproverId) throw new Error('Approver ID required')
+        return await poServices.purchaseOrderService.getPendingApprovals(pendingApproverId)
 
       default:
         return { action, message: `${action} functionality available` }

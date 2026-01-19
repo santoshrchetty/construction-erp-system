@@ -14,6 +14,8 @@ async function availableModulesHandler(request: NextRequest, context: AuthContex
     }
 
     const moduleData = await context.authService.getUserModules(roleName)
+    
+    console.log('Module data structure:', JSON.stringify(moduleData, null, 2))
 
     return NextResponse.json({
       success: true,

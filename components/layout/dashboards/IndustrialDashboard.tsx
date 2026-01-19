@@ -23,6 +23,7 @@ export function IndustrialDashboard() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [activeTile, setActiveTile] = useState<DatabaseTile | null>(null)
 
   useEffect(() => {
     fetchAuthorizedTiles()
@@ -59,6 +60,14 @@ export function IndustrialDashboard() {
     
     const module = moduleMap[moduleCode] || 'projects'
     return checkPermission(module, Permission.READ)
+  }
+
+  const handleTileClick = (tile: DatabaseTile) => {
+    setActiveTile(tile)
+  }
+
+  const closeTile = () => {
+    setActiveTile(null)
   }
 
   const filteredTiles = tiles.filter(tile => {
@@ -202,7 +211,8 @@ export function IndustrialDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredTiles.map(tile => (
               <div 
-                key={tile.id} 
+                key={tile.id}
+                onClick={() => handleTileClick(tile)}
                 className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer group"
               >
                 <div className="p-4">
@@ -259,6 +269,51 @@ export function IndustrialDashboard() {
 
       {/* Add bottom padding for mobile navigation */}
       <div className="h-20 sm:hidden"></div>
+
+      {/* Tile Modal */}
+      {activeTile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{activeTile.title}</h2>
+                <p className="text-sm text-gray-600">{activeTile.subtitle}</p>
+              </div>
+              <button
+                onClick={closeTile}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Icons.X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              {renderTileComponent(activeTile)}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
+}
+
+function renderTileComponent(tile: DatabaseTile) {
+  // Dynamically render component based on construction_action
+  switch (tile.construction_action) {
+    case 'manage-projects':
+      const { ManageProjectsComponent } = require('@/components/tiles/ManageProjectsComponent')
+      return <ManageProjectsComponent />
+    
+    case 'unified-material-request':
+      const { UnifiedMaterialRequest } = require('@/components/tiles/UnifiedMaterialRequestComponent')
+      return <UnifiedMaterialRequest />
+    
+    default:
+      return (
+        <div className="p-8 text-center">
+          <Icons.AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">Component not yet implemented</p>
+          <p className="text-sm text-gray-500 mt-2">Action: {tile.construction_action}</p>
+        </div>
+      )
+  }
 }

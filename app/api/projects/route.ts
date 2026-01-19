@@ -6,47 +6,46 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const action = url.searchParams.get('action')
+    const companyId = url.searchParams.get('companyId')
+    const id = url.searchParams.get('id')
     
     if (action) {
-      const result = await handleProjects(action, {}, 'GET')
+      const result = await handleProjects(action, { companyId, id }, 'GET')
       return NextResponse.json({ success: true, data: result })
     }
     
     const supabase = await createServiceClient()
-    const { data, error } = await supabase
+    let query = supabase
       .from('projects')
-      .select('*')
+      .select('id, code, name, status, company_code_id')
       .order('created_at', { ascending: false })
+    
+    if (companyId) {
+      query = query.eq('company_code_id', companyId)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
 
-    return NextResponse.json({ projects: data })
+    return NextResponse.json({ success: true, data: data || [] })
   } catch (error) {
     console.error('Projects API error:', error)
-    return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Failed to fetch projects' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
-  console.log('POST request received')
-  
   try {
     const url = new URL(request.url)
     const action = url.searchParams.get('action')
-    console.log('Action:', action)
-    
     const body = await request.json()
-    console.log('Body:', body)
     
-    console.log('Supabase client created')
-
     if (action) {
-      console.log(`Processing ${action} action`)
       const result = await handleProjects(action, body, 'POST')
       return NextResponse.json({ success: true, data: result })
     }
 
-    // Default: Create new project
     const supabase = await createServiceClient()
     const { data, error } = await supabase
       .from('projects')
@@ -56,9 +55,45 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error
 
-    return NextResponse.json({ project: data })
+    return NextResponse.json({ success: true, data })
   } catch (error) {
     console.error('Projects API error:', error)
-    return NextResponse.json({ error: 'Failed to process request' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Failed to process request' }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const url = new URL(request.url)
+    const action = url.searchParams.get('action')
+    const body = await request.json()
+    
+    if (action) {
+      const result = await handleProjects(action, body, 'PUT')
+      return NextResponse.json({ success: true, data: result })
+    }
+
+    return NextResponse.json({ success: false, error: 'Action required' }, { status: 400 })
+  } catch (error) {
+    console.error('Projects API error:', error)
+    return NextResponse.json({ success: false, error: 'Failed to update' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const url = new URL(request.url)
+    const action = url.searchParams.get('action')
+    const id = url.searchParams.get('id')
+    
+    if (action) {
+      const result = await handleProjects(action, { id }, 'DELETE')
+      return NextResponse.json({ success: true, data: result })
+    }
+
+    return NextResponse.json({ success: false, error: 'Action required' }, { status: 400 })
+  } catch (error) {
+    console.error('Projects API error:', error)
+    return NextResponse.json({ success: false, error: 'Failed to delete' }, { status: 500 })
   }
 }

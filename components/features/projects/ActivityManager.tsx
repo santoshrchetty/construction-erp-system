@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { wbsApi } from '@/lib/wbs-api';
+import ActivityMaterialsForm from '@/components/activities/ActivityMaterialsForm';
 
 
 interface Activity {
@@ -46,6 +47,7 @@ export default function ActivityManager({ projectId }: { projectId: string }) {
   const [wbsNodes, setWbsNodes] = useState<WBSNode[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [showMaterialsModal, setShowMaterialsModal] = useState<{show: boolean, activity: Activity | null}>({show: false, activity: null});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{show: boolean, activity: Activity | null}>({show: false, activity: null});
   const [formData, setFormData] = useState({
     name: '',
@@ -286,6 +288,13 @@ export default function ActivityManager({ projectId }: { projectId: string }) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex space-x-2">
+                      <button 
+                        onClick={() => setShowMaterialsModal({show: true, activity})}
+                        className="text-purple-600 hover:text-purple-800 text-sm"
+                        title="Materials"
+                      >
+                        📦
+                      </button>
                       <button 
                         onClick={() => editActivity(activity)}
                         className="text-blue-600 hover:text-blue-800 text-sm"
@@ -541,6 +550,27 @@ export default function ActivityManager({ projectId }: { projectId: string }) {
                 Delete Activity
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Materials Modal */}
+      {showMaterialsModal.show && showMaterialsModal.activity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-lg font-bold">Materials for {showMaterialsModal.activity.name}</h3>
+                <p className="text-sm text-gray-600">Start Date: {showMaterialsModal.activity.planned_start_date}</p>
+              </div>
+              <button
+                onClick={() => setShowMaterialsModal({show: false, activity: null})}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <ActivityMaterialsForm activityId={showMaterialsModal.activity.id} />
           </div>
         </div>
       )}

@@ -15,6 +15,74 @@ export const GET = withMediumRiskRecovery(async (request: NextRequest) => {
     const search = searchParams.get('search')
     const accountType = searchParams.get('account_type')
     
+    // Handle tiles list request (no category/action)
+    if (!category && !action) {
+      const { createServiceClient } = await import('@/lib/supabase/server')
+      const supabase = await createServiceClient()
+      
+      // Get user and their role
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
+        console.error('Auth error:', userError)
+        return NextResponse.json({ success: true, tiles: [] })
+      }
+      
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('*, roles(*)')
+        .eq('id', user.id)
+        .single()
+      
+      if (profileError) {
+        console.error('Profile fetch error:', profileError)
+      }
+      
+      const userRole = profile?.roles?.name
+      console.log('User role:', userRole)
+      
+      // Get user's authorized module codes using RPC function
+      const { data: moduleCodes, error: modulesError } = await supabase
+        .rpc('get_user_modules', { user_id: user.id })
+      
+      if (modulesError) {
+        console.error('RPC error:', modulesError)
+        return NextResponse.json({ success: true, tiles: [] })
+      }
+      
+      const authorizedModuleCodes = moduleCodes?.map((row: any) => row.module_code).filter(Boolean) || []
+      
+      console.log('Authorized module codes:', authorizedModuleCodes)
+      
+      // Fetch only tiles that match user's authorized modules
+      let tilesQuery = supabase
+        .from('tiles')
+        .select('*')
+        .eq('is_active', true)
+      
+      // Fetch only tiles that match user's authorized modules (sorted by category and sequence)
+      if (authorizedModuleCodes.length > 0) {
+        tilesQuery = tilesQuery
+          .in('module_code', authorizedModuleCodes)
+          .order('tile_category', { ascending: true })
+          .order('sequence_order', { ascending: true })
+      } else {
+        return NextResponse.json({ success: true, tiles: [] })
+      }
+      
+      const { data: tiles, error: tilesError } = await tilesQuery.order('id')
+      
+      if (tilesError) {
+        console.error('Tiles fetch error:', tilesError)
+      }
+      
+      console.log('Fetched authorized tiles count:', tiles?.length)
+      
+      return NextResponse.json({
+        success: true,
+        tiles: tiles || []
+      })
+    }
+    
     // Add RBAC check for tile access
     const authContext = await withAuth(request, Module.COSTING, Permission.VIEW)
     
@@ -374,6 +442,31 @@ export const POST = withHighRiskRecovery(async (request: NextRequest) => {
       
       if (action === 'companies') {
         const data = await financeService.getCompanies()
+        return NextResponse.json({ success: true, data })
+      }
+    }
+    
+    // Handle Projects CRUD
+    if (body.category === 'projects') {
+      const { handleProjects } = await import('@/app/api/projects/handler')
+      
+      if (body.action === 'list') {
+        const data = await handleProjects('list', body.payload || {}, 'GET')
+        return NextResponse.json({ success: true, data })
+      }
+      
+      if (body.action === 'create') {
+        const data = await handleProjects('create', body.payload, 'POST')
+        return NextResponse.json({ success: true, data })
+      }
+      
+      if (body.action === 'update') {
+        const data = await handleProjects('update', body.payload, 'POST')
+        return NextResponse.json({ success: true, data })
+      }
+      
+      if (body.action === 'delete') {
+        const data = await handleProjects('delete', body.payload, 'POST')
         return NextResponse.json({ success: true, data })
       }
     }
