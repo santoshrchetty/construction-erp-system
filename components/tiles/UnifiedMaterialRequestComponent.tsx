@@ -20,6 +20,16 @@ export function UnifiedMaterialRequest() {
   const [templates, setTemplates] = useState([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  
+  // Filter state
+  const [filters, setFilters] = useState({
+    entryDateFrom: '',
+    entryDateTo: '',
+    requiredDate: '',
+    material: '',
+    priority: '',
+    status: ''
+  })
 
   // Master data dropdowns
   const [companies, setCompanies] = useState<any[]>([])
@@ -199,7 +209,7 @@ export function UnifiedMaterialRequest() {
     try {
       const response = await fetch(`/api/wbs?projectId=${projectId}`)
       const data = await response.json()
-      if (data.success) setWbsElements(data.data || [])
+      if (data.success) setWbsElements(Array.isArray(data.data) ? data.data : [])
     } catch (error) {
       console.error('Failed to load WBS elements:', error)
     } finally {
@@ -213,7 +223,7 @@ export function UnifiedMaterialRequest() {
     try {
       const response = await fetch(`/api/activities?wbsId=${wbsId}`)
       const data = await response.json()
-      if (data.success) setActivities(data.data || [])
+      if (data.success) setActivities(Array.isArray(data.data) ? data.data : [])
     } catch (error) {
       console.error('Failed to load activities:', error)
     } finally {
@@ -226,7 +236,7 @@ export function UnifiedMaterialRequest() {
     try {
       const response = await fetch(`/api/cost-centers?companyId=${companyId}`)
       const data = await response.json()
-      if (data.success) setCostCenters(data.data || [])
+      if (data.success) setCostCenters(Array.isArray(data.data) ? data.data : [])
     } catch (error) {
       console.error('Failed to load cost centers:', error)
     } finally {
@@ -261,11 +271,41 @@ export function UnifiedMaterialRequest() {
         body: JSON.stringify({
           category: 'materials',
           action: 'material-request-list',
-          payload: { request_type: 'MATERIAL_REQ' }
+          payload: { 
+            request_type: 'MATERIAL_REQ',
+            ...(filters.priority && { priority: filters.priority }),
+            ...(filters.status && { status: filters.status })
+          }
         })
       })
       const data = await response.json()
-      if (data.success) setRequests(data.data || [])
+      if (data.success) {
+        let filteredRequests = data.data || []
+        
+        // Client-side filtering
+        if (filters.entryDateFrom) {
+          filteredRequests = filteredRequests.filter(r => 
+            new Date(r.created_at) >= new Date(filters.entryDateFrom)
+          )
+        }
+        if (filters.entryDateTo) {
+          filteredRequests = filteredRequests.filter(r => 
+            new Date(r.created_at) <= new Date(filters.entryDateTo)
+          )
+        }
+        if (filters.requiredDate) {
+          filteredRequests = filteredRequests.filter(r => 
+            r.required_date === filters.requiredDate
+          )
+        }
+        if (filters.material) {
+          filteredRequests = filteredRequests.filter(r => 
+            r.request_number?.toLowerCase().includes(filters.material.toLowerCase())
+          )
+        }
+        
+        setRequests(filteredRequests)
+      }
     } catch (error) {
       console.error('Failed to load requests:', error)
     } finally {
@@ -640,7 +680,7 @@ export function UnifiedMaterialRequest() {
                             onChange={(e) => setFormData(prev => ({ ...prev, wbs_element_id: e.target.value, activity_id: '' }))}
                           >
                             <option value="">{loadingWBS ? 'Loading...' : 'Select WBS (Optional)'}</option>
-                            {wbsElements.map(w => (
+                            {Array.isArray(wbsElements) && wbsElements.map(w => (
                               <option key={w.id} value={w.id}>
                                 {w.code} - {w.name}
                               </option>
@@ -659,7 +699,7 @@ export function UnifiedMaterialRequest() {
                             onChange={(e) => setFormData(prev => ({ ...prev, activity_id: e.target.value }))}
                           >
                             <option value="">{loadingActivities ? 'Loading...' : 'Select Activity (Optional)'}</option>
-                            {activities.map(a => (
+                            {Array.isArray(activities) && activities.map(a => (
                               <option key={a.id} value={a.id}>
                                 {a.code} - {a.name}
                               </option>
@@ -933,11 +973,108 @@ export function UnifiedMaterialRequest() {
           {/* List Tab */}
           {activeTab === 'list' && (
             <div className="space-y-4">
+              {/* Filters */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Entry Date From</label>
+                    <input 
+                      type="date" 
+                      className="w-full border rounded px-3 py-2 text-sm"
+                      value={filters.entryDateFrom}
+                      onChange={(e) => setFilters({...filters, entryDateFrom: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Entry Date To</label>
+                    <input 
+                      type="date" 
+                      className="w-full border rounded px-3 py-2 text-sm"
+                      value={filters.entryDateTo}
+                      onChange={(e) => setFilters({...filters, entryDateTo: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Required Date</label>
+                    <input 
+                      type="date" 
+                      className="w-full border rounded px-3 py-2 text-sm"
+                      value={filters.requiredDate}
+                      onChange={(e) => setFilters({...filters, requiredDate: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Material</label>
+                    <input 
+                      type="text" 
+                      placeholder="Search material..." 
+                      className="w-full border rounded px-3 py-2 text-sm"
+                      value={filters.material}
+                      onChange={(e) => setFilters({...filters, material: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
+                    <select 
+                      className="w-full border rounded px-3 py-2 text-sm"
+                      value={filters.priority}
+                      onChange={(e) => setFilters({...filters, priority: e.target.value})}
+                    >
+                      <option value="">All Priorities</option>
+                      {priorities.map(p => (
+                        <option key={p.code} value={p.code}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                    <select 
+                      className="w-full border rounded px-3 py-2 text-sm"
+                      value={filters.status}
+                      onChange={(e) => setFilters({...filters, status: e.target.value})}
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="DRAFT">Draft</option>
+                      <option value="SUBMITTED">Submitted</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REJECTED">Rejected</option>
+                      <option value="FULFILLED">Fulfilled</option>
+                    </select>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <button 
+                      onClick={loadRequests}
+                      className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                    >
+                      <Icons.Search className="w-4 h-4 inline mr-1" />
+                      Filter
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setFilters({
+                          entryDateFrom: '',
+                          entryDateTo: '',
+                          requiredDate: '',
+                          material: '',
+                          priority: '',
+                          status: ''
+                        })
+                        loadRequests()
+                      }}
+                      className="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request #</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entry Date</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -949,6 +1086,7 @@ export function UnifiedMaterialRequest() {
                     {requests.map((request, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="px-4 py-4 text-sm font-medium text-gray-900">{request.request_number}</td>
+                        <td className="px-4 py-4 text-sm text-gray-900">{new Date(request.created_at).toLocaleDateString()}</td>
                         <td className="px-4 py-4 text-sm text-gray-900">{request.request_type}</td>
                         <td className="px-4 py-4 text-sm">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-${priorities.find(p => p.code === request.priority)?.color}-100 text-${priorities.find(p => p.code === request.priority)?.color}-800`}>

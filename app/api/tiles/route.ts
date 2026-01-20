@@ -319,16 +319,14 @@ export const GET = withMediumRiskRecovery(async (request: NextRequest) => {
 // Protected POST with auto-backup and rollback
 export const POST = withHighRiskRecovery(async (request: NextRequest) => {
   try {
-    const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category')
-    const action = searchParams.get('action')
-    
-    console.log('POST request - category:', category, 'action:', action) // Debug log
-    
     const authContext = await withAuth(request, Module.COSTING, Permission.CREATE)
     const body = await request.json()
     
-    console.log('POST request body:', body) // Debug log
+    // Get category and action from body (not searchParams)
+    const category = body.category
+    const action = body.action
+    
+    console.log('POST request - category:', category, 'action:', action, 'body:', body)
     
     if (category === 'finance' && action === 'chart_of_accounts') {
       // TODO: Create FinanceService to handle chart of accounts operations
@@ -448,26 +446,38 @@ export const POST = withHighRiskRecovery(async (request: NextRequest) => {
     
     // Handle Projects CRUD
     if (body.category === 'projects') {
+      console.log('Handling projects request:', body)
       const { handleProjects } = await import('@/app/api/projects/handler')
       
-      if (body.action === 'list') {
-        const data = await handleProjects('list', body.payload || {}, 'GET')
+      try {
+        if (body.action === 'list') {
+          const data = await handleProjects('list', body.payload || {}, 'GET')
+          return NextResponse.json({ success: true, data })
+        }
+        
+        if (body.action === 'create') {
+          const payloadWithUser = { ...body.payload, userId: authContext.userId }
+          const data = await handleProjects('create', payloadWithUser, 'POST')
+          return NextResponse.json({ success: true, data })
+        }
+        
+        if (body.action === 'update') {
+          const payloadWithUser = { ...body.payload, userId: authContext.userId }
+          const data = await handleProjects('update', payloadWithUser, 'POST')
+          return NextResponse.json({ success: true, data })
+        }
+        
+        if (body.action === 'delete') {
+          const data = await handleProjects('delete', body.payload, 'POST')
+          return NextResponse.json({ success: true, data })
+        }
+        
+        // Handle other project actions (categories, patterns, etc.)
+        const data = await handleProjects(body.action, body.payload || {}, 'GET')
         return NextResponse.json({ success: true, data })
-      }
-      
-      if (body.action === 'create') {
-        const data = await handleProjects('create', body.payload, 'POST')
-        return NextResponse.json({ success: true, data })
-      }
-      
-      if (body.action === 'update') {
-        const data = await handleProjects('update', body.payload, 'POST')
-        return NextResponse.json({ success: true, data })
-      }
-      
-      if (body.action === 'delete') {
-        const data = await handleProjects('delete', body.payload, 'POST')
-        return NextResponse.json({ success: true, data })
+      } catch (projectError) {
+        console.error('Projects handler error:', projectError)
+        throw projectError
       }
     }
     
@@ -652,9 +662,12 @@ export const POST = withHighRiskRecovery(async (request: NextRequest) => {
       data: { message: 'Created successfully' }
     })
   } catch (error) {
+    console.error('POST /api/tiles error:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return NextResponse.json({
       error: 'Creation failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     }, { status: 500 })
   }
 })

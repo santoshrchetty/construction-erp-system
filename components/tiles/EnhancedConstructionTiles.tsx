@@ -304,6 +304,9 @@ export default function EnhancedConstructionTiles() {
       case 'Material Requests':
       case 'Unified Material Request':
         return <UnifiedMaterialRequest />
+      case 'Material Request Approvals':
+        const { MaterialRequestApprovalsComponent } = require('./MaterialRequestApprovalsComponent')
+        return <MaterialRequestApprovalsComponent />
       case 'Material Reservations':
       case 'Create Material Reservation':
       case 'My Reservations':

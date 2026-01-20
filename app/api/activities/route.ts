@@ -257,6 +257,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get activities
+    const wbsId = url.searchParams.get('wbsId');
+    
     let query = supabase
       .from('activities')
       .select('*, wbs_nodes(code, name)')
@@ -265,12 +267,16 @@ export async function GET(request: NextRequest) {
     if (projectId) {
       query = query.eq('project_id', projectId);
     }
+    
+    if (wbsId) {
+      query = query.eq('wbs_node_id', wbsId);
+    }
 
     const { data, error } = await query;
 
     if (error) throw error;
 
-    return NextResponse.json({ activities: data });
+    return NextResponse.json({ success: true, data: data || [] });
   } catch (error) {
     console.error('Activities API error:', error);
     return NextResponse.json({ error: 'Failed to fetch activities' }, { status: 500 });

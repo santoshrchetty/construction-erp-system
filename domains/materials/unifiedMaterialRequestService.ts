@@ -97,8 +97,7 @@ class UnifiedMaterialRequestService {
           notes: request.notes,
           requested_by: userId,
           created_by: userId,
-          current_approver: workflow?.level_1_approver_role ? await this.getApproverByRole(workflow.level_1_approver_role, request.company_code) : null,
-          status: workflow ? 'SUBMITTED' : 'APPROVED' // Auto-approve if no workflow
+          status: 'DRAFT'
         })
         .select()
         .single()
@@ -117,7 +116,6 @@ class UnifiedMaterialRequestService {
         estimated_price: item.estimated_price,
         currency_code: item.currency_code || 'USD',
         storage_location: item.storage_location,
-        preferred_vendor: item.preferred_vendor,
         delivery_date: item.delivery_date
       }))
 
@@ -151,12 +149,7 @@ class UnifiedMaterialRequestService {
     try {
       let query = this.supabase
         .from('material_requests')
-        .select(`
-          *,
-          material_request_items(*),
-          requested_by_user:auth.users!requested_by(email),
-          approved_by_user:auth.users!approved_by(email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
 
       if (filters.request_type) query = query.eq('request_type', filters.request_type)

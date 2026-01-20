@@ -74,12 +74,7 @@ export class ProjectRepository {
       .order('category_code')
     
     if (error) throw error
-    
-    return (data || []).map(item => ({
-      category: item.category_code,
-      prefix: item.category_name,
-      description: item.category_name
-    }))
+    return data || []
   }
 
   async getCompanyCodes() {

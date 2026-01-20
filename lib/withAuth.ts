@@ -5,7 +5,7 @@ import { UserRole, Module, Permission } from '@/lib/permissions/types'
 import { permissionChecker } from '@/lib/permissions/checker'
 
 export async function withAuth(request: NextRequest) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   
   if (userError || !user) throw new Error('Unauthorized')
@@ -18,5 +18,5 @@ export async function withAuth(request: NextRequest) {
   
   const userRole = profile?.roles?.name as UserRole || UserRole.EMPLOYEE
   
-  return { user, profile, userRole, supabase }
+  return { user, profile, userRole, supabase, userId: user.id }
 }

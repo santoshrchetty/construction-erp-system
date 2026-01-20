@@ -4,7 +4,17 @@ import { handleWBS } from './handler'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const action = searchParams.get('action') || 'default'
+    const projectId = searchParams.get('projectId')
+    const action = searchParams.get('action') || 'nodes'
+    
+    // If projectId is provided without action, default to getting WBS nodes
+    if (projectId && !searchParams.get('action')) {
+      const result = await handleWBS('nodes', request, 'GET')
+      return NextResponse.json({
+        success: true,
+        data: result
+      })
+    }
     
     const result = await handleWBS(action, request, 'GET')
     

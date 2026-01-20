@@ -5,9 +5,12 @@ import * as projectCrudService from '@/domains/projects/projectCrudService'
 
 export async function handleProjects(action: string, body: any, method: string = 'GET') {
   try {
+    console.log('handleProjects called:', { action, body, method })
     switch (action) {
       case 'list':
-        return await projectCrudService.getAllProjects(body.companyId)
+        const projects = await projectCrudService.getAllProjects(body?.companyId)
+        console.log('Projects fetched:', projects)
+        return projects
       
       case 'get':
         return await projectCrudService.getProjectById(body.id)

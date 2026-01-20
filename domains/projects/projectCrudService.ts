@@ -44,7 +44,17 @@ export async function createProject(payload: any, userId: string) {
   const { data, error } = await supabase
     .from('projects')
     .insert({
-      ...payload,
+      code: payload.code,
+      name: payload.name,
+      description: payload.description,
+      category_code: payload.category_code,
+      project_type: payload.project_type,
+      status: payload.status,
+      start_date: payload.start_date,
+      planned_end_date: payload.planned_end_date,
+      budget: payload.budget,
+      location: payload.location,
+      company_code_id: payload.company_code_id,
       created_by: userId
     })
     .select()
@@ -60,7 +70,17 @@ export async function updateProject(id: string, payload: any, userId: string) {
   const { data, error } = await supabase
     .from('projects')
     .update({
-      ...payload,
+      code: payload.code,
+      name: payload.name,
+      description: payload.description,
+      category_code: payload.category_code,
+      project_type: payload.project_type,
+      status: payload.status,
+      start_date: payload.start_date,
+      planned_end_date: payload.planned_end_date,
+      budget: payload.budget,
+      location: payload.location,
+      company_code_id: payload.company_code_id,
       updated_at: new Date().toISOString()
     })
     .eq('id', id)

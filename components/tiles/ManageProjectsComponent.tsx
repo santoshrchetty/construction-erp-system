@@ -9,24 +9,43 @@ export function ManageProjectsComponent() {
   const [showForm, setShowForm] = useState(false)
   const [editingProject, setEditingProject] = useState(null)
   const [companies, setCompanies] = useState([])
+  const [categories, setCategories] = useState([])
+  const [numberingPatterns, setNumberingPatterns] = useState([])
+  const [projectTypes, setProjectTypes] = useState([])
 
   const [formData, setFormData] = useState({
     code: '',
     name: '',
     description: '',
+    category_code: '',
     project_type: 'commercial',
     status: 'planning',
     start_date: '',
     planned_end_date: '',
     budget: 0,
     location: '',
-    company_code: ''
+    company_code_id: '',
+    selected_pattern: ''
   })
 
   useEffect(() => {
     loadCompanies()
+    loadCategories()
     if (activeTab === 'list') loadProjects()
   }, [activeTab])
+
+  useEffect(() => {
+    if (formData.category_code) {
+      loadProjectTypes(formData.category_code)
+    }
+  }, [formData.category_code])
+
+  useEffect(() => {
+    const selectedCompany = companies.find(c => c.id === formData.company_code_id)
+    if (selectedCompany) {
+      loadNumberingPatterns(selectedCompany.company_code)
+    }
+  }, [formData.company_code_id, companies])
 
   const loadCompanies = async () => {
     try {
@@ -35,6 +54,62 @@ export function ManageProjectsComponent() {
       if (data.success) setCompanies(data.data)
     } catch (error) {
       console.error('Failed to load companies:', error)
+    }
+  }
+
+  const loadCategories = async () => {
+    try {
+      const response = await fetch('/api/tiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: 'projects', action: 'categories' })
+      })
+      const data = await response.json()
+      if (data.success) {
+        setCategories(Array.isArray(data.data) ? data.data : [])
+      }
+    } catch (error) {
+      console.error('Failed to load categories:', error)
+    }
+  }
+
+  const loadNumberingPatterns = async (companyCode) => {
+    try {
+      const response = await fetch('/api/tiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: 'projects',
+          action: 'numbering-patterns',
+          payload: { entity_type: 'PROJECT', company_code: companyCode }
+        })
+      })
+      const data = await response.json()
+      if (data.success) {
+        setNumberingPatterns(Array.isArray(data.data) ? data.data : [])
+      }
+    } catch (error) {
+      console.error('Failed to load numbering patterns:', error)
+    }
+  }
+
+  const loadProjectTypes = async (categoryCode) => {
+    try {
+      const response = await fetch('/api/tiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: 'projects',
+          action: 'project-types',
+          payload: { category_code: categoryCode }
+        })
+      })
+      const data = await response.json()
+      if (data.success) {
+        setProjectTypes(Array.isArray(data.data) ? data.data : [])
+      }
+    } catch (error) {
+      console.error('Failed to load project types:', error)
     }
   }
 
@@ -58,8 +133,46 @@ export function ManageProjectsComponent() {
     }
   }
 
+  const generateProjectCode = async () => {
+    if (!formData.selected_pattern || !formData.company_code_id) {
+      alert('Please select company and numbering pattern first')
+      return
+    }
+    
+    const selectedCompany = companies.find(c => c.id === formData.company_code_id)
+    try {
+      const response = await fetch('/api/tiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: 'projects',
+          action: 'generate-code',
+          payload: {
+            entity_type: 'PROJECT',
+            company_code: selectedCompany.company_code,
+            pattern: formData.selected_pattern
+          }
+        })
+      })
+      const data = await response.json()
+      if (data.success && data.data.code) {
+        setFormData({ ...formData, code: data.data.code })
+      }
+    } catch (error) {
+      console.error('Failed to generate code:', error)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    console.log('Form data being submitted:', formData)
+    
+    if (!formData.category_code) {
+      alert('Please select a category')
+      return
+    }
+    
     setSaving(true)
     try {
       const response = await fetch('/api/tiles', {
@@ -77,7 +190,7 @@ export function ManageProjectsComponent() {
         resetForm()
         setActiveTab('list')
       } else {
-        alert('Error: ' + data.error)
+        alert('Error: ' + (data.error || data.details))
       }
     } catch (error) {
       alert('Error: ' + error.message)
@@ -122,7 +235,7 @@ export function ManageProjectsComponent() {
       planned_end_date: project.planned_end_date,
       budget: project.budget,
       location: project.location || '',
-      company_code: project.company?.company_code || ''
+      company_code_id: project.company_code_id || ''
     })
     setShowForm(true)
     setActiveTab('create')
@@ -135,13 +248,15 @@ export function ManageProjectsComponent() {
       code: '',
       name: '',
       description: '',
+      category_code: '',
       project_type: 'commercial',
       status: 'planning',
       start_date: '',
       planned_end_date: '',
       budget: 0,
       location: '',
-      company_code: ''
+      company_code_id: '',
+      selected_pattern: ''
     })
   }
 
@@ -239,30 +354,74 @@ export function ManageProjectsComponent() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Project Code *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.code}
-                    onChange={(e) => setFormData({...formData, code: e.target.value})}
-                    className="w-full border rounded px-3 py-2"
-                  />
-                </div>
-                <div>
                   <label className="block text-sm font-medium mb-1">Company Code *</label>
                   <select
                     required
-                    value={formData.company_code}
-                    onChange={(e) => setFormData({...formData, company_code: e.target.value})}
+                    value={formData.company_code_id}
+                    onChange={(e) => setFormData({...formData, company_code_id: e.target.value})}
                     className="w-full border rounded px-3 py-2"
                   >
                     <option value="">Select Company Code</option>
                     {companies.map((c) => (
-                      <option key={c.id} value={c.company_code}>
+                      <option key={c.id} value={c.id}>
                         {c.company_code} - {c.company_name}
                       </option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Category *</label>
+                  <select
+                    required
+                    value={formData.category_code}
+                    onChange={(e) => setFormData({...formData, category_code: e.target.value})}
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    <option value="">Select Category</option>
+                    {Array.isArray(categories) && categories.map((cat) => (
+                      <option key={cat.category_code} value={cat.category_code}>
+                        {cat.category_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Numbering Pattern *</label>
+                  <select
+                    required
+                    value={formData.selected_pattern}
+                    onChange={(e) => setFormData({...formData, selected_pattern: e.target.value})}
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    <option value="">Select Pattern</option>
+                    {Array.isArray(numberingPatterns) && numberingPatterns.map((pattern) => (
+                      <option key={pattern.id} value={pattern.pattern}>
+                        {pattern.pattern} - {pattern.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Project Code *</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={formData.code}
+                      onChange={(e) => setFormData({...formData, code: e.target.value})}
+                      className="flex-1 border rounded px-3 py-2"
+                      placeholder="Click Generate"
+                    />
+                    <button
+                      type="button"
+                      onClick={generateProjectCode}
+                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                    >
+                      <Icons.RefreshCw className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
               <div>
@@ -277,16 +436,28 @@ export function ManageProjectsComponent() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Type</label>
+                  <label className="block text-sm font-medium mb-1">Type *</label>
                   <select
+                    required
                     value={formData.project_type}
                     onChange={(e) => setFormData({...formData, project_type: e.target.value})}
                     className="w-full border rounded px-3 py-2"
                   >
-                    <option value="residential">Residential</option>
-                    <option value="commercial">Commercial</option>
-                    <option value="infrastructure">Infrastructure</option>
-                    <option value="industrial">Industrial</option>
+                    <option value="">Select Type</option>
+                    {projectTypes.length > 0 ? (
+                      projectTypes.map((type) => (
+                        <option key={type.type_code} value={type.type_code}>
+                          {type.type_name}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="residential">Residential</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="infrastructure">Infrastructure</option>
+                        <option value="industrial">Industrial</option>
+                      </>
+                    )}
                   </select>
                 </div>
                 <div>
