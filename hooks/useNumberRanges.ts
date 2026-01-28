@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NumberRangeService } from '../domains/finance/NumberRangeService';
-import { NumberRangeRepository } from '../data/NumberRangeRepository';
+import { NumberRangeRepository } from '../domains/administration/numberRangeRepository';
 
 interface NumberRange {
   company_code: string;

@@ -87,17 +87,12 @@ export class AuthorizationService {
         return { companyCodes: [], currentCompanyCode: null }
       }
       
-      // Get all company codes user has access to within their company
+      // Get all company codes user has access to within their group
       const client = await this.repository.initClient()
       const { data: companyCodes, error } = await client
         .from('company_codes')
-        .select(`
-          company_code,
-          company_name,
-          currency,
-          companies!inner(company_name)
-        `)
-        .eq('companies.company_id', profile.company_id)
+        .select('company_code, company_name, currency, grpcompany_code')
+        .eq('grpcompany_code', profile.grpcompany_code)
         .eq('is_active', true)
         .order('company_code')
       

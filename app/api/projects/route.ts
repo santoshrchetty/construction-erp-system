@@ -6,22 +6,22 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const action = url.searchParams.get('action')
-    const companyId = url.searchParams.get('companyId')
+    const companyCode = url.searchParams.get('companyCode')
     const id = url.searchParams.get('id')
     
     if (action) {
-      const result = await handleProjects(action, { companyId, id }, 'GET')
+      const result = await handleProjects(action, { companyCode, id }, 'GET')
       return NextResponse.json({ success: true, data: result })
     }
     
     const supabase = await createServiceClient()
     let query = supabase
       .from('projects')
-      .select('id, code, name, status, company_code_id')
+      .select('id, project_code, name, status, company_code')
       .order('created_at', { ascending: false })
     
-    if (companyId) {
-      query = query.eq('company_code_id', companyId)
+    if (companyCode) {
+      query = query.eq('company_code', companyCode)
     }
 
     const { data, error } = await query

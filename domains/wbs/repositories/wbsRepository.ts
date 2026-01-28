@@ -55,12 +55,24 @@ export class WBSRepository {
     const supabase = await createServiceClient()
     const { data, error } = await supabase
       .from('projects')
-      .select('code')
+      .select('project_code')
       .eq('id', projectId)
       .single()
     
     if (error) throw error
-    return data.code
+    return data.project_code
+  }
+
+  async getProjectIdByCode(projectCode: string) {
+    const supabase = await createServiceClient()
+    const { data, error } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('project_code', projectCode)
+      .single()
+    
+    if (error) return null
+    return data?.id
   }
 
   // Activities

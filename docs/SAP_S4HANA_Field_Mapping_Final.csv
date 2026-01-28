@@ -1,0 +1,950 @@
+﻿Status,Module,Sub-Module,SAP S/4HANA Table,SAP Field,SAP Field Name,Construction App Table,Construction App Field,Data Type,Max Length,Notes
+Implemented,MM,Material Master - Basic Data,MARA,MATNR,Material Number,materials,material_code,VARCHAR,31,SAP: 40 chars in S/4HANA
+Implemented,MM,Material Master - Basic Data,MAKT,MAKTX,Material Description,materials,material_name,VARCHAR,240,SAP: 40 chars
+Implemented,MM,Material Master - Basic Data,MARA,MTART,Material Type,materials,material_type,VARCHAR,10,"FG/RM/SFG/TG/SER vs FERT/ROH/HALB"
+Implemented,MM,Material Master - Basic Data,MARA,MEINS,Base Unit of Measure,materials,base_uom,VARCHAR,10,BAG/TON/CUM/KG/LTR/PCS/MTR/EA
+Implemented,MM,Material Master - Basic Data,MARA,MATKL,Material Group,materials,material_group,VARCHAR,50,Custom groups vs SAP MATKL
+Implemented,MM,Material Master - Basic Data,MARA,BRGEW,Gross Weight,materials,gross_weight,DECIMAL,"15,3",
+Implemented,MM,Material Master - Basic Data,MARA,NTGEW,Net Weight,materials,net_weight,DECIMAL,"15,3",
+Implemented,MM,Material Master - Basic Data,MARA,GEWEI,Weight Unit,materials,weight_unit,VARCHAR,10,KG/TON/G/LB
+Implemented,MM,Material Master - Basic Data,MARA,VOLUM,Volume,materials,volume,DECIMAL,"15,3",
+Implemented,MM,Material Master - Basic Data,MARA,VOLEH,Volume Unit,materials,volume_unit,VARCHAR,10,CUM/LTR/ML/GAL
+Implemented,MM,Material Master - Basic Data,MARA,ERSDA,Created On,materials,created_at,TIMESTAMP,,Database-managed
+Implemented,MM,Material Master - Basic Data,MARA,ERNAM,Created By,materials,created_by,UUID,,Database-managed
+Implemented,MM,Material Master - Basic Data,MARA,LAEDA,Last Changed,materials,updated_at,TIMESTAMP,,Database-managed
+Implemented,MM,Material Master - Basic Data,MARA,AENAM,Changed By,materials,updated_by,UUID,,Database-managed
+Implemented,MM,Material Master - Plant Data,MARC,WERKS,Plant,material_plant_data,plant_code,VARCHAR,10,4-char code
+Implemented,MM,Material Master - Plant Data,MARC,BESKZ,Procurement Type,material_plant_data,procurement_type,VARCHAR,10,E (In-house) / F (External)
+Implemented,MM,Material Master - Plant Data,MARC,DISMM,MRP Type,material_plant_data,mrp_type,VARCHAR,10,MRP controller
+Implemented,MM,Material Master - Plant Data,MARC,MINBE,Reorder Point,material_plant_data,reorder_point,DECIMAL,"15,3",
+Implemented,MM,Material Master - Plant Data,MARC,EISBE,Safety Stock,material_plant_data,safety_stock,DECIMAL,"15,3",
+Implemented,MM,Material Master - Plant Data,MARC,BSTMI,Minimum Lot Size,material_plant_data,minimum_lot_size,DECIMAL,"15,3",
+Implemented,MM,Material Master - Plant Data,MARC,PLIFZ,Planned Delivery Time,material_plant_data,planned_delivery_time,INTEGER,,Days
+Implemented,MM,Material Master - Plant Data,MARC,MMSTA,Plant-Specific Status,material_plant_data,plant_status,VARCHAR,20,ACTIVE/INACTIVE/BLOCKED
+Implemented,MM,Material Master - Valuation,MBEW,BWKEY,Valuation Area,material_pricing,plant_code,VARCHAR,10,Plant level valuation
+Implemented,MM,Material Master - Valuation,MBEW,VPRSV,Price Control,material_pricing,price_type,VARCHAR,20,STANDARD/MOVING_AVG
+Implemented,MM,Material Master - Valuation,MBEW,STPRS,Standard Price,material_pricing,price,DECIMAL,"15,2",
+Implemented,MM,Material Master - Valuation,MBEW,VERPR,Moving Average Price,material_pricing,price,DECIMAL,"15,2",
+Implemented,MM,Material Master - Valuation,MBEW,WAERS,Currency,material_pricing,currency,VARCHAR,3,3-char code
+Implemented,MM,Material Master - Valuation,MBEW,SALK3,Stock Value,stock_balances,total_value,DECIMAL,"15,2",
+Implemented,ORG,Organization - Company Code,T001,BUKRS,Company Code,company_codes,company_code,VARCHAR,10,4-char code
+Implemented,ORG,Organization - Company Code,T001,BUTXT,Company Name,company_codes,company_name,VARCHAR,500,
+Implemented,ORG,Organization - Company Code,T001,WAERS,Currency,company_codes,currency,VARCHAR,3,3-char code
+Implemented,ORG,Organization - Company Code,T001,LAND1,Country,company_codes,country_code,VARCHAR,2,2-char code
+Implemented,ORG,Organization - Plant,T001W,WERKS,Plant,plants,plant_code,VARCHAR,10,4-char code
+Implemented,ORG,Organization - Plant,T001W,NAME1,Plant Name,plants,plant_name,VARCHAR,500,
+Implemented,ORG,Organization - Plant,T001W,BWKEY,Company Code,plants,company_code,VARCHAR,10,FK to company_codes
+Implemented,ORG,Organization - Plant,T001W,ADRNR,Address,plants,address,TEXT,,
+Implemented,ORG,Organization - Storage Location,T001L,LGORT,Storage Location,storage_locations,sloc_code,VARCHAR,10,4-char code
+Implemented,ORG,Organization - Storage Location,T001L,LGOBE,Storage Location Name,storage_locations,sloc_name,VARCHAR,500,
+Implemented,ORG,Organization - Storage Location,T001L,WERKS,Plant,storage_locations,plant_code,VARCHAR,10,FK to plants
+Implemented,BASIS,Number Ranges - Object Definition,TNRO,OBJECT,Number Range Object,document_number_ranges,document_type,VARCHAR,10,Object identifier (e.g. MATL/BELNR)
+Implemented,BASIS,Number Ranges - Object Definition,TNRO,TXT,Object Description,document_number_ranges,description,VARCHAR,500,Number range description
+Implemented,BASIS,Number Ranges - Object Definition,TNRO,CODE,Subobject Required,document_number_ranges,fiscal_year,VARCHAR,4,Fiscal year as subobject
+Implemented,BASIS,Number Ranges - Intervals,NRIV,OBJECT,Number Range Object,document_number_ranges,document_type,VARCHAR,10,Object identifier
+Implemented,BASIS,Number Ranges - Intervals,NRIV,SUBOBJECT,Subobject,document_number_ranges,fiscal_year,VARCHAR,4,Fiscal year
+Implemented,BASIS,Number Ranges - Intervals,NRIV,NRRANGENR,Number Range Number,document_number_ranges,range_number,VARCHAR,2,Range identifier (01-99)
+Implemented,BASIS,Number Ranges - Intervals,NRIV,FROMNUMBER,From Number,document_number_ranges,from_number,VARCHAR,20,Range start
+Implemented,BASIS,Number Ranges - Intervals,NRIV,TONUMBER,To Number,document_number_ranges,to_number,VARCHAR,20,Range end
+Implemented,BASIS,Number Ranges - Intervals,NRIV,NRLEVEL,Current Number,document_number_ranges,current_number,VARCHAR,20,Last used number
+Implemented,BASIS,Number Ranges - Intervals,NRIV,EXTERNIND,External Number Assignment,document_number_ranges,is_external,BOOLEAN,,External numbering flag
+Implemented,BASIS,Number Ranges - Configuration,Custom,Custom,Company Code,document_number_ranges,company_code,VARCHAR,10,Company code assignment
+Implemented,BASIS,Number Ranges - Configuration,Custom,Custom,Prefix,document_number_ranges,prefix,VARCHAR,10,Number prefix
+Implemented,BASIS,Number Ranges - Configuration,Custom,Custom,Suffix,document_number_ranges,suffix,VARCHAR,10,Number suffix
+Implemented,BASIS,Number Ranges - Configuration,Custom,Custom,Padding Length,document_number_ranges,padding_length,INTEGER,,Zero-padding length
+Implemented,BASIS,Number Ranges - Configuration,Custom,Custom,Warning Threshold,document_number_ranges,warning_threshold,INTEGER,,Alert threshold percentage
+Implemented,BASIS,Number Ranges - Configuration,Custom,Custom,Is Active,document_number_ranges,is_active,BOOLEAN,,Active status
+Implemented,BASIS,Number Ranges - Configuration,Custom,Custom,Created At,document_number_ranges,created_at,TIMESTAMP,,Creation timestamp
+Implemented,BASIS,Number Ranges - Configuration,Custom,Custom,Modified At,document_number_ranges,modified_at,TIMESTAMP,,Last modification
+Implemented,BASIS,Number Ranges - Alerts,Custom,Custom,Alert ID,number_range_alerts,id,UUID,,Alert identifier
+Implemented,BASIS,Number Ranges - Alerts,Custom,Custom,Company Code,number_range_alerts,company_code,VARCHAR,10,Company code
+Implemented,BASIS,Number Ranges - Alerts,Custom,Custom,Document Type,number_range_alerts,document_type,VARCHAR,10,Document type
+Implemented,BASIS,Number Ranges - Alerts,Custom,Custom,Alert Type,number_range_alerts,alert_type,VARCHAR,20,WARNING/CRITICAL/EXHAUSTED
+Implemented,BASIS,Number Ranges - Alerts,Custom,Custom,Message,number_range_alerts,message,TEXT,,Alert message
+Implemented,BASIS,Number Ranges - Alerts,Custom,Custom,Is Acknowledged,number_range_alerts,is_acknowledged,BOOLEAN,,Acknowledgment status
+Implemented,BASIS,Number Ranges - Alerts,Custom,Custom,Created At,number_range_alerts,created_at,TIMESTAMP,,Alert timestamp
+Implemented,BASIS,Number Ranges - Alerts,Custom,Custom,Acknowledged At,number_range_alerts,acknowledged_at,TIMESTAMP,,Acknowledgment timestamp
+Implemented,BASIS,Number Ranges - Usage History,Custom,Custom,History ID,number_range_usage_history,id,UUID,,History record ID
+Implemented,BASIS,Number Ranges - Usage History,Custom,Custom,Company Code,number_range_usage_history,company_code,VARCHAR,10,Company code
+Implemented,BASIS,Number Ranges - Usage History,Custom,Custom,Document Type,number_range_usage_history,document_type,VARCHAR,10,Document type
+Implemented,BASIS,Number Ranges - Usage History,Custom,Custom,Number Assigned,number_range_usage_history,number_assigned,VARCHAR,20,Assigned number
+Implemented,BASIS,Number Ranges - Usage History,Custom,Custom,Used At,number_range_usage_history,used_at,TIMESTAMP,,Assignment timestamp
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Config ID,document_type_config,id,UUID,,Configuration identifier
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Company Code,document_type_config,company_code,VARCHAR,31,Tenant/Company identifier
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Base Document Type,document_type_config,base_document_type,VARCHAR,10,"MR, PR, PO, GR, GI, CI, VI, etc."
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Subtype Code,document_type_config,subtype_code,VARCHAR,2,"01-99 subtype identifier"
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Subtype Name,document_type_config,subtype_name,VARCHAR,100,"Standard, Emergency, etc."
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Description,document_type_config,description,TEXT,,Detailed description
+Implemented,BASIS,Document Type Configuration,Custom,Custom,SAP Document Type,document_type_config,sap_document_type,VARCHAR,10,"SAP BLART/BWART mapping"
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Number Range Group,document_type_config,number_range_group,VARCHAR,10,Links to number range
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Format Template,document_type_config,format_template,VARCHAR,100,"{prefix}-{year}-{number}"
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Number Length,document_type_config,number_length,INTEGER,,"6 or 8 digits"
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Expected Volume,document_type_config,expected_volume,VARCHAR,10,"LOW/MEDIUM/HIGH"
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Is Active,document_type_config,is_active,BOOLEAN,,Active status
+Implemented,BASIS,Document Type Configuration,Custom,Custom,Display Order,document_type_config,display_order,INTEGER,,Sort order in UI
+Implemented,BASIS,SAP Document Type Mapping,Custom,Custom,Mapping ID,sap_document_type_mapping,id,UUID,,Mapping identifier
+Implemented,BASIS,SAP Document Type Mapping,Custom,Custom,Our Document Type,sap_document_type_mapping,our_doc_type,VARCHAR,10,"Our code (MR, GR, CI)"
+Implemented,BASIS,SAP Document Type Mapping,Custom,Custom,Our Subtype,sap_document_type_mapping,our_subtype,VARCHAR,2,"Our subtype (01, 02)"
+Implemented,BASIS,SAP Document Type Mapping,Custom,Custom,SAP Document Type,sap_document_type_mapping,sap_doc_type,VARCHAR,10,"SAP BLART (DR, KR, SA)"
+Implemented,BASIS,SAP Document Type Mapping,Custom,Custom,SAP Movement Type,sap_document_type_mapping,sap_movement_type,VARCHAR,3,"SAP BWART (101, 201, 261)"
+Implemented,BASIS,SAP Document Type Mapping,Custom,Custom,SAP BLART,sap_document_type_mapping,sap_blart,VARCHAR,10,"SAP document type code"
+Implemented,BASIS,SAP Document Type Mapping,Custom,Custom,Description,sap_document_type_mapping,description,TEXT,,Mapping description
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,Log ID,number_range_audit_log,id,UUID,,Audit log identifier
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,Company Code,number_range_audit_log,company_code,VARCHAR,31,Company code
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,Document Type,number_range_audit_log,document_type,VARCHAR,10,Document type
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,Number Range Group,number_range_audit_log,number_range_group,VARCHAR,10,Range group
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,Action,number_range_audit_log,action,VARCHAR,50,"GENERATED/EXTENDED/EXHAUSTED"
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,Old Value,number_range_audit_log,old_value,BIGINT,,Previous number
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,New Value,number_range_audit_log,new_value,BIGINT,,New number
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,Old To Number,number_range_audit_log,old_to_number,BIGINT,,Previous range end
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,New To Number,number_range_audit_log,new_to_number,BIGINT,,New range end
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,Extended By,number_range_audit_log,extended_by,BIGINT,,Extension amount
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,User ID,number_range_audit_log,user_id,UUID,,User who triggered action
+Implemented,BASIS,Number Range Audit Log,Custom,Custom,Timestamp,number_range_audit_log,timestamp,TIMESTAMP,,Action timestamp
+Implemented,BASIS,Number Range Enhancement,Custom,Custom,Auto Extend,document_number_ranges,auto_extend,BOOLEAN,,Auto-extension enabled
+Implemented,BASIS,Number Range Enhancement,Custom,Custom,Extend By,document_number_ranges,extend_by,BIGINT,,Extension amount
+Implemented,BASIS,Number Range Enhancement,Custom,Custom,Last Used Date,document_number_ranges,last_used_date,TIMESTAMP,,Last number generation
+Implemented,MM,Material Request,Custom,Custom,Request Number,material_requests,request_number,VARCHAR,20,"Format: MR-01-24-000123"
+Implemented,MM,Material Request,Custom,Custom,Document Type Code,material_requests,document_type_code,VARCHAR,2,"Subtype code (01, 02, etc.)"
+Implemented,MM,Material Request,Custom,Custom,Activity Code,material_requests,activity_code,VARCHAR,31,Activity assignment
+Implemented,MM,Material Request,Custom,Custom,Storage Location,material_requests,storage_location,VARCHAR,31,Storage location code
+Implemented,MM,Material Document,Custom,Custom,Document Number,material_movements,document_number,VARCHAR,20,"Format: GR-01-24-00000001"
+Implemented,MM,Material Document,Custom,Custom,SAP MBLNR,material_movements,sap_mblnr,VARCHAR,10,SAP material document number
+Implemented,MM,Material Document,Custom,Custom,SAP MJAHR,material_movements,sap_mjahr,VARCHAR,4,SAP material document year
+Implemented,MM,Material Document,Custom,Custom,SAP BWART,material_movements,sap_bwart,VARCHAR,3,"SAP movement type (101, 201)"
+Implemented,MM,Material Document,Custom,Custom,SAP BLART,material_movements,sap_blart,VARCHAR,2,"SAP document type (WE, WA)"
+Implemented,FI,Customer Invoice,Custom,Custom,Invoice Number,customer_invoices,invoice_number,VARCHAR,20,"Format: CI-01-24-00000001"
+Implemented,FI,Customer Invoice,Custom,Custom,SAP BELNR,customer_invoices,sap_belnr,VARCHAR,10,SAP accounting document
+Implemented,FI,Customer Invoice,Custom,Custom,SAP GJAHR,customer_invoices,sap_gjahr,VARCHAR,4,SAP fiscal year
+Implemented,FI,Customer Invoice,Custom,Custom,SAP BLART,customer_invoices,sap_blart,VARCHAR,2,"SAP document type (DR)"
+Implemented,FI,Vendor Invoice,Custom,Custom,Invoice Number,vendor_invoices,invoice_number,VARCHAR,20,"Format: VI-01-24-00000001"
+Implemented,FI,Vendor Invoice,Custom,Custom,SAP BELNR,vendor_invoices,sap_belnr,VARCHAR,10,SAP accounting document
+Implemented,FI,Vendor Invoice,Custom,Custom,SAP GJAHR,vendor_invoices,sap_gjahr,VARCHAR,4,SAP fiscal year
+Implemented,FI,Vendor Invoice,Custom,Custom,SAP BLART,vendor_invoices,sap_blart,VARCHAR,2,"SAP document type (KR)"
+Implemented,FI,Payment Document,Custom,Custom,Payment Number,payments,payment_number,VARCHAR,20,"Format: PD-01-24-00000001"
+Implemented,FI,Payment Document,Custom,Custom,SAP BELNR,payments,sap_belnr,VARCHAR,10,SAP payment document
+Implemented,FI,Payment Document,Custom,Custom,SAP GJAHR,payments,sap_gjahr,VARCHAR,4,SAP fiscal year
+Implemented,FI,Payment Document,Custom,Custom,SAP BLART,payments,sap_blart,VARCHAR,2,"SAP document type (DZ)"
+Implemented,FI,Journal Entry,Custom,Custom,Journal Number,journal_entries,journal_number,VARCHAR,20,"Format: JE-01-24-00000001"
+Implemented,FI,Journal Entry,Custom,Custom,SAP BELNR,journal_entries,sap_belnr,VARCHAR,10,SAP journal document
+Implemented,FI,Journal Entry,Custom,Custom,SAP GJAHR,journal_entries,sap_gjahr,VARCHAR,4,SAP fiscal year
+Implemented,FI,Journal Entry,Custom,Custom,SAP BLART,journal_entries,sap_blart,VARCHAR,2,"SAP document type (SA)"ment timestamp
+Implemented,BASIS,Number Ranges - Usage History,Custom,Custom,User ID,number_range_usage_history,user_id,UUID,,User who requested
+Mapping Only,BASIS,Number Range Objects,TNRO,MATL,Material Number,document_number_ranges,MATERIAL,,,Material master numbering
+Mapping Only,BASIS,Number Range Objects,TNRO,BELNR,Accounting Document,document_number_ranges,FI_DOCUMENT,,,Financial document numbering
+Mapping Only,BASIS,Number Range Objects,TNRO,BANFN,Purchase Requisition,document_number_ranges,PR,,,PR numbering
+Mapping Only,BASIS,Number Range Objects,TNRO,EBELN,Purchase Order,document_number_ranges,PO,,,PO numbering
+Mapping Only,BASIS,Number Range Objects,TNRO,MBLNR,Material Document,document_number_ranges,GR,,,Goods receipt numbering
+Mapping Only,BASIS,Number Range Objects,TNRO,BELNR_INV,Invoice Document,document_number_ranges,INVOICE,,,Invoice numbering
+Mapping Only,BASIS,Number Range Objects,TNRO,PSPNR,Project Definition,document_number_ranges,PROJECT,,,Project numbering
+Mapping Only,BASIS,Number Range Objects,TNRO,AUFNR,Order Number,document_number_ranges,ORDER,,,Internal order numbering
+Implemented,BASIS,Transaction Codes,SNUM,SNUM,Number Range Maintenance,NumberRangeMaintenance,,,,Component: NumberRangeMaintenance
+Implemented,MM-IM,Inventory Management - Stock,MARD,LABST,Unrestricted Stock,stock_balances,current_quantity,DECIMAL,"15,3",
+Not Implemented,MM-IM,Inventory Management - Stock,MARD,INSME,Quality Inspection Stock,,,,,Not implemented
+Not Implemented,MM-IM,Inventory Management - Stock,MARD,SPEME,Blocked Stock,,,,,Not implemented
+Implemented,MM-IM,Inventory Management - Stock,Custom,Custom,Reserved Quantity,stock_balances,reserved_quantity,DECIMAL,"15,3",Custom field
+Implemented,MM-IM,Inventory Management - Stock,Custom,Custom,Available Quantity,stock_balances,available_quantity,DECIMAL,"15,3",Calculated field
+Mapping Only,MM,Material Type Mapping,Custom,Custom,FERT - Finished Product,material_types,FG,,,Finished Goods
+Mapping Only,MM,Material Type Mapping,Custom,Custom,ROH - Raw Material,material_types,RM,,,Raw Materials
+Mapping Only,MM,Material Type Mapping,Custom,Custom,HALB - Semi-Finished,material_types,SFG,,,Semi-Finished
+Mapping Only,MM,Material Type Mapping,Custom,Custom,HAWA - Trading Goods,material_types,TG,,,Trading Goods
+Mapping Only,MM,Material Type Mapping,Custom,Custom,DIEN - Services,material_types,SER,,,Services
+Mapping Only,MM,Material Type Mapping,Custom,Custom,HIBE - Operating Supplies,material_types,RM,,,Mapped to Raw Materials
+Mapping Only,MM,Material Type Mapping,Custom,Custom,VERP - Packaging Material,material_types,RM,,,Mapped to Raw Materials
+Not Implemented,MM,Material Type Mapping,Custom,Custom,NLAG - Non-Stock Material,,,,,Not implemented
+Implemented,MM,Transaction Codes,MM01,MM01,Create Material Master,CreateMaterialMaster,,,,"Component: CreateMaterialMaster"
+Implemented,MM,Transaction Codes,MM02,MM02,Change Material Master,MaintainMaterialMaster,,,,"Component: MaintainMaterialMaster"
+Implemented,MM,Transaction Codes,MM03,MM03,Display Material Master,DisplayMaterialMaster,,,,"Component: DisplayMaterialMaster"
+Implemented,MM,Transaction Codes,MM50,MM50,Extend Material to Plant,ExtendMaterialToPlant,,,,"Component: ExtendMaterialToPlant"
+Implemented,MM,Transaction Codes,MM60,MM60,Material Plant Parameters,MaterialPlantParameters,,,,"Component: MaterialPlantParameters"
+Implemented,MM-IM,Transaction Codes,MMBE,MMBE,Stock Overview,StockOverview,,,,"Component: StockOverview"
+Not Implemented,MM-IM,Transaction Codes,MB51,MB51,Material Document List,,,,,Not implemented
+Not Implemented,MM-IM,Transaction Codes,MB52,MB52,Stock List,,,,,Not implemented
+Implemented,FI,Chart of Accounts - Master Data,SKA1,KTOPL,Chart of Accounts,chart_of_accounts,chart_id,VARCHAR,10,Chart identifier
+Implemented,FI,Chart of Accounts - Master Data,SKA1,SAKNR,GL Account Number,chart_of_accounts,account_code,VARCHAR,10,10-char GL account
+Implemented,FI,Chart of Accounts - Master Data,SKAT,TXT50,GL Account Name,chart_of_accounts,account_name,VARCHAR,500,Account description
+Implemented,FI,Chart of Accounts - Master Data,SKA1,XBILK,Balance Sheet Account,chart_of_accounts,account_type,VARCHAR,20,ASSET/LIABILITY/EQUITY/REVENUE/EXPENSE
+Implemented,FI,Chart of Accounts - Master Data,SKA1,KTOKS,Account Group,chart_of_accounts,account_group,VARCHAR,10,Account classification
+Not Implemented,FI,Chart of Accounts - Master Data,SKA1,XSPEB,Blocked for Posting,chart_of_accounts,is_blocked,BOOLEAN,,Posting block indicator
+Not Implemented,FI,Chart of Accounts - Master Data,SKA1,XSPEA,Blocked for Planning,chart_of_accounts,is_planning_blocked,BOOLEAN,,Planning block indicator
+Implemented,FI,Chart of Accounts - Company Code,SKB1,BUKRS,Company Code,chart_of_accounts,company_code,VARCHAR,10,Company code assignment
+Implemented,FI,Chart of Accounts - Company Code,SKB1,SAKNR,GL Account Number,chart_of_accounts,account_code,VARCHAR,10,GL account in company code
+Not Implemented,FI,Chart of Accounts - Company Code,SKB1,WAERS,Currency,chart_of_accounts,currency,VARCHAR,3,Account currency
+Not Implemented,FI,Chart of Accounts - Company Code,SKB1,XINTB,Interest Calculation,chart_of_accounts,interest_calc,BOOLEAN,,Interest calculation indicator
+Not Implemented,FI,Chart of Accounts - Company Code,SKB1,XMWNO,Tax Category,chart_of_accounts,tax_category,VARCHAR,10,Tax posting category
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,RLDNR,Ledger,financial_documents,ledger,VARCHAR,2,Leading ledger (0L)
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,RBUKRS,Company Code,financial_documents,company_code,VARCHAR,10,Company code
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,GJAHR,Fiscal Year,financial_documents,fiscal_year,VARCHAR,4,Posting fiscal year
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BELNR,Document Number,financial_documents,document_number,VARCHAR,10,Accounting document number
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BUZEI,Line Item,financial_documents,line_item,INTEGER,,Line item number
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,RACCT,Account Number,financial_documents,account_code,VARCHAR,10,GL account number
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BLART,Document Type,financial_documents,document_type,VARCHAR,2,SA/AB/KR/RE/etc
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BLDAT,Document Date,financial_documents,document_date,DATE,,Document date
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BUDAT,Posting Date,financial_documents,posting_date,DATE,,Posting date
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,WAERS,Currency,financial_documents,currency,VARCHAR,3,Document currency
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,HSL,Amount in Local Currency,financial_documents,amount_lc,DECIMAL,"15,2",Amount in company currency
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,TSL,Amount in Transaction Currency,financial_documents,amount_tc,DECIMAL,"15,2",Amount in document currency
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,MENGE,Quantity,financial_documents,quantity,DECIMAL,"15,3",Quantity
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,MEINS,Unit of Measure,financial_documents,uom,VARCHAR,10,Base unit
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,MATNR,Material Number,financial_documents,material_code,VARCHAR,40,Material
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,WERKS,Plant,financial_documents,plant_code,VARCHAR,10,Plant
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,KOSTL,Cost Center,financial_documents,cost_center,VARCHAR,10,Cost center
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,AUFNR,Order Number,financial_documents,order_number,VARCHAR,12,Internal order/Project
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,PRCTR,Profit Center,financial_documents,profit_center,VARCHAR,10,Profit center
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,SEGMENT,Segment,financial_documents,segment,VARCHAR,10,Segment for segmental reporting
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,SGTXT,Item Text,financial_documents,line_item_text,VARCHAR,500,Line item description
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,XBLNR,Reference Document,financial_documents,reference_doc,VARCHAR,16,External reference
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BKTXT,Document Header Text,financial_documents,header_text,VARCHAR,500,Document description
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,LIFNR,Vendor Number,financial_documents,vendor_code,VARCHAR,10,Vendor account
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,KUNNR,Customer Number,financial_documents,customer_code,VARCHAR,10,Customer account
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZTERM,Payment Terms,financial_documents,payment_terms,VARCHAR,4,Payment terms key
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZFBDT,Baseline Date,financial_documents,baseline_date,DATE,,Payment baseline date
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZBD1T,Cash Discount Days 1,financial_documents,discount_days_1,INTEGER,,First discount period
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZBD1P,Cash Discount Percent 1,financial_documents,discount_pct_1,DECIMAL,"5,2",First discount percentage
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZBD2T,Cash Discount Days 2,financial_documents,discount_days_2,INTEGER,,Second discount period
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZBD2P,Cash Discount Percent 2,financial_documents,discount_pct_2,DECIMAL,"5,2",Second discount percentage
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,REBZG,Invoice Reference,financial_documents,invoice_reference,VARCHAR,10,Invoice document number
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,REBZJ,Invoice Fiscal Year,financial_documents,invoice_year,VARCHAR,4,Invoice fiscal year
+Not Implemented,FI,Universal Journal (ACDOCA),ACDOCA,REBZZ,Invoice Line Item,financial_documents,invoice_line_item,INTEGER,,Invoice line item number
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,LIFNR,Vendor Number,vendors,vendor_code,VARCHAR,10,Vendor account number
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,NAME1,Vendor Name,vendors,vendor_name,VARCHAR,500,Vendor name
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,SORTL,Search Term,vendors,search_term,VARCHAR,20,Search key
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,STRAS,Street,vendors,street,VARCHAR,500,Street address
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,ORT01,City,vendors,city,VARCHAR,100,City
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,PSTLZ,Postal Code,vendors,postal_code,VARCHAR,10,Postal code
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,LAND1,Country,vendors,country_code,VARCHAR,2,Country key
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,TELF1,Telephone,vendors,phone,VARCHAR,20,Phone number
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,SMTP_ADDR,Email,vendors,email,VARCHAR,500,Email address
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,STCD1,Tax Number 1,vendors,tax_number_1,VARCHAR,20,Tax identification number
+Not Implemented,FI-AP,Vendor Master - General Data,LFA1,STCD2,Tax Number 2,vendors,tax_number_2,VARCHAR,20,Additional tax number
+Not Implemented,FI-AP,Vendor Master - Company Code,LFB1,LIFNR,Vendor Number,vendors,vendor_code,VARCHAR,10,Vendor in company code
+Not Implemented,FI-AP,Vendor Master - Company Code,LFB1,BUKRS,Company Code,vendors,company_code,VARCHAR,10,Company code
+Not Implemented,FI-AP,Vendor Master - Company Code,LFB1,AKONT,Reconciliation Account,vendors,reconciliation_account,VARCHAR,10,GL account for vendor
+Not Implemented,FI-AP,Vendor Master - Company Code,LFB1,ZTERM,Payment Terms,vendors,payment_terms,VARCHAR,4,Default payment terms
+Not Implemented,FI-AP,Vendor Master - Company Code,LFB1,ZWELS,Payment Methods,vendors,payment_methods,VARCHAR,10,Allowed payment methods
+Not Implemented,FI-AP,Vendor Master - Company Code,LFB1,REPRF,Dunning Procedure,vendors,dunning_procedure,VARCHAR,4,Dunning procedure
+Not Implemented,FI-AP,Vendor Master - Company Code,LFB1,XVERR,Clearing with Vendor,vendors,clearing_with_vendor,BOOLEAN,,Automatic clearing
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,KUNNR,Customer Number,customers,customer_code,VARCHAR,10,Customer account number
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,NAME1,Customer Name,customers,customer_name,VARCHAR,500,Customer name
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,SORTL,Search Term,customers,search_term,VARCHAR,20,Search key
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,STRAS,Street,customers,street,VARCHAR,500,Street address
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,ORT01,City,customers,city,VARCHAR,100,City
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,PSTLZ,Postal Code,customers,postal_code,VARCHAR,10,Postal code
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,LAND1,Country,customers,country_code,VARCHAR,2,Country key
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,TELF1,Telephone,customers,phone,VARCHAR,20,Phone number
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,SMTP_ADDR,Email,customers,email,VARCHAR,500,Email address
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,STCD1,Tax Number 1,customers,tax_number_1,VARCHAR,20,Tax identification number
+Not Implemented,FI-AR,Customer Master - General Data,KNA1,STCD2,Tax Number 2,customers,tax_number_2,VARCHAR,20,Additional tax number
+Not Implemented,FI-AR,Customer Master - Company Code,KNB1,KUNNR,Customer Number,customers,customer_code,VARCHAR,10,Customer in company code
+Not Implemented,FI-AR,Customer Master - Company Code,KNB1,BUKRS,Company Code,customers,company_code,VARCHAR,10,Company code
+Not Implemented,FI-AR,Customer Master - Company Code,KNB1,AKONT,Reconciliation Account,customers,reconciliation_account,VARCHAR,10,GL account for customer
+Not Implemented,FI-AR,Customer Master - Company Code,KNB1,ZTERM,Payment Terms,customers,payment_terms,VARCHAR,4,Default payment terms
+Not Implemented,FI-AR,Customer Master - Company Code,KNB1,ZWELS,Payment Methods,customers,payment_methods,VARCHAR,10,Allowed payment methods
+Not Implemented,FI-AR,Customer Master - Company Code,KNB1,REPRF,Dunning Procedure,customers,dunning_procedure,VARCHAR,4,Dunning procedure
+Not Implemented,FI-AR,Customer Master - Company Code,KNB1,XVERR,Clearing with Customer,customers,clearing_with_customer,BOOLEAN,,Automatic clearing
+Implemented,CO,Cost Center - Master Data,CSKS,KOKRS,Controlling Area,cost_centers,controlling_area,VARCHAR,10,Controlling area
+Implemented,CO,Cost Center - Master Data,CSKS,KOSTL,Cost Center,cost_centers,cost_center_code,VARCHAR,10,Cost center code
+Implemented,CO,Cost Center - Master Data,CSKS,DATBI,Valid To,cost_centers,valid_to,DATE,,Validity end date
+Implemented,CO,Cost Center - Master Data,CSKS,DATAB,Valid From,cost_centers,valid_from,DATE,,Validity start date
+Implemented,CO,Cost Center - Master Data,CSKT,KTEXT,Cost Center Name,cost_centers,cost_center_name,VARCHAR,500,Cost center description
+Not Implemented,CO,Cost Center - Master Data,CSKS,VERAK,Person Responsible,cost_centers,responsible_person,VARCHAR,20,Person responsible
+Implemented,CO,Cost Center - Master Data,CSKS,BUKRS,Company Code,cost_centers,company_code,VARCHAR,10,Company code
+Not Implemented,CO,Cost Center - Master Data,CSKS,WAERS,Currency,cost_centers,currency,VARCHAR,3,Cost center currency
+Implemented,CO,Profit Center - Master Data,CEPC,PRCTR,Profit Center,profit_centers,profit_center_code,VARCHAR,10,Profit center code
+Implemented,CO,Profit Center - Master Data,CEPC,DATBI,Valid To,profit_centers,valid_to,DATE,,Validity end date
+Implemented,CO,Profit Center - Master Data,CEPC,DATAB,Valid From,profit_centers,valid_from,DATE,,Validity start date
+Implemented,CO,Profit Center - Master Data,CEPCT,KTEXT,Profit Center Name,profit_centers,profit_center_name,VARCHAR,500,Profit center description
+Implemented,CO,Profit Center - Master Data,CEPC,BUKRS,Company Code,profit_centers,company_code,VARCHAR,10,Company code
+Not Implemented,CO,Profit Center - Master Data,CEPC,WAERS,Currency,profit_centers,currency,VARCHAR,3,Profit center currency
+Not Implemented,CO,Profit Center - Master Data,CEPC,VERAK,Person Responsible,profit_centers,responsible_person,VARCHAR,20,Person responsible
+Not Implemented,FI,Payment Terms - Master Data,T052,ZTERM,Payment Terms,payment_terms,payment_term_code,VARCHAR,4,Payment terms key
+Not Implemented,FI,Payment Terms - Master Data,T052U,TEXT1,Payment Terms Text,payment_terms,payment_term_name,VARCHAR,500,Payment terms description
+Not Implemented,FI,Payment Terms - Master Data,T052,ZBD1T,Cash Discount Days 1,payment_terms,discount_days_1,INTEGER,,First discount period
+Not Implemented,FI,Payment Terms - Master Data,T052,ZBD1P,Cash Discount Percent 1,payment_terms,discount_pct_1,DECIMAL,"5,2",First discount percentage
+Not Implemented,FI,Payment Terms - Master Data,T052,ZBD2T,Cash Discount Days 2,payment_terms,discount_days_2,INTEGER,,Second discount period
+Not Implemented,FI,Payment Terms - Master Data,T052,ZBD2P,Cash Discount Percent 2,payment_terms,discount_pct_2,DECIMAL,"5,2",Second discount percentage
+Not Implemented,FI,Payment Terms - Master Data,T052,ZBD3T,Net Payment Days,payment_terms,net_days,INTEGER,,Net payment due days
+Not Implemented,FI,Tax Code - Master Data,T007A,MWSKZ,Tax Code,tax_codes,tax_code,VARCHAR,2,Tax code key
+Not Implemented,FI,Tax Code - Master Data,T007S,TEXT1,Tax Code Description,tax_codes,tax_code_name,VARCHAR,500,Tax code description
+Not Implemented,FI,Tax Code - Master Data,MWDAT,KALSM,Tax Procedure,tax_codes,tax_procedure,VARCHAR,6,Tax calculation procedure
+Not Implemented,FI,Tax Code - Master Data,A003,KBETR,Tax Rate,tax_codes,tax_rate,DECIMAL,"5,2",Tax percentage
+Not Implemented,FI,Tax Code - Master Data,T007A,MWART,Tax Type,tax_codes,tax_type,VARCHAR,1,Input/Output tax indicator
+Implemented,FI,Transaction Codes,FS00,FS00,GL Account Master,ChartOfAccounts,,,,"Component: ChartOfAccounts"
+Not Implemented,FI,Transaction Codes,FB01,FB01,Post Document,PostDocument,,,,"Component: PostDocument"
+Not Implemented,FI,Transaction Codes,FB03,FB03,Display Document,DisplayDocument,,,,"Component: DisplayDocument"
+Not Implemented,FI-AP,Transaction Codes,FK01,FK01,Create Vendor,CreateVendor,,,,"Component: CreateVendor"
+Not Implemented,FI-AP,Transaction Codes,FK02,FK02,Change Vendor,MaintainVendor,,,,"Component: MaintainVendor"
+Not Implemented,FI-AP,Transaction Codes,FK03,FK03,Display Vendor,DisplayVendor,,,,"Component: DisplayVendor"
+Not Implemented,FI-AR,Transaction Codes,FD01,FD01,Create Customer,CreateCustomer,,,,"Component: CreateCustomer"
+Not Implemented,FI-AR,Transaction Codes,FD02,FD02,Change Customer,MaintainCustomer,,,,"Component: MaintainCustomer"
+Not Implemented,FI-AR,Transaction Codes,FD03,FD03,Display Customer,DisplayCustomer,,,,"Component: DisplayCustomer"
+Not Implemented,CO,Transaction Codes,KS01,KS01,Create Cost Center,CreateCostCenter,,,,"Component: CreateCostCenter"
+Not Implemented,CO,Transaction Codes,KS02,KS02,Change Cost Center,MaintainCostCenter,,,,"Component: MaintainCostCenter"
+Not Implemented,CO,Transaction Codes,KE51,KE51,Create Profit Center,CreateProfitCenter,,,,"Component: CreateProfitCenter"
+Not Implemented,CO,Transaction Codes,KE52,KE52,Change Profit Center,MaintainProfitCenter,,,,"Component: MaintainProfitCenter"
+Not Implemented,FI-AP,Transaction Codes,F-43,F-43,Enter Vendor Invoice,VendorInvoice,,,,"Component: VendorInvoice"
+Not Implemented,FI-AP,Transaction Codes,F-28,F-28,Post Vendor Payment,VendorPayment,,,,"Component: VendorPayment"
+Not Implemented,FI-AR,Transaction Codes,F-22,F-22,Enter Customer Invoice,CustomerInvoice,,,,"Component: CustomerInvoice"
+Not Implemented,FI-AR,Transaction Codes,F-28,F-28,Post Customer Payment,CustomerPayment,,,,"Component: CustomerPayment"
+Not Implemented,FI,Transaction Codes,FAGLB03,FAGLB03,Display Balances,DisplayBalances,,,,"Component: DisplayBalances"
+Not Implemented,MM,Material Request - Header,Custom,Custom,Request Number,material_requests,request_number,VARCHAR,20,Internal request number
+Not Implemented,MM,Material Request - Header,Custom,Custom,Request Date,material_requests,request_date,DATE,,Date of request
+Not Implemented,MM,Material Request - Header,Custom,Custom,Requested By,material_requests,requested_by,UUID,,User who created request
+Not Implemented,MM,Material Request - Header,Custom,Custom,Request Type,material_requests,request_type,VARCHAR,20,PURCHASE/TRANSFER/STOCK
+Not Implemented,MM,Material Request - Header,Custom,Custom,Priority,material_requests,priority,VARCHAR,10,HIGH/MEDIUM/LOW
+Not Implemented,MM,Material Request - Header,Custom,Custom,Status,material_requests,status,VARCHAR,20,DRAFT/SUBMITTED/APPROVED/REJECTED
+Not Implemented,MM,Material Request - Header,Custom,Custom,Plant,material_requests,plant_code,VARCHAR,10,Requesting plant
+Not Implemented,MM,Material Request - Header,Custom,Custom,Cost Center,material_requests,cost_center,VARCHAR,10,Charging cost center
+Not Implemented,MM,Material Request - Header,Custom,Custom,Project,material_requests,project_code,VARCHAR,20,Project/WBS element
+Not Implemented,MM,Material Request - Items,Custom,Custom,Request Number,material_request_items,request_number,VARCHAR,20,FK to header
+Not Implemented,MM,Material Request - Items,Custom,Custom,Item Number,material_request_items,item_number,INTEGER,,Line item number
+Not Implemented,MM,Material Request - Items,Custom,Custom,Material Code,material_request_items,material_code,VARCHAR,31,Material number
+Not Implemented,MM,Material Request - Items,Custom,Custom,Quantity,material_request_items,quantity,DECIMAL,"15,3",Requested quantity
+Not Implemented,MM,Material Request - Items,Custom,Custom,Unit of Measure,material_request_items,uom,VARCHAR,10,UOM
+Not Implemented,MM,Material Request - Items,Custom,Custom,Required Date,material_request_items,required_date,DATE,,Date needed
+Not Implemented,MM,Material Request - Items,Custom,Custom,Purpose,material_request_items,purpose,TEXT,,Usage description
+Implemented,MM-PUR,Purchase Requisition - Header,EBAN,BANFN,PR Number,purchase_requisitions,pr_number,VARCHAR,10,Purchase requisition number
+Implemented,MM-PUR,Purchase Requisition - Header,EBAN,BADAT,PR Date,purchase_requisitions,pr_date,DATE,,PR creation date
+Implemented,MM-PUR,Purchase Requisition - Header,EBAN,ERNAM,Created By,purchase_requisitions,created_by,UUID,,User who created
+Implemented,MM-PUR,Purchase Requisition - Header,EBAN,BSART,Document Type,purchase_requisitions,doc_type,VARCHAR,4,NB/ZNB/etc
+Not Implemented,MM-PUR,Purchase Requisition - Header,EBAN,EKGRP,Purchasing Group,purchase_requisitions,purchasing_group,VARCHAR,3,Purchasing group
+Not Implemented,MM-PUR,Purchase Requisition - Header,EBAN,FRGZU,Release Status,purchase_requisitions,release_status,VARCHAR,1,Release indicator
+Implemented,MM-PUR,Purchase Requisition - Items,EBAN,BANFN,PR Number,purchase_requisition_items,pr_number,VARCHAR,10,PR number
+Implemented,MM-PUR,Purchase Requisition - Items,EBAN,BNFPO,PR Item,purchase_requisition_items,pr_item,INTEGER,,Item number
+Implemented,MM-PUR,Purchase Requisition - Items,EBAN,MATNR,Material Number,purchase_requisition_items,material_code,VARCHAR,40,Material
+Implemented,MM-PUR,Purchase Requisition - Items,EBAN,MENGE,Quantity,purchase_requisition_items,quantity,DECIMAL,"15,3",Quantity
+Implemented,MM-PUR,Purchase Requisition - Items,EBAN,MEINS,Unit of Measure,purchase_requisition_items,uom,VARCHAR,10,UOM
+Implemented,MM-PUR,Purchase Requisition - Items,EBAN,LFDAT,Delivery Date,purchase_requisition_items,delivery_date,DATE,,Required delivery date
+Implemented,MM-PUR,Purchase Requisition - Items,EBAN,WERKS,Plant,purchase_requisition_items,plant_code,VARCHAR,10,Plant
+Not Implemented,MM-PUR,Purchase Requisition - Items,EBAN,LGORT,Storage Location,purchase_requisition_items,storage_location,VARCHAR,10,Storage location
+Implemented,MM-PUR,Purchase Requisition - Items,EBAN,KOSTL,Cost Center,purchase_requisition_items,cost_center,VARCHAR,10,Cost center
+Not Implemented,MM-PUR,Purchase Requisition - Items,EBAN,AUFNR,Order Number,purchase_requisition_items,order_number,VARCHAR,12,Internal order
+Not Implemented,MM-PUR,Purchase Requisition - Items,EBAN,PREIS,Price,purchase_requisition_items,price,DECIMAL,"15,2",Estimated price
+Not Implemented,MM-PUR,Purchase Requisition - Items,EBAN,PEINH,Price Unit,purchase_requisition_items,price_unit,INTEGER,,Price per X units
+Not Implemented,MM-PUR,Purchase Requisition - Items,EBAN,WAERS,Currency,purchase_requisition_items,currency,VARCHAR,3,Currency
+Implemented,MM-PUR,Purchase Order - Header,EKKO,EBELN,PO Number,purchase_orders,po_number,VARCHAR,10,Purchase order number
+Implemented,MM-PUR,Purchase Order - Header,EKKO,BEDAT,PO Date,purchase_orders,po_date,DATE,,PO creation date
+Implemented,MM-PUR,Purchase Order - Header,EKKO,BSART,Document Type,purchase_orders,doc_type,VARCHAR,4,NB/ZNB/etc
+Implemented,MM-PUR,Purchase Order - Header,EKKO,LIFNR,Vendor,purchase_orders,vendor_code,VARCHAR,10,Vendor account
+Implemented,MM-PUR,Purchase Order - Header,EKKO,EKORG,Purchasing Organization,purchase_orders,purchasing_org,VARCHAR,4,Purchasing org
+Not Implemented,MM-PUR,Purchase Order - Header,EKKO,EKGRP,Purchasing Group,purchase_orders,purchasing_group,VARCHAR,3,Purchasing group
+Implemented,MM-PUR,Purchase Order - Header,EKKO,BUKRS,Company Code,purchase_orders,company_code,VARCHAR,10,Company code
+Not Implemented,MM-PUR,Purchase Order - Header,EKKO,WAERS,Currency,purchase_orders,currency,VARCHAR,3,Document currency
+Not Implemented,MM-PUR,Purchase Order - Header,EKKO,ZTERM,Payment Terms,purchase_orders,payment_terms,VARCHAR,4,Payment terms
+Not Implemented,MM-PUR,Purchase Order - Header,EKKO,INCO1,Incoterms,purchase_orders,incoterms,VARCHAR,3,Incoterms code
+Not Implemented,MM-PUR,Purchase Order - Header,EKKO,INCO2,Incoterms Location,purchase_orders,incoterms_location,VARCHAR,70,Incoterms location
+Not Implemented,MM-PUR,Purchase Order - Header,EKKO,FRGZU,Release Status,purchase_orders,release_status,VARCHAR,1,Release indicator
+Implemented,MM-PUR,Purchase Order - Items,EKPO,EBELN,PO Number,purchase_order_items,po_number,VARCHAR,10,PO number
+Implemented,MM-PUR,Purchase Order - Items,EKPO,EBELP,PO Item,purchase_order_items,po_item,INTEGER,,Item number
+Implemented,MM-PUR,Purchase Order - Items,EKPO,MATNR,Material Number,purchase_order_items,material_code,VARCHAR,40,Material
+Implemented,MM-PUR,Purchase Order - Items,EKPO,MENGE,Quantity,purchase_order_items,quantity,DECIMAL,"15,3",Order quantity
+Implemented,MM-PUR,Purchase Order - Items,EKPO,MEINS,Unit of Measure,purchase_order_items,uom,VARCHAR,10,UOM
+Implemented,MM-PUR,Purchase Order - Items,EKPO,NETPR,Net Price,purchase_order_items,net_price,DECIMAL,"15,2",Net price
+Not Implemented,MM-PUR,Purchase Order - Items,EKPO,PEINH,Price Unit,purchase_order_items,price_unit,INTEGER,,Price per X units
+Not Implemented,MM-PUR,Purchase Order - Items,EKPO,NETWR,Net Value,purchase_order_items,net_value,DECIMAL,"15,2",Net order value
+Implemented,MM-PUR,Purchase Order - Items,EKPO,WERKS,Plant,purchase_order_items,plant_code,VARCHAR,10,Plant
+Not Implemented,MM-PUR,Purchase Order - Items,EKPO,LGORT,Storage Location,purchase_order_items,storage_location,VARCHAR,10,Storage location
+Not Implemented,MM-PUR,Purchase Order - Items,EKPO,MWSKZ,Tax Code,purchase_order_items,tax_code,VARCHAR,2,Tax code
+Implemented,MM-PUR,Purchase Order - Items,EKPO,KOSTL,Cost Center,purchase_order_items,cost_center,VARCHAR,10,Cost center
+Not Implemented,MM-PUR,Purchase Order - Items,EKPO,AUFNR,Order Number,purchase_order_items,order_number,VARCHAR,12,Internal order
+Not Implemented,MM-PUR,Purchase Order - Items,EKPO,BANFN,PR Number,purchase_order_items,pr_number,VARCHAR,10,Reference PR
+Not Implemented,MM-PUR,Purchase Order - Items,EKPO,BNFPO,PR Item,purchase_order_items,pr_item,INTEGER,,Reference PR item
+Not Implemented,MM-PUR,Purchase Order - Items,EKPO,ELIKZ,Delivery Completed,purchase_order_items,delivery_completed,BOOLEAN,,Delivery complete indicator
+Not Implemented,MM-PUR,Purchase Order - Items,EKPO,EREKZ,Final Invoice,purchase_order_items,final_invoice,BOOLEAN,,Final invoice indicator
+Implemented,MM-IM,Goods Receipt - Header,MKPF,MBLNR,Material Document,goods_receipts,material_doc_number,VARCHAR,10,Material document number
+Implemented,MM-IM,Goods Receipt - Header,MKPF,MJAHR,Material Document Year,goods_receipts,material_doc_year,VARCHAR,4,Fiscal year
+Implemented,MM-IM,Goods Receipt - Header,MKPF,BUDAT,Posting Date,goods_receipts,posting_date,DATE,,Posting date
+Implemented,MM-IM,Goods Receipt - Header,MKPF,BLDAT,Document Date,goods_receipts,document_date,DATE,,Document date
+Not Implemented,MM-IM,Goods Receipt - Header,MKPF,USNAM,User Name,goods_receipts,created_by,UUID,,User who posted
+Not Implemented,MM-IM,Goods Receipt - Header,MKPF,XBLNR,Reference Document,goods_receipts,reference_doc,VARCHAR,16,External reference
+Not Implemented,MM-IM,Goods Receipt - Header,MKPF,BKTXT,Header Text,goods_receipts,header_text,VARCHAR,500,Document header text
+Implemented,MM-IM,Goods Receipt - Items,MSEG,MBLNR,Material Document,goods_receipt_items,material_doc_number,VARCHAR,10,Material document
+Implemented,MM-IM,Goods Receipt - Items,MSEG,MJAHR,Material Document Year,goods_receipt_items,material_doc_year,VARCHAR,4,Fiscal year
+Implemented,MM-IM,Goods Receipt - Items,MSEG,ZEILE,Item,goods_receipt_items,item_number,INTEGER,,Item number
+Implemented,MM-IM,Goods Receipt - Items,MSEG,BWART,Movement Type,goods_receipt_items,movement_type,VARCHAR,3,101/102/etc
+Implemented,MM-IM,Goods Receipt - Items,MSEG,MATNR,Material Number,goods_receipt_items,material_code,VARCHAR,40,Material
+Implemented,MM-IM,Goods Receipt - Items,MSEG,MENGE,Quantity,goods_receipt_items,quantity,DECIMAL,"15,3",Quantity
+Implemented,MM-IM,Goods Receipt - Items,MSEG,MEINS,Unit of Measure,goods_receipt_items,uom,VARCHAR,10,UOM
+Implemented,MM-IM,Goods Receipt - Items,MSEG,WERKS,Plant,goods_receipt_items,plant_code,VARCHAR,10,Plant
+Implemented,MM-IM,Goods Receipt - Items,MSEG,LGORT,Storage Location,goods_receipt_items,storage_location,VARCHAR,10,Storage location
+Not Implemented,MM-IM,Goods Receipt - Items,MSEG,EBELN,Purchase Order,goods_receipt_items,po_number,VARCHAR,10,PO number
+Not Implemented,MM-IM,Goods Receipt - Items,MSEG,EBELP,PO Item,goods_receipt_items,po_item,INTEGER,,PO item
+Not Implemented,MM-IM,Goods Receipt - Items,MSEG,KOSTL,Cost Center,goods_receipt_items,cost_center,VARCHAR,10,Cost center
+Not Implemented,MM-IM,Goods Receipt - Items,MSEG,AUFNR,Order Number,goods_receipt_items,order_number,VARCHAR,12,Internal order
+Not Implemented,MM-IM,Goods Receipt - Items,MSEG,DMBTR,Amount in Local Currency,goods_receipt_items,amount_lc,DECIMAL,"15,2",Amount
+Not Implemented,MM-IM,Goods Receipt - Items,MSEG,WAERS,Currency,goods_receipt_items,currency,VARCHAR,3,Currency
+Not Implemented,MM-SRV,Service Entry Sheet - Header,ESLL,LBLNI,Service Entry Sheet,service_entry_sheets,ses_number,VARCHAR,10,SES number
+Not Implemented,MM-SRV,Service Entry Sheet - Header,Custom,Custom,SES Date,service_entry_sheets,ses_date,DATE,,SES creation date
+Not Implemented,MM-SRV,Service Entry Sheet - Header,ESLL,EBELN,Purchase Order,service_entry_sheets,po_number,VARCHAR,10,Reference PO
+Not Implemented,MM-SRV,Service Entry Sheet - Header,ESLL,EBELP,PO Item,service_entry_sheets,po_item,INTEGER,,Reference PO item
+Not Implemented,MM-SRV,Service Entry Sheet - Header,Custom,Custom,Status,service_entry_sheets,status,VARCHAR,20,DRAFT/SUBMITTED/APPROVED
+Not Implemented,MM-SRV,Service Entry Sheet - Header,Custom,Custom,Created By,service_entry_sheets,created_by,UUID,,User who created
+Not Implemented,MM-SRV,Service Entry Sheet - Items,ESLL,LBLNI,Service Entry Sheet,service_entry_sheet_items,ses_number,VARCHAR,10,SES number
+Not Implemented,MM-SRV,Service Entry Sheet - Items,ESLL,LBLNR,Service Line,service_entry_sheet_items,line_number,INTEGER,,Line number
+Not Implemented,MM-SRV,Service Entry Sheet - Items,ESLL,SRVPOS,Service Number,service_entry_sheet_items,service_number,VARCHAR,18,Service line item
+Not Implemented,MM-SRV,Service Entry Sheet - Items,ESLL,KTEXT1,Short Text,service_entry_sheet_items,short_text,VARCHAR,500,Service description
+Not Implemented,MM-SRV,Service Entry Sheet - Items,ESLL,MENGE,Quantity,service_entry_sheet_items,quantity,DECIMAL,"15,3",Service quantity
+Not Implemented,MM-SRV,Service Entry Sheet - Items,ESLL,MEINS,Unit of Measure,service_entry_sheet_items,uom,VARCHAR,10,UOM
+Not Implemented,MM-SRV,Service Entry Sheet - Items,ESLL,TBTWR,Gross Price,service_entry_sheet_items,gross_price,DECIMAL,"15,2",Gross price
+Not Implemented,MM-SRV,Service Entry Sheet - Items,ESLL,WAERS,Currency,service_entry_sheet_items,currency,VARCHAR,3,Currency
+Not Implemented,MM-IV,Invoice - Header,RBKP,BELNR,Invoice Document,invoices,invoice_number,VARCHAR,10,Invoice document number
+Not Implemented,MM-IV,Invoice - Header,RBKP,GJAHR,Fiscal Year,invoices,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,MM-IV,Invoice - Header,RBKP,BLDAT,Document Date,invoices,document_date,DATE,,Invoice date
+Not Implemented,MM-IV,Invoice - Header,RBKP,BUDAT,Posting Date,invoices,posting_date,DATE,,Posting date
+Not Implemented,MM-IV,Invoice - Header,RBKP,XBLNR,Reference Document,invoices,reference_doc,VARCHAR,16,Vendor invoice number
+Not Implemented,MM-IV,Invoice - Header,RBKP,LIFNR,Vendor,invoices,vendor_code,VARCHAR,10,Vendor account
+Not Implemented,MM-IV,Invoice - Header,RBKP,WAERS,Currency,invoices,currency,VARCHAR,3,Document currency
+Not Implemented,MM-IV,Invoice - Header,RBKP,RMWWR,Gross Amount,invoices,gross_amount,DECIMAL,"15,2",Gross invoice amount
+Not Implemented,MM-IV,Invoice - Header,RBKP,WMWST1,Tax Amount,invoices,tax_amount,DECIMAL,"15,2",Tax amount
+Not Implemented,MM-IV,Invoice - Header,RBKP,ZTERM,Payment Terms,invoices,payment_terms,VARCHAR,4,Payment terms
+Not Implemented,MM-IV,Invoice - Header,RBKP,ZLSPR,Payment Block,invoices,payment_block,VARCHAR,1,Payment block key
+Not Implemented,MM-IV,Invoice - Items,RSEG,BELNR,Invoice Document,invoice_items,invoice_number,VARCHAR,10,Invoice document
+Not Implemented,MM-IV,Invoice - Items,RSEG,GJAHR,Fiscal Year,invoice_items,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,MM-IV,Invoice - Items,RSEG,BUZEI,Invoice Item,invoice_items,item_number,INTEGER,,Item number
+Not Implemented,MM-IV,Invoice - Items,RSEG,EBELN,Purchase Order,invoice_items,po_number,VARCHAR,10,PO number
+Not Implemented,MM-IV,Invoice - Items,RSEG,EBELP,PO Item,invoice_items,po_item,INTEGER,,PO item
+Not Implemented,MM-IV,Invoice - Items,RSEG,MATNR,Material Number,invoice_items,material_code,VARCHAR,40,Material
+Not Implemented,MM-IV,Invoice - Items,RSEG,MENGE,Quantity,invoice_items,quantity,DECIMAL,"15,3",Invoiced quantity
+Not Implemented,MM-IV,Invoice - Items,RSEG,MEINS,Unit of Measure,invoice_items,uom,VARCHAR,10,UOM
+Not Implemented,MM-IV,Invoice - Items,RSEG,WRBTR,Amount,invoice_items,amount,DECIMAL,"15,2",Line item amount
+Not Implemented,MM-IV,Invoice - Items,RSEG,WAERS,Currency,invoice_items,currency,VARCHAR,3,Currency
+Not Implemented,MM-IV,Invoice - Items,RSEG,MWSKZ,Tax Code,invoice_items,tax_code,VARCHAR,2,Tax code
+Not Implemented,MM-IV,Invoice - Items,RSEG,WERKS,Plant,invoice_items,plant_code,VARCHAR,10,Plant
+Not Implemented,MM-IV,Invoice - Items,RSEG,KOSTL,Cost Center,invoice_items,cost_center,VARCHAR,10,Cost center
+Not Implemented,APPROVAL,Approval Workflow - Header,Custom,Custom,Approval ID,approval_workflows,approval_id,UUID,,Unique approval ID
+Not Implemented,APPROVAL,Approval Workflow - Header,Custom,Custom,Document Type,approval_workflows,document_type,VARCHAR,20,PR/PO/INVOICE/etc
+Not Implemented,APPROVAL,Approval Workflow - Header,Custom,Custom,Document Number,approval_workflows,document_number,VARCHAR,20,Reference document
+Not Implemented,APPROVAL,Approval Workflow - Header,Custom,Custom,Requester,approval_workflows,requester_id,UUID,,User who initiated
+Not Implemented,APPROVAL,Approval Workflow - Header,Custom,Custom,Status,approval_workflows,status,VARCHAR,20,PENDING/APPROVED/REJECTED
+Not Implemented,APPROVAL,Approval Workflow - Header,Custom,Custom,Created Date,approval_workflows,created_at,TIMESTAMP,,Workflow start date
+Not Implemented,APPROVAL,Approval Workflow - Header,Custom,Custom,Completed Date,approval_workflows,completed_at,TIMESTAMP,,Workflow end date
+Not Implemented,APPROVAL,Approval Workflow - Levels,Custom,Custom,Approval ID,approval_levels,approval_id,UUID,,FK to workflow
+Not Implemented,APPROVAL,Approval Workflow - Levels,Custom,Custom,Level Number,approval_levels,level_number,INTEGER,,Approval level sequence
+Not Implemented,APPROVAL,Approval Workflow - Levels,Custom,Custom,Approver,approval_levels,approver_id,UUID,,User who approves
+Not Implemented,APPROVAL,Approval Workflow - Levels,Custom,Custom,Approver Role,approval_levels,approver_role,VARCHAR,50,,Role-based approver
+Not Implemented,APPROVAL,Approval Workflow - Levels,Custom,Custom,Status,approval_levels,status,VARCHAR,20,PENDING/APPROVED/REJECTED
+Not Implemented,APPROVAL,Approval Workflow - Levels,Custom,Custom,Action Date,approval_levels,action_date,TIMESTAMP,,Date of approval/rejection
+Not Implemented,APPROVAL,Approval Workflow - Levels,Custom,Custom,Comments,approval_levels,comments,TEXT,,Approver comments
+Not Implemented,APPROVAL,Approval Workflow - Levels,Custom,Custom,Amount Limit,approval_levels,amount_limit,DECIMAL,"15,2",Approval authority limit
+Not Implemented,APPROVAL,Approval Policy - Rules,Custom,Custom,Policy ID,approval_policies,policy_id,UUID,,Unique policy ID
+Not Implemented,APPROVAL,Approval Policy - Rules,Custom,Custom,Document Type,approval_policies,document_type,VARCHAR,20,PR/PO/INVOICE/etc
+Not Implemented,APPROVAL,Approval Policy - Rules,Custom,Custom,Company Code,approval_policies,company_code,VARCHAR,10,Company code
+Not Implemented,APPROVAL,Approval Policy - Rules,Custom,Custom,Amount From,approval_policies,amount_from,DECIMAL,"15,2",Lower threshold
+Not Implemented,APPROVAL,Approval Policy - Rules,Custom,Custom,Amount To,approval_policies,amount_to,DECIMAL,"15,2",Upper threshold
+Not Implemented,APPROVAL,Approval Policy - Rules,Custom,Custom,Approval Levels Required,approval_policies,levels_required,INTEGER,,Number of approval levels
+Not Implemented,APPROVAL,Approval Policy - Rules,Custom,Custom,Is Active,approval_policies,is_active,BOOLEAN,,Policy active status
+Implemented,MM-PUR,Transaction Codes,ME51N,ME51N,Create Purchase Requisition,CreatePR,,,,"Component: CreatePR"
+Implemented,MM-PUR,Transaction Codes,ME52N,ME52N,Change Purchase Requisition,MaintainPR,,,,"Component: MaintainPR"
+Implemented,MM-PUR,Transaction Codes,ME53N,ME53N,Display Purchase Requisition,DisplayPR,,,,"Component: DisplayPR"
+Implemented,MM-PUR,Transaction Codes,ME21N,ME21N,Create Purchase Order,CreatePO,,,,"Component: CreatePO"
+Implemented,MM-PUR,Transaction Codes,ME22N,ME22N,Change Purchase Order,MaintainPO,,,,"Component: MaintainPO"
+Implemented,MM-PUR,Transaction Codes,ME23N,ME23N,Display Purchase Order,DisplayPO,,,,"Component: DisplayPO"
+Implemented,MM-IM,Transaction Codes,MIGO,MIGO,Goods Receipt,GoodsReceipt,,,,"Component: GoodsReceipt"
+Not Implemented,MM-SRV,Transaction Codes,ML81N,ML81N,Create Service Entry Sheet,CreateSES,,,,"Component: CreateSES"
+Not Implemented,MM-IV,Transaction Codes,MIRO,MIRO,Enter Invoice,EnterInvoice,,,,"Component: EnterInvoice"
+Not Implemented,MM-IV,Transaction Codes,MIR4,MIR4,Release Blocked Invoice,ReleaseInvoice,,,,"Component: ReleaseInvoice"
+Not Implemented,APPROVAL,Transaction Codes,Custom,Custom,Approval Workbench,ApprovalWorkbench,,,,"Component: ApprovalWorkbench"
+Implemented,PS,Project Definition - Master Data,PROJ,PSPNR,Project Definition,projects,project_code,VARCHAR,24,Project definition (internal)
+Implemented,PS,Project Definition - Master Data,PROJ,PSPID,Project ID,projects,project_id,VARCHAR,24,Project ID (external)
+Implemented,PS,Project Definition - Master Data,PROJ,POST1,Project Description,projects,project_name,VARCHAR,500,Project name
+Implemented,PS,Project Definition - Master Data,PROJ,PLFAZ,Start Date,projects,start_date,DATE,,Project start date
+Implemented,PS,Project Definition - Master Data,PROJ,PLSEZ,Finish Date,projects,end_date,DATE,,Project finish date
+Implemented,PS,Project Definition - Master Data,PROJ,PBUKR,Company Code,projects,company_code,VARCHAR,10,Company code
+Not Implemented,PS,Project Definition - Master Data,PROJ,VERNA,Person Responsible,projects,responsible_person,VARCHAR,20,Project manager
+Not Implemented,PS,Project Definition - Master Data,PROJ,WERKS,Plant,projects,plant_code,VARCHAR,10,Plant
+Not Implemented,PS,Project Definition - Master Data,PROJ,PRCTR,Profit Center,projects,profit_center,VARCHAR,10,Profit center
+Not Implemented,PS,Project Definition - Master Data,PROJ,FUNC_AREA,Functional Area,projects,functional_area,VARCHAR,16,Functional area
+Implemented,PS,Project Definition - Master Data,PROJ,ASTNR,Project Status,projects,status,VARCHAR,20,PLANNING/RELEASED/CLOSED
+Not Implemented,PS,Project Definition - Master Data,PROJ,WAERS,Currency,projects,currency,VARCHAR,3,Project currency
+Implemented,PS,WBS Element - Master Data,PRPS,PSPNR,WBS Element,wbs_elements,wbs_code,VARCHAR,24,WBS element (internal)
+Implemented,PS,WBS Element - Master Data,PRPS,POSID,WBS Element ID,wbs_elements,wbs_id,VARCHAR,24,WBS element (external)
+Implemented,PS,WBS Element - Master Data,PRPS,POST1,WBS Description,wbs_elements,wbs_name,VARCHAR,500,WBS element description
+Implemented,PS,WBS Element - Master Data,PRPS,PSPHI,Superior WBS Element,wbs_elements,parent_wbs,VARCHAR,24,Parent WBS element
+Implemented,PS,WBS Element - Master Data,PRPS,STUFE,WBS Level,wbs_elements,level,INTEGER,,Hierarchy level
+Implemented,PS,WBS Element - Master Data,PRPS,PLFAZ,Start Date,wbs_elements,start_date,DATE,,WBS start date
+Implemented,PS,WBS Element - Master Data,PRPS,PLSEZ,Finish Date,wbs_elements,end_date,DATE,,WBS finish date
+Not Implemented,PS,WBS Element - Master Data,PRPS,VERNA,Person Responsible,wbs_elements,responsible_person,VARCHAR,20,WBS responsible
+Not Implemented,PS,WBS Element - Master Data,PRPS,WERKS,Plant,wbs_elements,plant_code,VARCHAR,10,Plant
+Not Implemented,PS,WBS Element - Master Data,PRPS,PRCTR,Profit Center,wbs_elements,profit_center,VARCHAR,10,Profit center
+Not Implemented,PS,WBS Element - Master Data,PRPS,FUNC_AREA,Functional Area,wbs_elements,functional_area,VARCHAR,16,Functional area
+Not Implemented,PS,WBS Element - Master Data,PRPS,FAKKR,Billing Element,wbs_elements,billing_element,VARCHAR,1,Account assignment element
+Not Implemented,PS,WBS Element - Master Data,PRPS,FKSTL,Cost Center,wbs_elements,cost_center,VARCHAR,10,Cost center
+Not Implemented,PS,WBS Element - Accounting,PRPS,WAERS,Currency,wbs_elements,currency,VARCHAR,3,WBS currency
+Not Implemented,PS,WBS Element - Accounting,PRPS,ZSCHL,Interest Key,wbs_elements,interest_key,VARCHAR,2,Interest calculation key
+Not Implemented,PS,Network - Header,AUFK,AUFNR,Network Number,networks,network_number,VARCHAR,12,Network number (internal order)
+Not Implemented,PS,Network - Header,AUFK,AUART,Network Type,networks,network_type,VARCHAR,4,Network type
+Not Implemented,PS,Network - Header,AUFK,KTEXT,Network Description,networks,network_name,VARCHAR,500,Network description
+Not Implemented,PS,Network - Header,AUFK,PSPEL,WBS Element,networks,wbs_code,VARCHAR,24,Assignment to WBS
+Not Implemented,PS,Network - Header,AUFK,BUKRS,Company Code,networks,company_code,VARCHAR,10,Company code
+Not Implemented,PS,Network - Header,AUFK,WERKS,Plant,networks,plant_code,VARCHAR,10,Plant
+Not Implemented,PS,Network - Header,AUFK,ASTNR,Network Status,networks,status,VARCHAR,20,Network status
+Not Implemented,PS,Network - Header,AUFK,ERDAT,Created On,networks,created_at,DATE,,Creation date
+Not Implemented,PS,Network - Header,AUFK,AEDAT,Changed On,networks,updated_at,DATE,,Last change date
+Not Implemented,PS,Network - Activity,AFVC,AUFPL,Routing Number,network_activities,routing_number,VARCHAR,10,Routing number
+Not Implemented,PS,Network - Activity,AFVC,APLZL,Activity Number,network_activities,activity_number,VARCHAR,8,Activity/operation number
+Not Implemented,PS,Network - Activity,AFVC,LTXA1,Activity Description,network_activities,activity_name,VARCHAR,500,Activity description
+Not Implemented,PS,Network - Activity,AFVC,AUFNR,Network Number,network_activities,network_number,VARCHAR,12,Network assignment
+Not Implemented,PS,Network - Activity,AFVC,ARBPL,Work Center,network_activities,work_center,VARCHAR,8,Work center
+Not Implemented,PS,Network - Activity,AFVC,WERKS,Plant,network_activities,plant_code,VARCHAR,10,Plant
+Not Implemented,PS,Network - Activity,AFVC,DAUNE,Earliest Start,network_activities,earliest_start,DATE,,Earliest start date
+Not Implemented,PS,Network - Activity,AFVC,DAUEN,Earliest Finish,network_activities,earliest_finish,DATE,,Earliest finish date
+Not Implemented,PS,Network - Activity,AFVC,ISMNW,Duration,network_activities,duration,DECIMAL,"15,3",Activity duration
+Not Implemented,PS,Network - Activity,AFVC,MEINH,Duration Unit,network_activities,duration_unit,VARCHAR,3,Duration unit (H/D/W)
+Not Implemented,PS,Project Budget - Planning,BPJA,PSPNR,WBS Element,project_budgets,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Budget - Planning,BPJA,GJAHR,Fiscal Year,project_budgets,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Budget - Planning,BPJA,VERSN,Version,project_budgets,version,VARCHAR,3,Budget version
+Not Implemented,PS,Project Budget - Planning,BPJA,WTJHR,Annual Budget,project_budgets,annual_budget,DECIMAL,"15,2",Annual budget value
+Not Implemented,PS,Project Budget - Planning,BPJA,WAERS,Currency,project_budgets,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Budget - Planning,BPJA,WRTTP,Value Type,project_budgets,value_type,VARCHAR,2,Plan/Actual indicator
+Not Implemented,PS,Project Costs - Actual,COEP,PSPNR,WBS Element,project_costs,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Costs - Actual,COEP,GJAHR,Fiscal Year,project_costs,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Costs - Actual,COEP,PERIO,Period,project_costs,period,VARCHAR,3,Posting period
+Not Implemented,PS,Project Costs - Actual,COEP,WRTTP,Value Type,project_costs,value_type,VARCHAR,2,Plan/Actual/Commitment
+Not Implemented,PS,Project Costs - Actual,COEP,KSTAR,Cost Element,project_costs,cost_element,VARCHAR,10,Cost element
+Not Implemented,PS,Project Costs - Actual,COEP,WTGBTR,Amount in Controlling Area Currency,project_costs,amount,DECIMAL,"15,2",Cost amount
+Not Implemented,PS,Project Costs - Actual,COEP,WAERS,Currency,project_costs,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Costs - Actual,COEP,MEINH,Unit of Measure,project_costs,uom,VARCHAR,10,UOM
+Not Implemented,PS,Project Costs - Actual,COEP,MBGBTR,Quantity,project_costs,quantity,DECIMAL,"15,3",Quantity
+Not Implemented,PS,Project Milestone,MEILENSTEIN,PSPNR,WBS Element,project_milestones,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Milestone,MEILENSTEIN,MSTNR,Milestone Number,project_milestones,milestone_number,VARCHAR,8,Milestone number
+Not Implemented,PS,Project Milestone,MEILENSTEIN,MSTXT,Milestone Description,project_milestones,milestone_name,VARCHAR,500,Milestone description
+Not Implemented,PS,Project Milestone,MEILENSTEIN,MSTDAT,Milestone Date,project_milestones,milestone_date,DATE,,Planned milestone date
+Not Implemented,PS,Project Milestone,MEILENSTEIN,MSTIST,Actual Date,project_milestones,actual_date,DATE,,Actual milestone date
+Not Implemented,PS,Project Milestone,MEILENSTEIN,MSTSTA,Milestone Status,project_milestones,status,VARCHAR,20,PLANNED/ACHIEVED/MISSED
+Not Implemented,PS,Project Billing,PRAA,PSPNR,WBS Element,project_billing,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Billing,PRAA,GJAHR,Fiscal Year,project_billing,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Billing,PRAA,PERIO,Period,project_billing,period,VARCHAR,3,Posting period
+Not Implemented,PS,Project Billing,PRAA,WRTTP,Value Type,project_billing,value_type,VARCHAR,2,Plan/Actual
+Not Implemented,PS,Project Billing,PRAA,WTGBTR,Billing Amount,project_billing,billing_amount,DECIMAL,"15,2",Billed amount
+Not Implemented,PS,Project Billing,PRAA,WAERS,Currency,project_billing,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Billing,PRAA,FKDAT,Billing Date,project_billing,billing_date,DATE,,Invoice date
+Not Implemented,PS,Project Billing,PRAA,VBELN,Billing Document,project_billing,billing_doc,VARCHAR,10,SD billing document
+Not Implemented,PS,Project Progress,Custom,Custom,Progress ID,project_progress,progress_id,UUID,,Unique progress ID
+Not Implemented,PS,Project Progress,Custom,Custom,WBS Element,project_progress,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Progress,Custom,Custom,Progress Date,project_progress,progress_date,DATE,,Progress reporting date
+Not Implemented,PS,Project Progress,Custom,Custom,Planned Progress %,project_progress,planned_progress,DECIMAL,"5,2",Planned progress percentage
+Not Implemented,PS,Project Progress,Custom,Custom,Actual Progress %,project_progress,actual_progress,DECIMAL,"5,2",Actual progress percentage
+Not Implemented,PS,Project Progress,Custom,Custom,Physical Progress %,project_progress,physical_progress,DECIMAL,"5,2",Physical completion
+Not Implemented,PS,Project Progress,Custom,Custom,Financial Progress %,project_progress,financial_progress,DECIMAL,"5,2",Financial completion
+Not Implemented,PS,Project Progress,Custom,Custom,Comments,project_progress,comments,TEXT,,Progress comments
+Not Implemented,PS,Project Resources,Custom,Custom,Resource ID,project_resources,resource_id,UUID,,Unique resource ID
+Not Implemented,PS,Project Resources,Custom,Custom,WBS Element,project_resources,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Resources,Custom,Custom,Resource Type,project_resources,resource_type,VARCHAR,20,LABOR/EQUIPMENT/MATERIAL
+Not Implemented,PS,Project Resources,Custom,Custom,Resource Code,project_resources,resource_code,VARCHAR,20,Resource identifier
+Not Implemented,PS,Project Resources,Custom,Custom,Resource Name,project_resources,resource_name,VARCHAR,500,Resource description
+Not Implemented,PS,Project Resources,Custom,Custom,Planned Quantity,project_resources,planned_quantity,DECIMAL,"15,3",Planned resource quantity
+Not Implemented,PS,Project Resources,Custom,Custom,Actual Quantity,project_resources,actual_quantity,DECIMAL,"15,3",Actual resource usage
+Not Implemented,PS,Project Resources,Custom,Custom,Unit of Measure,project_resources,uom,VARCHAR,10,UOM
+Not Implemented,PS,Project Resources,Custom,Custom,Planned Cost,project_resources,planned_cost,DECIMAL,"15,2",Planned cost
+Not Implemented,PS,Project Resources,Custom,Custom,Actual Cost,project_resources,actual_cost,DECIMAL,"15,2",Actual cost
+Implemented,PS,Transaction Codes,CJ20N,CJ20N,Create/Change Project,CreateProject,,,,"Component: CreateProject"
+Implemented,PS,Transaction Codes,CJ02,CJ02,Change Project,MaintainProject,,,,"Component: MaintainProject"
+Implemented,PS,Transaction Codes,CJ03,CJ03,Display Project,DisplayProject,,,,"Component: DisplayProject"
+Not Implemented,PS,Transaction Codes,CJ2C,CJ2C,Change WBS Element,MaintainWBS,,,,"Component: MaintainWBS"
+Not Implemented,PS,Transaction Codes,CN41,CN41,Create Network,CreateNetwork,,,,"Component: CreateNetwork"
+Not Implemented,PS,Transaction Codes,CN42,CN42,Change Network,MaintainNetwork,,,,"Component: MaintainNetwork"
+Not Implemented,PS,Transaction Codes,CJ30,CJ30,Project Budget,ProjectBudget,,,,"Component: ProjectBudget"
+Not Implemented,PS,Transaction Codes,CJ40,CJ40,Project Planning Board,ProjectPlanning,,,,"Component: ProjectPlanning"
+Not Implemented,PS,Transaction Codes,CJ9A,CJ9A,Project Progress Analysis,ProjectProgress,,,,"Component: ProjectProgress"
+Not Implemented,PS,Transaction Codes,S_ALR_87013558,S_ALR_87013558,Project Cost Report,ProjectCostReport,,,,"Component: ProjectCostReport"
+Not Implemented,PS,Transaction Codes,CN47,CN47,Network Confirmation,NetworkConfirmation,,,,"Component: NetworkConfirmation"
+Not Implemented,PS,Transaction Codes,CJ88,CJ88,Project Settlement,ProjectSettlement,,,,"Component: ProjectSettlement"
+Not Implemented,PM,Equipment Master - General Data,EQUI,EQUNR,Equipment Number,equipment,equipment_number,VARCHAR,18,Equipment number
+Not Implemented,PM,Equipment Master - General Data,EQUI,EQKTX,Equipment Description,equipment,equipment_name,VARCHAR,500,Equipment description
+Not Implemented,PM,Equipment Master - General Data,EQUI,EQART,Equipment Category,equipment,equipment_category,VARCHAR,10,Equipment category
+Not Implemented,PM,Equipment Master - General Data,EQUI,EQTYP,Equipment Type,equipment,equipment_type,VARCHAR,10,Technical object type
+Not Implemented,PM,Equipment Master - General Data,EQUI,SWERK,Plant,equipment,plant_code,VARCHAR,10,Maintenance plant
+Not Implemented,PM,Equipment Master - General Data,EQUI,STORT,Location,equipment,location,VARCHAR,10,Functional location
+Not Implemented,PM,Equipment Master - General Data,EQUI,BEBER,Business Area,equipment,business_area,VARCHAR,4,Business area
+Not Implemented,PM,Equipment Master - General Data,EQUI,KOSTL,Cost Center,equipment,cost_center,VARCHAR,10,Cost center
+Not Implemented,PM,Equipment Master - General Data,EQUI,PRCTR,Profit Center,equipment,profit_center,VARCHAR,10,Profit center
+Not Implemented,PM,Equipment Master - General Data,EQUI,HERST,Manufacturer,equipment,manufacturer,VARCHAR,30,Manufacturer
+Not Implemented,PM,Equipment Master - General Data,EQUI,TYPBZ,Model Number,equipment,model_number,VARCHAR,20,Model number
+Not Implemented,PM,Equipment Master - General Data,EQUI,BAUJJ,Construction Year,equipment,construction_year,VARCHAR,4,Year of construction
+Not Implemented,PM,Equipment Master - General Data,EQUI,BAUMM,Construction Month,equipment,construction_month,VARCHAR,2,Month of construction
+Not Implemented,PM,Equipment Master - General Data,EQUI,ANSDT,Acquisition Date,equipment,acquisition_date,DATE,,Acquisition date
+Not Implemented,PM,Equipment Master - General Data,EQUI,ANSWT,Acquisition Value,equipment,acquisition_value,DECIMAL,"15,2",Acquisition value
+Not Implemented,PM,Equipment Master - General Data,EQUI,WAERS,Currency,equipment,currency,VARCHAR,3,Currency
+Not Implemented,PM,Equipment Master - General Data,EQUI,SERGE,Serial Number,equipment,serial_number,VARCHAR,18,Manufacturer serial number
+Not Implemented,PM,Functional Location - Master Data,IFLOT,TPLNR,Functional Location,functional_locations,floc_code,VARCHAR,30,Functional location
+Not Implemented,PM,Functional Location - Master Data,IFLOT,PLTXT,Description,functional_locations,floc_name,VARCHAR,500,Functional location description
+Not Implemented,PM,Functional Location - Master Data,IFLOT,FLTYP,Structure Indicator,functional_locations,structure_indicator,VARCHAR,1,Structure indicator
+Not Implemented,PM,Functional Location - Master Data,IFLOT,TPLMA,Superior Functional Location,functional_locations,parent_floc,VARCHAR,30,Superior functional location
+Not Implemented,PM,Functional Location - Master Data,IFLOT,SWERK,Maintenance Plant,functional_locations,plant_code,VARCHAR,10,Maintenance plant
+Not Implemented,PM,Functional Location - Master Data,IFLOT,BEBER,Business Area,functional_locations,business_area,VARCHAR,4,Business area
+Not Implemented,PM,Functional Location - Master Data,IFLOT,KOSTL,Cost Center,functional_locations,cost_center,VARCHAR,10,Cost center
+Not Implemented,PM,Functional Location - Master Data,IFLOT,PRCTR,Profit Center,functional_locations,profit_center,VARCHAR,10,Profit center
+Not Implemented,PM,Functional Location - Master Data,IFLOT,EQART,Object Type,functional_locations,object_type,VARCHAR,10,Object type
+Not Implemented,PM,Maintenance Order - Header,AUFK,AUFNR,Order Number,maintenance_orders,order_number,VARCHAR,12,Maintenance order number
+Not Implemented,PM,Maintenance Order - Header,AUFK,AUART,Order Type,maintenance_orders,order_type,VARCHAR,4,PM01/PM02/PM03/etc
+Not Implemented,PM,Maintenance Order - Header,AUFK,KTEXT,Order Description,maintenance_orders,order_description,VARCHAR,500,Order description
+Not Implemented,PM,Maintenance Order - Header,AUFK,EQUNR,Equipment,maintenance_orders,equipment_number,VARCHAR,18,Equipment number
+Not Implemented,PM,Maintenance Order - Header,AUFK,TPLNR,Functional Location,maintenance_orders,floc_code,VARCHAR,30,Functional location
+Not Implemented,PM,Maintenance Order - Header,AUFK,BUKRS,Company Code,maintenance_orders,company_code,VARCHAR,10,Company code
+Not Implemented,PM,Maintenance Order - Header,AUFK,WERKS,Plant,maintenance_orders,plant_code,VARCHAR,10,Maintenance plant
+Not Implemented,PM,Maintenance Order - Header,AUFK,GSBER,Business Area,maintenance_orders,business_area,VARCHAR,4,Business area
+Not Implemented,PM,Maintenance Order - Header,AUFK,KOSTL,Cost Center,maintenance_orders,cost_center,VARCHAR,10,Cost center
+Not Implemented,PM,Maintenance Order - Header,AUFK,PRCTR,Profit Center,maintenance_orders,profit_center,VARCHAR,10,Profit center
+Not Implemented,PM,Maintenance Order - Header,AUFK,ERDAT,Created On,maintenance_orders,created_at,DATE,,Creation date
+Not Implemented,PM,Maintenance Order - Header,AUFK,AEDAT,Changed On,maintenance_orders,updated_at,DATE,,Last change date
+Not Implemented,PM,Maintenance Order - Header,AUFK,ASTNR,Order Status,maintenance_orders,status,VARCHAR,20,CREATED/RELEASED/COMPLETED/CLOSED
+Not Implemented,PM,Maintenance Order - Header,AUFK,GSTRP,Basic Start Date,maintenance_orders,basic_start_date,DATE,,Basic start date
+Not Implemented,PM,Maintenance Order - Header,AUFK,GLTRP,Basic Finish Date,maintenance_orders,basic_finish_date,DATE,,Basic finish date
+Not Implemented,PM,Maintenance Order - Header,AUFK,GSTRI,Actual Start Date,maintenance_orders,actual_start_date,DATE,,Actual start date
+Not Implemented,PM,Maintenance Order - Header,AUFK,GLTRI,Actual Finish Date,maintenance_orders,actual_finish_date,DATE,,Actual finish date
+Not Implemented,PM,Maintenance Order - Header,AUFK,PRIOK,Priority,maintenance_orders,priority,VARCHAR,1,Priority (1-9)
+Not Implemented,PM,Maintenance Order - Operations,AFVC,AUFPL,Routing Number,maintenance_operations,routing_number,VARCHAR,10,Routing number
+Not Implemented,PM,Maintenance Order - Operations,AFVC,APLZL,Operation Number,maintenance_operations,operation_number,VARCHAR,8,Operation number
+Not Implemented,PM,Maintenance Order - Operations,AFVC,LTXA1,Operation Description,maintenance_operations,operation_description,VARCHAR,500,Operation short text
+Not Implemented,PM,Maintenance Order - Operations,AFVC,AUFNR,Order Number,maintenance_operations,order_number,VARCHAR,12,Maintenance order
+Not Implemented,PM,Maintenance Order - Operations,AFVC,ARBPL,Work Center,maintenance_operations,work_center,VARCHAR,8,Work center
+Not Implemented,PM,Maintenance Order - Operations,AFVC,WERKS,Plant,maintenance_operations,plant_code,VARCHAR,10,Plant
+Not Implemented,PM,Maintenance Order - Operations,AFVC,STEUS,Control Key,maintenance_operations,control_key,VARCHAR,4,Control key
+Not Implemented,PM,Maintenance Order - Operations,AFVC,ARBEI,Work,maintenance_operations,work,DECIMAL,"15,3",Work quantity
+Not Implemented,PM,Maintenance Order - Operations,AFVC,ARBEH,Work Unit,maintenance_operations,work_unit,VARCHAR,3,Work unit (H/MIN)
+Not Implemented,PM,Maintenance Order - Operations,AFVC,DAUNE,Earliest Start,maintenance_operations,earliest_start,DATE,,Earliest start date
+Not Implemented,PM,Maintenance Order - Operations,AFVC,DAUEN,Earliest Finish,maintenance_operations,earliest_finish,DATE,,Earliest finish date
+Not Implemented,PM,Maintenance Order - Operations,AFVC,ISMNW,Duration,maintenance_operations,duration,DECIMAL,"15,3",Operation duration
+Not Implemented,PM,Maintenance Order - Operations,AFVC,MEINH,Duration Unit,maintenance_operations,duration_unit,VARCHAR,3,Duration unit
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,QMNUM,Notification Number,maintenance_notifications,notification_number,VARCHAR,12,Notification number
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,QMART,Notification Type,maintenance_notifications,notification_type,VARCHAR,4,M1/M2/M3/etc
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,QMTXT,Notification Description,maintenance_notifications,notification_description,VARCHAR,500,Short text
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,EQUNR,Equipment,maintenance_notifications,equipment_number,VARCHAR,18,Equipment number
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,TPLNR,Functional Location,maintenance_notifications,floc_code,VARCHAR,30,Functional location
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,QMDAT,Notification Date,maintenance_notifications,notification_date,DATE,,Notification date
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,ERNAM,Created By,maintenance_notifications,created_by,UUID,,User who created
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,PRIOK,Priority,maintenance_notifications,priority,VARCHAR,1,Priority (1-9)
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,QMGRP,Notification Group,maintenance_notifications,notification_group,VARCHAR,8,Notification group
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,QMCOD,Notification Code,maintenance_notifications,notification_code,VARCHAR,8,Notification code
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,QMTXT,Long Text,maintenance_notifications,long_text,TEXT,,Detailed description
+Not Implemented,PM,Maintenance Notification - Header,VIQMEL,AUFNR,Order Number,maintenance_notifications,order_number,VARCHAR,12,Related maintenance order
+Not Implemented,PM,Maintenance Notification - Items,QMEL,QMNUM,Notification Number,maintenance_notification_items,notification_number,VARCHAR,12,Notification number
+Not Implemented,PM,Maintenance Notification - Items,QMEL,FENUM,Item Number,maintenance_notification_items,item_number,VARCHAR,4,Item number
+Not Implemented,PM,Maintenance Notification - Items,QMEL,FETXT,Item Description,maintenance_notification_items,item_description,VARCHAR,500,Item text
+Not Implemented,PM,Maintenance Notification - Items,QMEL,FEGRP,Item Group,maintenance_notification_items,item_group,VARCHAR,8,Item group
+Not Implemented,PM,Maintenance Notification - Items,QMEL,FECOD,Item Code,maintenance_notification_items,item_code,VARCHAR,8,Item code
+Not Implemented,PM,Maintenance Plan - Header,MPLA,WARPL,Maintenance Plan,maintenance_plans,plan_number,VARCHAR,12,Maintenance plan number
+Not Implemented,PM,Maintenance Plan - Header,MPLA,PLNTY,Plan Category,maintenance_plans,plan_category,VARCHAR,1,Plan category
+Not Implemented,PM,Maintenance Plan - Header,MPLA,KTEXT,Plan Description,maintenance_plans,plan_description,VARCHAR,500,Plan description
+Not Implemented,PM,Maintenance Plan - Header,MPLA,EQUNR,Equipment,maintenance_plans,equipment_number,VARCHAR,18,Equipment number
+Not Implemented,PM,Maintenance Plan - Header,MPLA,TPLNR,Functional Location,maintenance_plans,floc_code,VARCHAR,30,Functional location
+Not Implemented,PM,Maintenance Plan - Header,MPLA,WERKS,Maintenance Plant,maintenance_plans,plant_code,VARCHAR,10,Maintenance plant
+Not Implemented,PM,Maintenance Plan - Header,MPLA,CYCLE,Cycle,maintenance_plans,cycle,VARCHAR,8,Maintenance cycle
+Not Implemented,PM,Maintenance Plan - Header,MPLA,ZYKZT,Cycle Unit,maintenance_plans,cycle_unit,VARCHAR,3,Cycle unit (D/W/M/Y)
+Not Implemented,PM,Maintenance Plan - Header,MPLA,STRAT,Maintenance Strategy,maintenance_plans,strategy,VARCHAR,8,Maintenance strategy
+Not Implemented,PM,Maintenance Plan - Header,MPLA,AUART,Order Type,maintenance_plans,order_type,VARCHAR,4,Order type for plan
+Not Implemented,PM,Maintenance Plan - Header,MPLA,ABNUM,Settlement Rule,maintenance_plans,settlement_rule,VARCHAR,12,Settlement rule
+Not Implemented,PM,Maintenance Plan - Items,MPOS,WARPL,Maintenance Plan,maintenance_plan_items,plan_number,VARCHAR,12,Maintenance plan
+Not Implemented,PM,Maintenance Plan - Items,MPOS,ABNUM,Maintenance Item,maintenance_plan_items,item_number,VARCHAR,4,Maintenance item
+Not Implemented,PM,Maintenance Plan - Items,MPOS,KTEXT,Item Description,maintenance_plan_items,item_description,VARCHAR,500,Item description
+Not Implemented,PM,Maintenance Plan - Items,MPOS,STRAT,Strategy,maintenance_plan_items,strategy,VARCHAR,8,Maintenance strategy
+Not Implemented,PM,Maintenance Plan - Items,MPOS,ZAEHL,Cycle,maintenance_plan_items,cycle,VARCHAR,8,Cycle
+Not Implemented,PM,Maintenance Plan - Items,MPOS,ZYKZT,Cycle Unit,maintenance_plan_items,cycle_unit,VARCHAR,3,Cycle unit
+Not Implemented,PM,Work Center - Master Data,CRHD,ARBPL,Work Center,work_centers,work_center_code,VARCHAR,8,Work center
+Not Implemented,PM,Work Center - Master Data,CRHD,WERKS,Plant,work_centers,plant_code,VARCHAR,10,Plant
+Not Implemented,PM,Work Center - Master Data,CRHD,KTEXT,Work Center Description,work_centers,work_center_name,VARCHAR,500,Work center description
+Not Implemented,PM,Work Center - Master Data,CRHD,VERWE,Usage,work_centers,usage,VARCHAR,3,Usage (001-PM)
+Not Implemented,PM,Work Center - Master Data,CRHD,KOSTL,Cost Center,work_centers,cost_center,VARCHAR,10,Cost center
+Not Implemented,PM,Work Center - Master Data,CRHD,LOGRP,Person Responsible,work_centers,responsible_person,VARCHAR,20,Person responsible
+Not Implemented,PM,Work Center - Capacity,KAKO,ARBPL,Work Center,work_center_capacity,work_center_code,VARCHAR,8,Work center
+Not Implemented,PM,Work Center - Capacity,KAKO,WERKS,Plant,work_center_capacity,plant_code,VARCHAR,10,Plant
+Not Implemented,PM,Work Center - Capacity,KAKO,BMSCH,Available Capacity,work_center_capacity,available_capacity,DECIMAL,"15,3",Available capacity
+Not Implemented,PM,Work Center - Capacity,KAKO,MEINH,Capacity Unit,work_center_capacity,capacity_unit,VARCHAR,3,Capacity unit (H/MIN)
+Not Implemented,PM,Work Center - Capacity,KAKO,ANZHL,Number of Capacities,work_center_capacity,number_of_capacities,INTEGER,,Number of individual capacities
+Not Implemented,PM,Measuring Point - Master Data,IMPTT,POINT,Measuring Point,measuring_points,measuring_point,VARCHAR,12,Measuring point
+Not Implemented,PM,Measuring Point - Master Data,IMPTT,PSORT,Measuring Point Description,measuring_points,measuring_point_name,VARCHAR,500,Description
+Not Implemented,PM,Measuring Point - Master Data,IMPTT,EQUNR,Equipment,measuring_points,equipment_number,VARCHAR,18,Equipment number
+Not Implemented,PM,Measuring Point - Master Data,IMPTT,TPLNR,Functional Location,measuring_points,floc_code,VARCHAR,30,Functional location
+Not Implemented,PM,Measuring Point - Master Data,IMPTT,ATNAM,Characteristic,measuring_points,characteristic,VARCHAR,30,Characteristic
+Not Implemented,PM,Measuring Point - Master Data,IMPTT,MSEHI,Unit of Measure,measuring_points,uom,VARCHAR,10,UOM
+Not Implemented,PM,Measuring Point - Master Data,IMPTT,DECIM,Decimal Places,measuring_points,decimal_places,INTEGER,,Decimal places
+Not Implemented,PM,Measuring Document - Reading,IMRG,MDOCM,Measuring Document,measuring_documents,document_number,VARCHAR,12,Measuring document
+Not Implemented,PM,Measuring Document - Reading,IMRG,POINT,Measuring Point,measuring_documents,measuring_point,VARCHAR,12,Measuring point
+Not Implemented,PM,Measuring Document - Reading,IMRG,READG,Reading,measuring_documents,reading_value,DECIMAL,"15,3",Reading value
+Not Implemented,PM,Measuring Document - Reading,IMRG,IDATE,Reading Date,measuring_documents,reading_date,DATE,,Reading date
+Not Implemented,PM,Measuring Document - Reading,IMRG,ITIME,Reading Time,measuring_documents,reading_time,TIME,,Reading time
+Not Implemented,PM,Measuring Document - Reading,IMRG,MSEHI,Unit of Measure,measuring_documents,uom,VARCHAR,10,UOM
+Not Implemented,PM,Measuring Document - Reading,IMRG,READR,Reader,measuring_documents,reader,VARCHAR,20,Person who recorded
+Not Implemented,PM,Transaction Codes,IE01,IE01,Create Equipment,CreateEquipment,,,,"Component: CreateEquipment"
+Not Implemented,PM,Transaction Codes,IE02,IE02,Change Equipment,MaintainEquipment,,,,"Component: MaintainEquipment"
+Not Implemented,PM,Transaction Codes,IE03,IE03,Display Equipment,DisplayEquipment,,,,"Component: DisplayEquipment"
+Not Implemented,PM,Transaction Codes,IL01,IL01,Create Functional Location,CreateFunctionalLocation,,,,"Component: CreateFunctionalLocation"
+Not Implemented,PM,Transaction Codes,IL02,IL02,Change Functional Location,MaintainFunctionalLocation,,,,"Component: MaintainFunctionalLocation"
+Not Implemented,PM,Transaction Codes,IW31,IW31,Create Maintenance Order,CreateMaintenanceOrder,,,,"Component: CreateMaintenanceOrder"
+Not Implemented,PM,Transaction Codes,IW32,IW32,Change Maintenance Order,MaintainMaintenanceOrder,,,,"Component: MaintainMaintenanceOrder"
+Not Implemented,PM,Transaction Codes,IW33,IW33,Display Maintenance Order,DisplayMaintenanceOrder,,,,"Component: DisplayMaintenanceOrder"
+Not Implemented,PM,Transaction Codes,IW21,IW21,Create Notification,CreateNotification,,,,"Component: CreateNotification"
+Not Implemented,PM,Transaction Codes,IW22,IW22,Change Notification,MaintainNotification,,,,"Component: MaintainNotification"
+Not Implemented,PM,Transaction Codes,IW23,IW23,Display Notification,DisplayNotification,,,,"Component: DisplayNotification"
+Not Implemented,PM,Transaction Codes,IP01,IP01,Create Maintenance Plan,CreateMaintenancePlan,,,,"Component: CreateMaintenancePlan"
+Not Implemented,PM,Transaction Codes,IP02,IP02,Change Maintenance Plan,MaintainMaintenancePlan,,,,"Component: MaintainMaintenancePlan"
+Not Implemented,PM,Transaction Codes,IP10,IP10,Maintenance Plan Scheduling,MaintenancePlanScheduling,,,,"Component: MaintenancePlanScheduling"
+Not Implemented,PM,Transaction Codes,IW41,IW41,Order Confirmation,OrderConfirmation,,,,"Component: OrderConfirmation"
+Not Implemented,PM,Transaction Codes,IW47,IW47,Technical Completion,TechnicalCompletion,,,,"Component: TechnicalCompletion"
+Not Implemented,PM,Transaction Codes,IK01,IK01,Create Measuring Point,CreateMeasuringPoint,,,,"Component: CreateMeasuringPoint"
+Not Implemented,PM,Transaction Codes,IK11,IK11,Enter Measurement Reading,EnterMeasurementReading,,,,"Component: EnterMeasurementReading"
+Not Implemented,PS,Project Budget - Original,BPGE,PSPNR,WBS Element,project_budget_original,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Budget - Original,BPGE,GJAHR,Fiscal Year,project_budget_original,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Budget - Original,BPGE,VERSN,Version,project_budget_original,version,VARCHAR,3,Budget version (000=Original)
+Not Implemented,PS,Project Budget - Original,BPGE,WTJHR,Original Budget,project_budget_original,original_budget,DECIMAL,"15,2",Original approved budget
+Not Implemented,PS,Project Budget - Original,BPGE,WAERS,Currency,project_budget_original,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Budget - Supplement,BPGE,PSPNR,WBS Element,project_budget_supplement,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Budget - Supplement,BPGE,GJAHR,Fiscal Year,project_budget_supplement,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Budget - Supplement,BPGE,VERSN,Version,project_budget_supplement,version,VARCHAR,3,Supplement version
+Not Implemented,PS,Project Budget - Supplement,BPGE,WTJHR,Supplement Budget,project_budget_supplement,supplement_amount,DECIMAL,"15,2",Budget supplement/revision
+Not Implemented,PS,Project Budget - Supplement,BPGE,WAERS,Currency,project_budget_supplement,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Budget - Supplement,BPGE,SUPPL_DATE,Supplement Date,project_budget_supplement,supplement_date,DATE,,Date of supplement
+Not Implemented,PS,Project Budget - Total,BPGE,PSPNR,WBS Element,project_budget_total,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Budget - Total,BPGE,GJAHR,Fiscal Year,project_budget_total,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Budget - Total,BPGE,WTGES,Total Budget,project_budget_total,total_budget,DECIMAL,"15,2",Total budget (Original + Supplements)
+Not Implemented,PS,Project Budget - Total,BPGE,WAERS,Currency,project_budget_total,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Costs - Plan,COSP,PSPNR,WBS Element,project_costs_plan,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Costs - Plan,COSP,GJAHR,Fiscal Year,project_costs_plan,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Costs - Plan,COSP,VERSN,Version,project_costs_plan,version,VARCHAR,3,Planning version
+Not Implemented,PS,Project Costs - Plan,COSP,KSTAR,Cost Element,project_costs_plan,cost_element,VARCHAR,10,Cost element
+Not Implemented,PS,Project Costs - Plan,COSP,WTGBTR,Planned Cost,project_costs_plan,planned_cost,DECIMAL,"15,2",Planned cost amount
+Not Implemented,PS,Project Costs - Plan,COSP,WAERS,Currency,project_costs_plan,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Costs - Plan,COSP,MEINH,Unit of Measure,project_costs_plan,uom,VARCHAR,10,UOM
+Not Implemented,PS,Project Costs - Plan,COSP,MBGBTR,Planned Quantity,project_costs_plan,planned_quantity,DECIMAL,"15,3",Planned quantity
+Not Implemented,PS,Project Costs - Commitment,COEP,PSPNR,WBS Element,project_costs_commitment,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Costs - Commitment,COEP,GJAHR,Fiscal Year,project_costs_commitment,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Costs - Commitment,COEP,WRTTP,Value Type,project_costs_commitment,value_type,VARCHAR,2,Value type (3=Commitment)
+Not Implemented,PS,Project Costs - Commitment,COEP,KSTAR,Cost Element,project_costs_commitment,cost_element,VARCHAR,10,Cost element
+Not Implemented,PS,Project Costs - Commitment,COEP,WTGBTR,Commitment Amount,project_costs_commitment,commitment_amount,DECIMAL,"15,2",Committed cost (PO value)
+Not Implemented,PS,Project Costs - Commitment,COEP,WAERS,Currency,project_costs_commitment,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Costs - Commitment,COEP,BEKNZ,Document Category,project_costs_commitment,document_category,VARCHAR,1,Document category
+Not Implemented,PS,Project Costs - Actual,COEP,PSPNR,WBS Element,project_costs_actual,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Costs - Actual,COEP,GJAHR,Fiscal Year,project_costs_actual,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Costs - Actual,COEP,PERIO,Period,project_costs_actual,period,VARCHAR,3,Posting period
+Not Implemented,PS,Project Costs - Actual,COEP,WRTTP,Value Type,project_costs_actual,value_type,VARCHAR,2,Value type (4=Actual)
+Not Implemented,PS,Project Costs - Actual,COEP,KSTAR,Cost Element,project_costs_actual,cost_element,VARCHAR,10,Cost element
+Not Implemented,PS,Project Costs - Actual,COEP,WTGBTR,Actual Cost,project_costs_actual,actual_cost,DECIMAL,"15,2",Actual cost amount
+Not Implemented,PS,Project Costs - Actual,COEP,WAERS,Currency,project_costs_actual,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Costs - Actual,COEP,MEINH,Unit of Measure,project_costs_actual,uom,VARCHAR,10,UOM
+Not Implemented,PS,Project Costs - Actual,COEP,MBGBTR,Actual Quantity,project_costs_actual,actual_quantity,DECIMAL,"15,3",Actual quantity
+Not Implemented,PS,Project Costs - Actual,COEP,BEKNZ,Document Category,project_costs_actual,document_category,VARCHAR,1,Document category
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,WBS Element,project_costs_variance,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,Fiscal Year,project_costs_variance,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,Cost Element,project_costs_variance,cost_element,VARCHAR,10,Cost element
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,Budget,project_costs_variance,budget,DECIMAL,"15,2",Total budget
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,Planned Cost,project_costs_variance,planned_cost,DECIMAL,"15,2",Planned cost
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,Commitment,project_costs_variance,commitment,DECIMAL,"15,2",Committed cost
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,Actual Cost,project_costs_variance,actual_cost,DECIMAL,"15,2",Actual cost
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,Budget Variance,project_costs_variance,budget_variance,DECIMAL,"15,2",Budget - (Commitment + Actual)
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,Plan Variance,project_costs_variance,plan_variance,DECIMAL,"15,2",Planned - Actual
+Not Implemented,PS,Project Costs - Variance,Custom,Custom,Currency,project_costs_variance,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Revenue - Plan,COSP,PSPNR,WBS Element,project_revenue_plan,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Revenue - Plan,COSP,GJAHR,Fiscal Year,project_revenue_plan,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Revenue - Plan,COSP,VERSN,Version,project_revenue_plan,version,VARCHAR,3,Planning version
+Not Implemented,PS,Project Revenue - Plan,COSP,KSTAR,Revenue Element,project_revenue_plan,revenue_element,VARCHAR,10,Revenue element
+Not Implemented,PS,Project Revenue - Plan,COSP,WTGBTR,Planned Revenue,project_revenue_plan,planned_revenue,DECIMAL,"15,2",Planned revenue amount
+Not Implemented,PS,Project Revenue - Plan,COSP,WAERS,Currency,project_revenue_plan,currency,VARCHAR,3,Currency
+Not Implemented,PS,Project Revenue - Actual,COEP,PSPNR,WBS Element,project_revenue_actual,wbs_code,VARCHAR,24,WBS element
+Not Implemented,PS,Project Revenue - Actual,COEP,GJAHR,Fiscal Year,project_revenue_actual,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PS,Project Revenue - Actual,COEP,PERIO,Period,project_revenue_actual,period,VARCHAR,3,Posting period
+Not Implemented,PS,Project Revenue - Actual,COEP,KSTAR,Revenue Element,project_revenue_actual,revenue_element,VARCHAR,10,Revenue element
+Not Implemented,PS,Project Revenue - Actual,COEP,WTGBTR,Actual Revenue,project_revenue_actual,actual_revenue,DECIMAL,"15,2",Actual revenue amount
+Not Implemented,PS,Project Revenue - Actual,COEP,WAERS,Currency,project_revenue_actual,currency,VARCHAR,3,Currency
+Not Implemented,PM,Maintenance Order - Budget,AUFK,PHAS1,Original Budget,maintenance_order_budget,order_number,VARCHAR,12,Order number
+Not Implemented,PM,Maintenance Order - Budget,Custom,Custom,Original Budget,maintenance_order_budget,original_budget,DECIMAL,"15,2",Original approved budget
+Not Implemented,PM,Maintenance Order - Budget,Custom,Custom,Revised Budget,maintenance_order_budget,revised_budget,DECIMAL,"15,2",Revised budget
+Not Implemented,PM,Maintenance Order - Budget,Custom,Custom,Total Budget,maintenance_order_budget,total_budget,DECIMAL,"15,2",Total budget (Original + Revisions)
+Not Implemented,PM,Maintenance Order - Budget,Custom,Custom,Currency,maintenance_order_budget,currency,VARCHAR,3,Currency
+Not Implemented,PM,Maintenance Order - Estimated Cost,AFKO,AUFNR,Order Number,maintenance_order_estimate,order_number,VARCHAR,12,Order number
+Not Implemented,PM,Maintenance Order - Estimated Cost,AFKO,GSTRS,Estimated Start,maintenance_order_estimate,estimated_start,DATE,,Estimated start date
+Not Implemented,PM,Maintenance Order - Estimated Cost,AFKO,GLTRS,Estimated Finish,maintenance_order_estimate,estimated_finish,DATE,,Estimated finish date
+Not Implemented,PM,Maintenance Order - Estimated Cost,Custom,Custom,Estimated Labor Cost,maintenance_order_estimate,estimated_labor_cost,DECIMAL,"15,2",Estimated labor cost
+Not Implemented,PM,Maintenance Order - Estimated Cost,Custom,Custom,Estimated Material Cost,maintenance_order_estimate,estimated_material_cost,DECIMAL,"15,2",Estimated material cost
+Not Implemented,PM,Maintenance Order - Estimated Cost,Custom,Custom,Estimated Service Cost,maintenance_order_estimate,estimated_service_cost,DECIMAL,"15,2",Estimated external service cost
+Not Implemented,PM,Maintenance Order - Estimated Cost,Custom,Custom,Estimated Overhead,maintenance_order_estimate,estimated_overhead,DECIMAL,"15,2",Estimated overhead cost
+Not Implemented,PM,Maintenance Order - Estimated Cost,Custom,Custom,Total Estimated Cost,maintenance_order_estimate,total_estimated_cost,DECIMAL,"15,2",Total estimated cost
+Not Implemented,PM,Maintenance Order - Estimated Cost,Custom,Custom,Currency,maintenance_order_estimate,currency,VARCHAR,3,Currency
+Not Implemented,PM,Maintenance Order - Actual Cost,COEP,AUFNR,Order Number,maintenance_order_actual,order_number,VARCHAR,12,Order number
+Not Implemented,PM,Maintenance Order - Actual Cost,COEP,GJAHR,Fiscal Year,maintenance_order_actual,fiscal_year,VARCHAR,4,Fiscal year
+Not Implemented,PM,Maintenance Order - Actual Cost,COEP,PERIO,Period,maintenance_order_actual,period,VARCHAR,3,Posting period
+Not Implemented,PM,Maintenance Order - Actual Cost,COEP,KSTAR,Cost Element,maintenance_order_actual,cost_element,VARCHAR,10,Cost element
+Not Implemented,PM,Maintenance Order - Actual Cost,COEP,WTGBTR,Actual Cost,maintenance_order_actual,actual_cost,DECIMAL,"15,2",Actual cost amount
+Not Implemented,PM,Maintenance Order - Actual Cost,COEP,WAERS,Currency,maintenance_order_actual,currency,VARCHAR,3,Currency
+Not Implemented,PM,Maintenance Order - Actual Cost,COEP,MEINH,Unit of Measure,maintenance_order_actual,uom,VARCHAR,10,UOM
+Not Implemented,PM,Maintenance Order - Actual Cost,COEP,MBGBTR,Actual Quantity,maintenance_order_actual,actual_quantity,DECIMAL,"15,3",Actual quantity
+Not Implemented,PM,Maintenance Order - Actual Labor,AFRU,AUFNR,Order Number,maintenance_order_labor,order_number,VARCHAR,12,Order number
+Not Implemented,PM,Maintenance Order - Actual Labor,AFRU,APLZL,Operation,maintenance_order_labor,operation_number,VARCHAR,8,Operation number
+Not Implemented,PM,Maintenance Order - Actual Labor,AFRU,ISMNW,Actual Work,maintenance_order_labor,actual_work,DECIMAL,"15,3",Actual work hours
+Not Implemented,PM,Maintenance Order - Actual Labor,AFRU,MEINH,Work Unit,maintenance_order_labor,work_unit,VARCHAR,3,Work unit (H/MIN)
+Not Implemented,PM,Maintenance Order - Actual Labor,AFRU,PERNR,Personnel Number,maintenance_order_labor,personnel_number,VARCHAR,8,Employee number
+Not Implemented,PM,Maintenance Order - Actual Labor,AFRU,BUDAT,Posting Date,maintenance_order_labor,posting_date,DATE,,Confirmation date
+Not Implemented,PM,Maintenance Order - Actual Labor,Custom,Custom,Labor Cost,maintenance_order_labor,labor_cost,DECIMAL,"15,2",Actual labor cost
+Not Implemented,PM,Maintenance Order - Actual Labor,Custom,Custom,Currency,maintenance_order_labor,currency,VARCHAR,3,Currency
+Not Implemented,PM,Maintenance Order - Actual Material,MSEG,AUFNR,Order Number,maintenance_order_material,order_number,VARCHAR,12,Order number
+Not Implemented,PM,Maintenance Order - Actual Material,MSEG,MATNR,Material Number,maintenance_order_material,material_code,VARCHAR,40,Material
+Not Implemented,PM,Maintenance Order - Actual Material,MSEG,MENGE,Quantity,maintenance_order_material,quantity,DECIMAL,"15,3",Material quantity
+Not Implemented,PM,Maintenance Order - Actual Material,MSEG,MEINS,Unit of Measure,maintenance_order_material,uom,VARCHAR,10,UOM
+Not Implemented,PM,Maintenance Order - Actual Material,MSEG,DMBTR,Material Cost,maintenance_order_material,material_cost,DECIMAL,"15,2",Material cost amount
+Not Implemented,PM,Maintenance Order - Actual Material,MSEG,WAERS,Currency,maintenance_order_material,currency,VARCHAR,3,Currency
+Not Implemented,PM,Maintenance Order - Actual Material,MSEG,BUDAT,Posting Date,maintenance_order_material,posting_date,DATE,,Goods issue date
+Not Implemented,PM,Maintenance Order - Variance,Custom,Custom,Order Number,maintenance_order_variance,order_number,VARCHAR,12,Order number
+Not Implemented,PM,Maintenance Order - Variance,Custom,Custom,Budget,maintenance_order_variance,budget,DECIMAL,"15,2",Total budget
+Not Implemented,PM,Maintenance Order - Variance,Custom,Custom,Estimated Cost,maintenance_order_variance,estimated_cost,DECIMAL,"15,2",Total estimated cost
+Not Implemented,PM,Maintenance Order - Variance,Custom,Custom,Actual Cost,maintenance_order_variance,actual_cost,DECIMAL,"15,2",Total actual cost
+Not Implemented,PM,Maintenance Order - Variance,Custom,Custom,Budget Variance,maintenance_order_variance,budget_variance,DECIMAL,"15,2",Budget - Actual
+Not Implemented,PM,Maintenance Order - Variance,Custom,Custom,Estimate Variance,maintenance_order_variance,estimate_variance,DECIMAL,"15,2",Estimated - Actual
+Not Implemented,PM,Maintenance Order - Variance,Custom,Custom,Budget Variance %,maintenance_order_variance,budget_variance_pct,DECIMAL,"5,2",Budget variance percentage
+Not Implemented,PM,Maintenance Order - Variance,Custom,Custom,Estimate Variance %,maintenance_order_variance,estimate_variance_pct,DECIMAL,"5,2",Estimate variance percentage
+Not Implemented,PM,Maintenance Order - Variance,Custom,Custom,Currency,maintenance_order_variance,currency,VARCHAR,3,Currency
+Not Implemented,PS,Transaction Codes,CJ40,CJ40,Project Budget Planning,ProjectBudgetPlanning,,,,"Component: ProjectBudgetPlanning"
+Not Implemented,PS,Transaction Codes,CJ9A,CJ9A,Project Cost Analysis,ProjectCostAnalysis,,,,"Component: ProjectCostAnalysis"
+Not Implemented,PS,Transaction Codes,S_ALR_87013558,S_ALR_87013558,WBS Cost Report,WBSCostReport,,,,"Component: WBSCostReport"
+Not Implemented,PS,Transaction Codes,CJ9E,CJ9E,Project Budget/Actual/Commitment,ProjectBudgetActual,,,,"Component: ProjectBudgetActual"
+Not Implemented,PM,Transaction Codes,IW38,IW38,Order Cost Analysis,OrderCostAnalysis,,,,"Component: OrderCostAnalysis"
+Not Implemented,PM,Transaction Codes,IW48,IW48,Order Budget,OrderBudget,,,,"Component: OrderBudget"
+Not Implemented,PM,Transaction Codes,S_ALR_87012993,S_ALR_87012993,PM Order Cost Report,PMOrderCostReport,,,,"Component: PMOrderCostReport"
+Not Implemented,BP,Business Partner - General Data,BUT000,PARTNER,Business Partner Number,business_partners,bp_number,VARCHAR,10,Business partner number
+Not Implemented,BP,Business Partner - General Data,BUT000,TYPE,BP Type,business_partners,bp_type,VARCHAR,4,1=Person 2=Organization
+Not Implemented,BP,Business Partner - General Data,BUT000,NAME_ORG1,Name 1,business_partners,name_1,VARCHAR,500,Organization name / Last name
+Not Implemented,BP,Business Partner - General Data,BUT000,NAME_ORG2,Name 2,business_partners,name_2,VARCHAR,500,Additional name / First name
+Not Implemented,BP,Business Partner - General Data,BUT000,NAME_ORG3,Name 3,business_partners,name_3,VARCHAR,500,Additional name
+Not Implemented,BP,Business Partner - General Data,BUT000,NAME_ORG4,Name 4,business_partners,name_4,VARCHAR,500,Additional name
+Not Implemented,BP,Business Partner - General Data,BUT000,SORT1,Search Term 1,business_partners,search_term_1,VARCHAR,20,Search term
+Not Implemented,BP,Business Partner - General Data,BUT000,SORT2,Search Term 2,business_partners,search_term_2,VARCHAR,20,Additional search term
+Not Implemented,BP,Business Partner - General Data,BUT000,BPKIND,BP Kind,business_partners,bp_kind,VARCHAR,4,Business partner kind
+Not Implemented,BP,Business Partner - General Data,BUT000,BPEXT,External BP Number,business_partners,external_bp_number,VARCHAR,20,External BP number
+Not Implemented,BP,Business Partner - General Data,BUT000,XDELE,Central Block,business_partners,central_block,BOOLEAN,,Central deletion flag
+Not Implemented,BP,Business Partner - General Data,BUT000,XBLCK,Central Posting Block,business_partners,central_posting_block,BOOLEAN,,Central posting block
+Not Implemented,BP,Business Partner - Role,BUT100,PARTNER,Business Partner Number,business_partner_roles,bp_number,VARCHAR,10,Business partner number
+Not Implemented,BP,Business Partner - Role,BUT100,PARTNER_ROLE,BP Role,business_partner_roles,bp_role,VARCHAR,6,FLCU00=Customer FLVN00=Vendor
+Not Implemented,BP,Business Partner - Role,BUT100,VALID_FROM,Valid From,business_partner_roles,valid_from,DATE,,Validity start date
+Not Implemented,BP,Business Partner - Role,BUT100,VALID_TO,Valid To,business_partner_roles,valid_to,DATE,,Validity end date
+Not Implemented,BP,Business Partner - Address,BUT020,PARTNER,Business Partner Number,business_partner_addresses,bp_number,VARCHAR,10,Business partner number
+Not Implemented,BP,Business Partner - Address,BUT020,ADDRNUMBER,Address Number,business_partner_addresses,address_number,VARCHAR,10,Address number
+Not Implemented,BP,Business Partner - Address,ADRC,STREET,Street,business_partner_addresses,street,VARCHAR,500,Street address
+Not Implemented,BP,Business Partner - Address,ADRC,HOUSE_NUM1,House Number,business_partner_addresses,house_number,VARCHAR,10,House number
+Not Implemented,BP,Business Partner - Address,ADRC,CITY1,City,business_partner_addresses,city,VARCHAR,100,City
+Not Implemented,BP,Business Partner - Address,ADRC,POST_CODE1,Postal Code,business_partner_addresses,postal_code,VARCHAR,10,Postal code
+Not Implemented,BP,Business Partner - Address,ADRC,REGION,Region,business_partner_addresses,region,VARCHAR,3,Region/State
+Not Implemented,BP,Business Partner - Address,ADRC,COUNTRY,Country,business_partner_addresses,country_code,VARCHAR,2,Country key
+Not Implemented,BP,Business Partner - Address,ADRC,TIME_ZONE,Time Zone,business_partner_addresses,time_zone,VARCHAR,6,Time zone
+Not Implemented,BP,Business Partner - Contact,ADR2,ADDRNUMBER,Address Number,business_partner_contacts,address_number,VARCHAR,10,Address number
+Not Implemented,BP,Business Partner - Contact,ADR2,TEL_NUMBER,Telephone,business_partner_contacts,phone,VARCHAR,30,Telephone number
+Not Implemented,BP,Business Partner - Contact,ADR2,R3_USER,Standard Number,business_partner_contacts,standard_number,BOOLEAN,,Standard phone indicator
+Not Implemented,BP,Business Partner - Contact,ADR3,ADDRNUMBER,Address Number,business_partner_contacts,address_number,VARCHAR,10,Address number
+Not Implemented,BP,Business Partner - Contact,ADR3,FAX_NUMBER,Fax,business_partner_contacts,fax,VARCHAR,30,Fax number
+Not Implemented,BP,Business Partner - Contact,ADR6,ADDRNUMBER,Address Number,business_partner_contacts,address_number,VARCHAR,10,Address number
+Not Implemented,BP,Business Partner - Contact,ADR6,SMTP_ADDR,Email,business_partner_contacts,email,VARCHAR,500,Email address
+Not Implemented,BP,Business Partner - Contact,ADR6,STD_NO,Standard Email,business_partner_contacts,standard_email,BOOLEAN,,Standard email indicator
+Not Implemented,BP,Business Partner - Bank Details,BUT0BK,PARTNER,Business Partner Number,business_partner_banks,bp_number,VARCHAR,10,Business partner number
+Not Implemented,BP,Business Partner - Bank Details,BUT0BK,BANKS,Bank Country,business_partner_banks,bank_country,VARCHAR,2,Bank country key
+Not Implemented,BP,Business Partner - Bank Details,BUT0BK,BANKL,Bank Key,business_partner_banks,bank_key,VARCHAR,15,Bank key
+Not Implemented,BP,Business Partner - Bank Details,BUT0BK,BANKN,Bank Account Number,business_partner_banks,bank_account,VARCHAR,18,Bank account number
+Not Implemented,BP,Business Partner - Bank Details,BUT0BK,BKONT,Bank Control Key,business_partner_banks,bank_control_key,VARCHAR,2,Bank control key
+Not Implemented,BP,Business Partner - Bank Details,BUT0BK,BVTYP,Bank Account Type,business_partner_banks,bank_account_type,VARCHAR,4,Bank account type
+Not Implemented,BP,Business Partner - Bank Details,BUT0BK,IBAN,IBAN,business_partner_banks,iban,VARCHAR,34,IBAN
+Not Implemented,BP,Business Partner - Bank Details,BUT0BK,SWIFT,SWIFT Code,business_partner_banks,swift_code,VARCHAR,11,SWIFT/BIC code
+Not Implemented,BP,Business Partner - Tax Number,DFKKBPTAXNUM,PARTNER,Business Partner Number,business_partner_tax,bp_number,VARCHAR,10,Business partner number
+Not Implemented,BP,Business Partner - Tax Number,DFKKBPTAXNUM,TAXTYPE,Tax Number Category,business_partner_tax,tax_category,VARCHAR,4,Tax number category
+Not Implemented,BP,Business Partner - Tax Number,DFKKBPTAXNUM,TAXNUM,Tax Number,business_partner_tax,tax_number,VARCHAR,20,Tax identification number
+Not Implemented,BP,Business Partner - Tax Number,DFKKBPTAXNUM,COUNTRY,Country,business_partner_tax,country_code,VARCHAR,2,Country key
+Not Implemented,BP,Business Partner - Customer Role,CUST_KNVV,KUNNR,Customer Number,bp_customer_sales,customer_number,VARCHAR,10,Customer number (BP role)
+Not Implemented,BP,Business Partner - Customer Role,CUST_KNVV,VKORG,Sales Organization,bp_customer_sales,sales_org,VARCHAR,4,Sales organization
+Not Implemented,BP,Business Partner - Customer Role,CUST_KNVV,VTWEG,Distribution Channel,bp_customer_sales,distribution_channel,VARCHAR,2,Distribution channel
+Not Implemented,BP,Business Partner - Customer Role,CUST_KNVV,SPART,Division,bp_customer_sales,division,VARCHAR,2,Division
+Not Implemented,BP,Business Partner - Customer Role,CUST_KNVV,ZTERM,Payment Terms,bp_customer_sales,payment_terms,VARCHAR,4,Payment terms
+Not Implemented,BP,Business Partner - Customer Role,CUST_KNVV,INCO1,Incoterms,bp_customer_sales,incoterms,VARCHAR,3,Incoterms
+Not Implemented,BP,Business Partner - Customer Role,CUST_KNVV,WAERS,Currency,bp_customer_sales,currency,VARCHAR,3,Currency
+Not Implemented,BP,Business Partner - Customer Role,CUST_KNVV,KTGRD,Account Assignment Group,bp_customer_sales,account_assignment_group,VARCHAR,2,Account assignment group
+Not Implemented,BP,Business Partner - Vendor Role,CUST_LFM1,LIFNR,Vendor Number,bp_vendor_purchasing,vendor_number,VARCHAR,10,Vendor number (BP role)
+Not Implemented,BP,Business Partner - Vendor Role,CUST_LFM1,EKORG,Purchasing Organization,bp_vendor_purchasing,purchasing_org,VARCHAR,4,Purchasing organization
+Not Implemented,BP,Business Partner - Vendor Role,CUST_LFM1,ZTERM,Payment Terms,bp_vendor_purchasing,payment_terms,VARCHAR,4,Payment terms
+Not Implemented,BP,Business Partner - Vendor Role,CUST_LFM1,WAERS,Currency,bp_vendor_purchasing,currency,VARCHAR,3,Currency
+Not Implemented,BP,Business Partner - Vendor Role,CUST_LFM1,EKGRP,Purchasing Group,bp_vendor_purchasing,purchasing_group,VARCHAR,3,Purchasing group
+Not Implemented,BP,Business Partner - Vendor Role,CUST_LFM1,INCO1,Incoterms,bp_vendor_purchasing,incoterms,VARCHAR,3,Incoterms
+Not Implemented,BP,Business Partner - Vendor Role,CUST_LFM1,KALSK,Schema Group Vendor,bp_vendor_purchasing,schema_group,VARCHAR,2,Schema group
+Not Implemented,BP,Business Partner - Company Code,BUT050,PARTNER,Business Partner Number,bp_company_code,bp_number,VARCHAR,10,Business partner number
+Not Implemented,BP,Business Partner - Company Code,BUT050,BUKRS,Company Code,bp_company_code,company_code,VARCHAR,10,Company code
+Not Implemented,BP,Business Partner - Company Code,BUT050,AKONT,Reconciliation Account,bp_company_code,reconciliation_account,VARCHAR,10,GL account
+Not Implemented,BP,Business Partner - Company Code,BUT050,ZTERM,Payment Terms,bp_company_code,payment_terms,VARCHAR,4,Payment terms
+Not Implemented,BP,Business Partner - Company Code,BUT050,ZWELS,Payment Methods,bp_company_code,payment_methods,VARCHAR,10,Payment methods
+Not Implemented,BP,Business Partner - Company Code,BUT050,XVERR,Clearing with BP,bp_company_code,clearing_with_bp,BOOLEAN,,Automatic clearing
+Not Implemented,BP,Business Partner - Company Code,BUT050,REPRF,Dunning Procedure,bp_company_code,dunning_procedure,VARCHAR,4,Dunning procedure
+Not Implemented,BP,Business Partner - Relationship,BUT050,PARTNER1,Business Partner 1,bp_relationships,bp_number_1,VARCHAR,10,First business partner
+Not Implemented,BP,Business Partner - Relationship,BUT050,PARTNER2,Business Partner 2,bp_relationships,bp_number_2,VARCHAR,10,Second business partner
+Not Implemented,BP,Business Partner - Relationship,BUT050,RELTYP,Relationship Type,bp_relationships,relationship_type,VARCHAR,6,Relationship type
+Not Implemented,BP,Business Partner - Relationship,BUT050,VALID_FROM,Valid From,bp_relationships,valid_from,DATE,,Validity start date
+Not Implemented,BP,Business Partner - Relationship,BUT050,VALID_TO,Valid To,bp_relationships,valid_to,DATE,,Validity end date
+Not Implemented,BP,Business Partner - Classification,BUT051,PARTNER,Business Partner Number,bp_classification,bp_number,VARCHAR,10,Business partner number
+Not Implemented,BP,Business Partner - Classification,BUT051,CLASS,Class,bp_classification,class,VARCHAR,18,Classification class
+Not Implemented,BP,Business Partner - Classification,BUT051,CLASSTYPE,Class Type,bp_classification,class_type,VARCHAR,3,Class type
+Not Implemented,BP,Business Partner - Classification,BUT051,ATWRT,Characteristic Value,bp_classification,characteristic_value,VARCHAR,30,Characteristic value
+Not Implemented,BP,Business Partner - Credit Management,UKM_BP_CMS,PARTNER,Business Partner Number,bp_credit_management,bp_number,VARCHAR,10,Business partner number
+Not Implemented,BP,Business Partner - Credit Management,UKM_BP_CMS,KKBER,Credit Control Area,bp_credit_management,credit_control_area,VARCHAR,4,Credit control area
+Not Implemented,BP,Business Partner - Credit Management,UKM_BP_CMS,KLIMK,Credit Limit,bp_credit_management,credit_limit,DECIMAL,"15,2",Credit limit
+Not Implemented,BP,Business Partner - Credit Management,UKM_BP_CMS,WAERS,Currency,bp_credit_management,currency,VARCHAR,3,Currency
+Not Implemented,BP,Business Partner - Credit Management,UKM_BP_CMS,CRBLB,Credit Exposure,bp_credit_management,credit_exposure,DECIMAL,"15,2",Current credit exposure
+Not Implemented,BP,Business Partner - Credit Management,UKM_BP_CMS,GRUPP,Risk Category,bp_credit_management,risk_category,VARCHAR,4,Risk category
+Not Implemented,BP,Business Partner - Credit Management,UKM_BP_CMS,SBGRP,Credit Representative Group,bp_credit_management,credit_rep_group,VARCHAR,4,Credit representative group
+Not Implemented,BP,Transaction Codes,BP,BP,Maintain Business Partner,MaintainBusinessPartner,,,,"Component: MaintainBusinessPartner"
+Not Implemented,BP,Transaction Codes,BP_GEN,BP_GEN,Create Business Partner,CreateBusinessPartner,,,,"Component: CreateBusinessPartner"
+Not Implemented,BP,Transaction Codes,BP_MASS,BP_MASS,Mass Maintenance BP,MassMaintenanceBP,,,,"Component: MassMaintenanceBP"
+Not Implemented,BP,Transaction Codes,FD32,FD32,Change Customer Credit Management,CustomerCreditManagement,,,,"Component: CustomerCreditManagement"
+Not Implemented,BP,Transaction Codes,XD99,XD99,Customer Master Mass Maintenance,CustomerMassMaintenance,,,,"Component: CustomerMassMaintenance"
+Not Implemented,BP,Transaction Codes,XK99,XK99,Vendor Master Mass Maintenance,VendorMassMaintenance,,,,"Component: VendorMassMaintenance"
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,RLDNR,Ledger,universal_journal,ledger,VARCHAR,20,Leading ledger
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,RBUKRS,Company Code,universal_journal,company_code,VARCHAR,10,Company code
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,GJAHR,Fiscal Year,universal_journal,fiscal_year,INTEGER,,Posting fiscal year
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BELNR,Document Number,universal_journal,source_document_id,VARCHAR,50,Accounting document number
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BUZEI,Line Item,universal_journal,id,UUID,,Line item (UUID instead of number)
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,RACCT,Account Number,universal_journal,gl_account,VARCHAR,20,GL account number
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BLART,Document Type,universal_journal,source_document_type,VARCHAR,20,SA/AB/KR/RE/etc
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BLDAT,Document Date,universal_journal,document_date,DATE,,Document date
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BUDAT,Posting Date,universal_journal,posting_date,DATE,,Posting date
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,WAERS,Currency,universal_journal,transaction_currency,VARCHAR,3,Document currency
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,HSL,Amount in Local Currency,universal_journal,company_amount,DECIMAL,"15,2",Amount in company currency
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,TSL,Amount in Transaction Currency,universal_journal,transaction_amount,DECIMAL,"15,2",Amount in document currency
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,MENGE,Quantity,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,MEINS,Unit of Measure,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,MATNR,Material Number,universal_journal,material_number,VARCHAR,40,Material
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,WERKS,Plant,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,KOSTL,Cost Center,universal_journal,cost_center,VARCHAR,20,Cost center
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,AUFNR,Order Number,universal_journal,production_order,VARCHAR,20,Internal order/Project
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,PRCTR,Profit Center,universal_journal,profit_center,VARCHAR,20,Profit center
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,SEGMENT,Segment,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,SGTXT,Item Text,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,XBLNR,Reference Document,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,BKTXT,Document Header Text,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,LIFNR,Vendor Number,universal_journal,supplier_code,VARCHAR,20,Vendor account
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,KUNNR,Customer Number,universal_journal,customer_code,VARCHAR,20,Customer account
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZTERM,Payment Terms,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZFBDT,Baseline Date,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZBD1T,Cash Discount Days 1,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZBD1P,Cash Discount Percent 1,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZBD2T,Cash Discount Days 2,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,ZBD2P,Cash Discount Percent 2,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,REBZG,Invoice Reference,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,REBZJ,Invoice Fiscal Year,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA),ACDOCA,REBZZ,Invoice Line Item,universal_journal,,,Not in current schema
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Event ID,universal_journal,event_id,UUID,,Event sourcing pattern
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Event Type,universal_journal,event_type,VARCHAR,50,Event type classification
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Event Timestamp,universal_journal,event_timestamp,TIMESTAMP,,Event occurrence time
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Source System,universal_journal,source_system,VARCHAR,20,Originating system
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Posting Key,universal_journal,posting_key,VARCHAR,20,Posting key
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Debit/Credit,universal_journal,debit_credit,CHAR,1,D or C indicator
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Group Currency,universal_journal,group_currency,VARCHAR,3,Group reporting currency
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Group Amount,universal_journal,group_amount,DECIMAL,"15,2",Amount in group currency
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,FX Rate Transaction to Company,universal_journal,fx_rate_transaction_to_company,DECIMAL,"12,6",Exchange rate
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,FX Rate Transaction to Group,universal_journal,fx_rate_transaction_to_group,DECIMAL,"12,6",Exchange rate
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,FX Rate Source,universal_journal,fx_rate_source,VARCHAR,20,Rate source
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,FX Rate Timestamp,universal_journal,fx_rate_timestamp,TIMESTAMP,,Rate timestamp
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Project Code,universal_journal,project_code,VARCHAR,20,Project assignment
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,WBS Element,universal_journal,wbs_element,VARCHAR,30,WBS element
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Asset Number,universal_journal,asset_number,VARCHAR,20,Fixed asset
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Maintenance Order,universal_journal,maintenance_order,VARCHAR,20,PM order
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Employee ID,universal_journal,employee_id,VARCHAR,20,Employee
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Contract Number,universal_journal,contract_number,VARCHAR,30,Contract reference
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Real Estate Object,universal_journal,real_estate_object,VARCHAR,20,RE object
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Treasury Instrument,universal_journal,treasury_instrument,VARCHAR,20,Treasury instrument
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Tax Code,universal_journal,tax_code,VARCHAR,10,Tax code
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Is Reversal,universal_journal,is_reversal,BOOLEAN,,Reversal indicator
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Reversal Of Event ID,universal_journal,reversal_of_event_id,UUID,,Original event reversed
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Reversal Reason,universal_journal,reversal_reason,TEXT,,Reversal explanation
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Period,universal_journal,period,INTEGER,,Posting period
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Activity Code,universal_journal,activity_code,VARCHAR,50,Activity assignment
+Implemented,FI,Universal Journal (ACDOCA) - Enhanced,Custom,Custom,Cost Element,universal_journal,cost_element,VARCHAR,20,Cost element

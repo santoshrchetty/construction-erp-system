@@ -1,5 +1,5 @@
 // Layer 2: Business Logic Layer - domains/approval/FlexibleApprovalService.ts
-import { WorkflowRepository } from '../../data/WorkflowRepository';
+import { WorkflowRepository } from '../workflow/workflowRepository';
 
 export class FlexibleApprovalService {
   private static validateInput(input: any): void {

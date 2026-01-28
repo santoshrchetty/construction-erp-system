@@ -16,6 +16,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+// Single supabase instance
+const supabase = createClient()
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<any>(null)
@@ -23,7 +26,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
     setMounted(true)
@@ -32,21 +34,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!mounted) return
 
-    let retryCount = 0
-    const maxRetries = 3
     let timeoutId: NodeJS.Timeout
+    let isCancelled = false
 
     const getSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
         
+        if (isCancelled) return
+        
         if (error) {
           console.error('Session error:', error)
-          if (retryCount < maxRetries) {
-            retryCount++
-            setTimeout(getSession, 1000 * retryCount)
-            return
-          }
         }
         
         setSession(session)
@@ -58,24 +56,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null)
         }
       } catch (error) {
-        console.error('Auth initialization error:', error)
+        if (!isCancelled) {
+          console.error('Auth initialization error:', error)
+        }
       } finally {
-        setLoading(false)
-        if (timeoutId) clearTimeout(timeoutId)
+        if (!isCancelled) {
+          setLoading(false)
+          if (timeoutId) clearTimeout(timeoutId)
+        }
       }
     }
 
     // Set timeout to prevent infinite loading
     timeoutId = setTimeout(() => {
-      console.warn('Auth initialization timeout')
-      setLoading(false)
-    }, 5000)
+      if (!isCancelled) {
+        setLoading(false)
+      }
+    }, 3000)
 
     getSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event)
+        if (isCancelled) return
+        
+        // Only log important events
+        if (event !== 'TOKEN_REFRESHED') {
+          console.log('Auth state change:', event)
+        }
         
         setSession(session)
         setUser(session?.user ?? null)
@@ -90,20 +98,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Handle auth events
         if (event === 'SIGNED_OUT') {
-          // Ensure clean state on sign out
           setUser(null)
           setProfile(null)
           setSession(null)
           router.push('/login')
         } else if (event === 'SIGNED_IN' && session?.user) {
           router.push('/erp-modules')
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed successfully')
         }
       }
     )
 
     return () => {
+      isCancelled = true
+      if (timeoutId) clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
   }, [mounted, router])
@@ -117,13 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single()
       
       if (error) {
-        // Silently handle - profile is optional for tiles functionality
         return
       }
       
       setProfile(profile)
     } catch (error) {
-      console.error('Profile fetch error:', error)
+      // Silent fail
     }
   }
 
@@ -136,8 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       
       if (error) throw error
-      
-      // Session will be handled by onAuthStateChange
     } catch (error) {
       setLoading(false)
       throw error
@@ -146,7 +150,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Call server-side logout endpoint
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
@@ -154,21 +157,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (!response.ok) throw new Error('Server logout failed')
       
-      // Clear client storage
       localStorage.clear()
       sessionStorage.clear()
       
-      // Clear local state
       setUser(null)
       setProfile(null)
       setSession(null)
       
-      // Force redirect
       window.location.href = '/login'
       
     } catch (error) {
       console.error('Logout error:', error)
-      // Fallback: force clear and redirect
       localStorage.clear()
       sessionStorage.clear()
       setUser(null)
@@ -191,7 +190,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Show loading spinner during SSR hydration
   if (!mounted) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

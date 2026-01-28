@@ -1,6 +1,6 @@
 // Step 3: Enhanced ApprovalService with Universal Support
 
-import { ApprovalRepository } from '../../data/ApprovalRepository';
+import { ApprovalRepository } from './approvalRepository';
 import { UniversalApprovalRequest, ApprovalObjectType } from '../../types/ApprovalTypes';
 
 export class EnhancedApprovalService {

@@ -1,4 +1,4 @@
-import { NumberRangeRepository } from '../../data/NumberRangeRepository';
+import { NumberRangeRepository } from '../administration/numberRangeRepository';
 
 export interface NumberRange {
   id: string;

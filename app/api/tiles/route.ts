@@ -497,6 +497,11 @@ export const POST = withHighRiskRecovery(async (request: NextRequest) => {
         return NextResponse.json(data)
       }
 
+      if (body.action === 'get-material-request') {
+        const data = await unifiedMaterialRequestService.getMaterialRequestById(body.payload.id)
+        return NextResponse.json(data)
+      }
+
       if (body.action === 'approve-material-request') {
         const data = await unifiedMaterialRequestService.updateRequestStatus(
           body.payload.request_id,
@@ -504,6 +509,16 @@ export const POST = withHighRiskRecovery(async (request: NextRequest) => {
           authContext.userId,
           body.payload.comments
         )
+        return NextResponse.json(data)
+      }
+
+      if (body.action === 'delete-material-request') {
+        const data = await unifiedMaterialRequestService.deleteMaterialRequest(body.payload.id)
+        return NextResponse.json(data)
+      }
+
+      if (body.action === 'get-templates') {
+        const data = await unifiedMaterialRequestService.getRequestTemplates(body.payload?.template_type)
         return NextResponse.json(data)
       }
 
@@ -593,7 +608,16 @@ export const POST = withHighRiskRecovery(async (request: NextRequest) => {
             body.payload.material_id,
             {
               material_name: body.payload.material_name,
-              description: body.payload.description
+              description: body.payload.description,
+              category: body.payload.category,
+              material_group: body.payload.material_group,
+              base_uom: body.payload.base_uom,
+              material_type: body.payload.material_type,
+              weight_unit: body.payload.weight_unit,
+              gross_weight: body.payload.gross_weight,
+              net_weight: body.payload.net_weight,
+              volume_unit: body.payload.volume_unit,
+              volume: body.payload.volume
             },
             authContext.userId
           )

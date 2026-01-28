@@ -39,14 +39,11 @@ export interface MaterialPricing {
 
 // Global Material Master Operations
 export async function createMaterialMaster(payload: MaterialMaster, userId: string) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   const { data, error } = await supabase
     .from('materials')
-    .insert({
-      ...payload,
-      created_by: userId
-    })
+    .insert(payload)
     .select()
     .single()
 
@@ -55,7 +52,7 @@ export async function createMaterialMaster(payload: MaterialMaster, userId: stri
 }
 
 export async function getMaterialMaster(materialCode?: string, searchTerm?: string, filters?: { category?: string, material_type?: string }) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   // Try material_master_view first, fallback to materials table
   let query = supabase
@@ -88,15 +85,11 @@ export async function getMaterialMaster(materialCode?: string, searchTerm?: stri
 }
 
 export async function updateMaterialMaster(materialCode: string, payload: Partial<MaterialMaster>, userId: string) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   const { data, error } = await supabase
     .from('materials')
-    .update({
-      ...payload,
-      updated_by: userId,
-      updated_at: new Date().toISOString()
-    })
+    .update(payload)
     .eq('material_code', materialCode)
     .select()
     .single()
@@ -107,14 +100,11 @@ export async function updateMaterialMaster(materialCode: string, payload: Partia
 
 // Plant Extension Operations
 export async function extendMaterialToPlant(payload: MaterialPlantData, userId: string) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   const { data, error } = await supabase
     .from('material_plant_data')
-    .insert({
-      ...payload,
-      created_by: userId
-    })
+    .insert(payload)
     .select()
     .single()
 
@@ -123,7 +113,7 @@ export async function extendMaterialToPlant(payload: MaterialPlantData, userId: 
 }
 
 export async function getMaterialPlantData(materialCode: string, plantCode?: string) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   let query = supabase
     .from('material_plant_data')
@@ -144,15 +134,11 @@ export async function getMaterialPlantData(materialCode: string, plantCode?: str
 }
 
 export async function updateMaterialPlantData(id: string, payload: Partial<MaterialPlantData>, userId: string) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   const { data, error } = await supabase
     .from('material_plant_data')
-    .update({
-      ...payload,
-      updated_by: userId,
-      updated_at: new Date().toISOString()
-    })
+    .update(payload)
     .eq('id', id)
     .select()
     .single()
@@ -163,14 +149,11 @@ export async function updateMaterialPlantData(id: string, payload: Partial<Mater
 
 // Pricing Operations
 export async function createMaterialPricing(payload: MaterialPricing, userId: string) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   const { data, error } = await supabase
     .from('material_pricing')
-    .insert({
-      ...payload,
-      created_by: userId
-    })
+    .insert(payload)
     .select()
     .single()
 
@@ -179,7 +162,7 @@ export async function createMaterialPricing(payload: MaterialPricing, userId: st
 }
 
 export async function getMaterialPricing(materialCode: string, companyCode?: string) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   let query = supabase
     .from('material_pricing')
@@ -199,7 +182,7 @@ export async function getMaterialPricing(materialCode: string, companyCode?: str
 
 // Master Data Helpers
 export async function getMaterialCategories() {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   const { data, error } = await supabase
     .from('material_categories')
@@ -212,7 +195,7 @@ export async function getMaterialCategories() {
 }
 
 export async function getMaterialGroups(categoryCode?: string) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   let query = supabase
     .from('material_groups')
@@ -231,7 +214,7 @@ export async function getMaterialGroups(categoryCode?: string) {
 
 // Enhanced Stock Overview with new structure
 export async function getStockOverviewERP(companyCode: string, filters: any) {
-  const supabase = createServiceClient()
+  const supabase = await createServiceClient()
   
   try {
     let query = supabase

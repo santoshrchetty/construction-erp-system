@@ -9,15 +9,15 @@ const supabase = createClient(
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const companyId = searchParams.get('companyId');
+    const companyCode = searchParams.get('companyCode');
     
     let query = supabase
       .from('plants')
-      .select('id, plant_code, plant_name, plant_type, company_code_id')
+      .select('id, plant_code, plant_name, plant_type, company_code')
       .eq('is_active', true);
     
-    if (companyId) {
-      query = query.eq('company_code_id', companyId);
+    if (companyCode) {
+      query = query.eq('company_code', companyCode);
     }
     
     const { data, error } = await query.order('plant_code');

@@ -1,6 +1,6 @@
 'use client'
 
-import EnhancedConstructionTiles from '../../components/tiles/EnhancedConstructionTiles'
+import EnhancedConstructionTiles from '../../components/layout/EnhancedConstructionTiles'
 
 export default function ERPModulesPage() {
   return <EnhancedConstructionTiles />

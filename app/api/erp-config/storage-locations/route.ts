@@ -9,15 +9,15 @@ const supabase = createClient(
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const plantId = searchParams.get('plantId');
+    const plantCode = searchParams.get('plantCode');
     
     let query = supabase
       .from('storage_locations')
-      .select('id, sloc_code, sloc_name, location_type, plant_id')
+      .select('id, sloc_code, sloc_name, location_type, plant_code')
       .eq('is_active', true);
     
-    if (plantId) {
-      query = query.eq('plant_id', plantId);
+    if (plantCode) {
+      query = query.eq('plant_code', plantCode);
     }
     
     const { data, error } = await query.order('sloc_code');

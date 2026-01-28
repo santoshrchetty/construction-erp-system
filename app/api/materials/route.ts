@@ -13,7 +13,9 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     const id = searchParams.get('id')
     const search = searchParams.get('search')
     const plantId = searchParams.get('plantId')
+    const plantCode = searchParams.get('plantCode')
     const storageLocationId = searchParams.get('storageLocationId')
+    const storageLocation = searchParams.get('storageLocation')
     const withStock = searchParams.get('withStock') === 'true'
     const limit = parseInt(searchParams.get('limit') || '50')
     
@@ -31,25 +33,10 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     
     // Search with optional stock info
     if (withStock) {
+      // Simple query without complex nested joins
       let query = supabase
         .from('materials')
-        .select(`
-          id,
-          material_code,
-          material_name,
-          description,
-          base_uom,
-          standard_price,
-          material_group,
-          category,
-          material_storage_data(
-            current_stock,
-            reserved_stock,
-            available_stock,
-            storage_location_id,
-            storage_locations(sloc_code, sloc_name, plant_id)
-          )
-        `)
+        .select('id, material_code, material_name, description, base_uom, material_group, category')
         .eq('is_active', true)
       
       if (search) {
@@ -57,22 +44,12 @@ export const GET = withAuth(async (request: NextRequest, context) => {
       }
       
       const { data, error } = await query.limit(limit)
-      if (error) throw error
-      
-      // Filter by plant/storage location
-      let filteredData = data
-      if (plantId || storageLocationId) {
-        filteredData = data?.map(material => ({
-          ...material,
-          material_storage_data: material.material_storage_data?.filter((stock: any) => {
-            if (storageLocationId) return stock.storage_location_id === storageLocationId
-            if (plantId) return stock.storage_locations?.plant_id === plantId
-            return true
-          })
-        })).filter(m => m.material_storage_data && m.material_storage_data.length > 0)
+      if (error) {
+        console.error('Materials query error:', error)
+        throw error
       }
       
-      return NextResponse.json({ success: true, data: filteredData })
+      return NextResponse.json({ success: true, data: data || [] })
     }
     
     // Simple search from view

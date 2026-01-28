@@ -1,5 +1,5 @@
 // Layer 2: Business Logic Layer - domains/approval/ApprovalService.ts
-import { ApprovalRepository } from '../../data/ApprovalRepository';
+import { ApprovalRepository } from './approvalRepository';
 
 // Default customer ID - should be passed from request context in production
 const DEFAULT_CUSTOMER_ID = '550e8400-e29b-41d4-a716-446655440001';

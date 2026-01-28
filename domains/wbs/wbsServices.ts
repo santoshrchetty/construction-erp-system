@@ -66,6 +66,12 @@ export class WBSService {
     return this.repository.getWBSNodes(projectId);
   }
 
+  async getWBSNodesByProjectCode(projectCode: string): Promise<WBSNode[]> {
+    const projectId = await this.repository.getProjectIdByCode(projectCode);
+    if (!projectId) throw new Error('Project not found');
+    return this.repository.getWBSNodes(projectId);
+  }
+
   async createWBSNode(data: Omit<WBSNode, 'id' | 'created_at' | 'updated_at'>): Promise<WBSNode> {
     const code = await this.generateWBSCode(data.project_id, data.parent_id, data.level);
     return this.repository.createWBSNode({ ...data, code });

@@ -11,9 +11,9 @@ export async function handleWBS(action: string, request: NextRequest, method: st
     switch (action) {
       case 'nodes':
         if (method === 'GET') {
-          const projectId = searchParams.get('projectId')
-          if (!projectId) throw new Error('projectId required')
-          return await wbsService.getWBSNodes(projectId)
+          const projectCode = searchParams.get('projectCode')
+          if (!projectCode) throw new Error('projectCode required')
+          return await wbsService.getWBSNodesByProjectCode(projectCode)
         } else if (method === 'POST') {
           return await wbsService.createWBSNode(body)
         } else if (method === 'PUT') {

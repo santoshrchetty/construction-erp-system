@@ -1,7 +1,7 @@
 // Enhanced Finance Service - 4-Layer Architecture Compliant
 // Business Logic Layer for GL Posting with comprehensive validation
 
-import { FinanceRepository } from '@/data/FinanceRepository'
+import { FinanceRepository } from './financeRepository'
 
 export interface GLEntry {
   account_code: string

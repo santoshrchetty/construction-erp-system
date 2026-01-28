@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Authentication only - authorization handled at tile level
     const authContext = await withAuth(request)
 
-    const supabase = createServiceClient()
+    const supabase = await createServiceClient()
 
     const [mgRes, vcRes, ptRes, uomRes, msRes, valRes, mtRes, glRes, ccRes, plantRes, slRes, akRes, adRes] = await Promise.all([
       supabase.from('material_groups').select('*').order('group_code'),
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const entity = searchParams.get('entity')
     const body = await request.json()
 
-    const supabase = createServiceClient()
+    const supabase = await createServiceClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
@@ -121,7 +121,7 @@ export async function PUT(request: NextRequest) {
     const entity = searchParams.get('entity')
     const body = await request.json()
 
-    const supabase = createServiceClient()
+    const supabase = await createServiceClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
@@ -176,7 +176,7 @@ export async function DELETE(request: NextRequest) {
     const entity = searchParams.get('entity')
     const id = searchParams.get('id')
 
-    const supabase = createServiceClient()
+    const supabase = await createServiceClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })

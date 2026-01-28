@@ -23,9 +23,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const supabase = createServiceClient()
     
+    // Generate PO number from number range
+    const { data: numberData, error: numberError } = await supabase.rpc('get_next_number', {
+      p_company_code: body.company_code || '1000',
+      p_document_type: 'PO',
+      p_fiscal_year: new Date().getFullYear().toString()
+    })
+    
+    if (numberError) throw numberError
+    
+    const poData = {
+      ...body,
+      po_number: numberData
+    }
+    
     const { data, error } = await supabase
       .from('purchase_orders')
-      .insert(body)
+      .insert(poData)
       .select()
       .single()
 

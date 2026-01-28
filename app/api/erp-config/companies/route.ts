@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('company_codes')
-      .select('id, company_code, company_name, currency')
+      .select('id, company_code, company_name, currency, grpcompany_code')
       .eq('is_active', true)
       .order('company_code');
 
