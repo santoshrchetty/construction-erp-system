@@ -5,6 +5,7 @@ export const TaskPriorityEnum = z.enum(['low', 'medium', 'high', 'critical'])
 
 export const TaskSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   project_id: z.string().uuid(),
   wbs_node_id: z.string().uuid().nullable(),
   activity_id: z.string().uuid().nullable(),
@@ -27,6 +28,7 @@ export const TaskSchema = z.object({
 
 export const TaskDependencySchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   predecessor_task_id: z.string().uuid(),
   successor_task_id: z.string().uuid(),
   dependency_type: z.enum(['finish_to_start', 'start_to_start', 'finish_to_finish', 'start_to_finish']).default('finish_to_start'),
@@ -36,6 +38,7 @@ export const TaskDependencySchema = z.object({
 
 export const CreateTaskSchema = TaskSchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true,
   updated_at: true
 }).partial({
@@ -56,6 +59,7 @@ export const CreateTaskSchema = TaskSchema.omit({
 
 export const CreateTaskDependencySchema = TaskDependencySchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true
 }).partial({
   dependency_type: true,

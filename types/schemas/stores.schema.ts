@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const StoreSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   project_id: z.string().uuid(),
   name: z.string().min(1).max(255),
   code: z.string().min(1).max(50),
@@ -14,6 +15,7 @@ export const StoreSchema = z.object({
 
 export const StockItemSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   item_code: z.string().min(1).max(50),
   description: z.string().min(1),
   category: z.string().max(100).nullable(),
@@ -28,6 +30,7 @@ export const StockItemSchema = z.object({
 
 export const StockBalanceSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   store_id: z.string().uuid(),
   stock_item_id: z.string().uuid(),
   current_quantity: z.number().min(0).default(0),
@@ -40,6 +43,7 @@ export const StockBalanceSchema = z.object({
 
 export const StockMovementSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   store_id: z.string().uuid(),
   stock_item_id: z.string().uuid(),
   movement_type: z.enum(['receipt', 'issue', 'return', 'transfer', 'adjustment', 'write_off']),
@@ -57,6 +61,7 @@ export const StockMovementSchema = z.object({
 
 export const CreateStoreSchema = StoreSchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true,
   updated_at: true
 }).partial({
@@ -67,6 +72,7 @@ export const CreateStoreSchema = StoreSchema.omit({
 
 export const CreateStockItemSchema = StockItemSchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true,
   updated_at: true
 }).partial({
@@ -79,6 +85,7 @@ export const CreateStockItemSchema = StockItemSchema.omit({
 
 export const CreateStockMovementSchema = StockMovementSchema.omit({
   id: true,
+  tenant_id: true,
   total_cost: true,
   created_at: true
 }).partial({

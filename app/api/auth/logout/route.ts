@@ -19,6 +19,9 @@ export async function POST() {
     
     const response = NextResponse.json({ success: true })
     
+    // Clear tenant cookie
+    response.cookies.delete('tenant-id')
+    
     // Set secure headers
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
     response.headers.set('Pragma', 'no-cache')

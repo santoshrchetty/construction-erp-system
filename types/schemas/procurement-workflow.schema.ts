@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 // Purchase Requisition Schemas
 export const CreatePurchaseRequisitionSchema = z.object({
+  tenant_id: z.string().uuid(),
   project_id: z.string().uuid('Invalid project ID'),
   requested_by: z.string().uuid('Invalid user ID'),
   department: z.string().optional(),
@@ -29,6 +30,7 @@ export const UpdatePRStatusSchema = z.object({
 
 // Vendor Quotation Schemas
 export const CreateVendorQuotationSchema = z.object({
+  tenant_id: z.string().uuid(),
   pr_line_id: z.string().uuid(),
   vendor_id: z.string().uuid(),
   quotation_number: z.string().optional(),
@@ -46,6 +48,7 @@ export const SelectVendorQuotationSchema = z.object({
 
 // Subcontract Order Schemas
 export const CreateSubcontractOrderSchema = z.object({
+  tenant_id: z.string().uuid(),
   project_id: z.string().uuid(),
   vendor_id: z.string().uuid(),
   work_description: z.string().min(1, 'Work description is required'),
@@ -89,6 +92,7 @@ export const UpdateMilestoneSchema = z.object({
 
 // Goods Receipt Schemas
 export const CreateGoodsReceiptSchema = z.object({
+  tenant_id: z.string().uuid(),
   po_id: z.string().uuid(),
   store_id: z.string().uuid(),
   receipt_date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid receipt date'),
@@ -131,6 +135,7 @@ export const QualityCheckSchema = z.object({
 
 // Cost Posting Schemas
 export const ManualCostPostingSchema = z.object({
+  tenant_id: z.string().uuid(),
   cost_object_id: z.string().uuid(),
   transaction_type: z.enum(['planned', 'committed', 'actual', 'accrued']),
   amount: z.number(),
@@ -142,6 +147,7 @@ export const ManualCostPostingSchema = z.object({
 })
 
 export const CostAdjustmentSchema = z.object({
+  tenant_id: z.string().uuid(),
   cost_object_id: z.string().uuid(),
   adjustment_amount: z.number(),
   adjustment_reason: z.string().min(1, 'Reason is required'),
@@ -152,6 +158,7 @@ export const CostAdjustmentSchema = z.object({
 
 // Vendor Performance Schemas
 export const VendorPerformanceSchema = z.object({
+  tenant_id: z.string().uuid(),
   vendor_id: z.string().uuid(),
   evaluation_period_start: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
   evaluation_period_end: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
@@ -166,6 +173,7 @@ export const VendorPerformanceSchema = z.object({
 
 // Purchase Order Amendment Schemas
 export const POAmendmentSchema = z.object({
+  tenant_id: z.string().uuid(),
   po_id: z.string().uuid(),
   amendment_type: z.enum(['quantity_change', 'price_change', 'delivery_date_change', 'specification_change']),
   amendment_reason: z.string().min(1, 'Reason is required'),

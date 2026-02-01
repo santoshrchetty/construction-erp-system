@@ -4,6 +4,7 @@ export const WBSNodeTypeEnum = z.enum(['project', 'phase', 'deliverable', 'work_
 
 export const WBSNodeSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   project_id: z.string().uuid(),
   parent_id: z.string().uuid().nullable(),
   code: z.string().min(1).max(50),
@@ -24,6 +25,7 @@ export const WBSNodeSchema = z.object({
 
 export const ActivitySchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   project_id: z.string().uuid(),
   wbs_node_id: z.string().uuid(),
   code: z.string().min(1).max(50),
@@ -43,6 +45,7 @@ export const ActivitySchema = z.object({
 
 export const CreateWBSNodeSchema = WBSNodeSchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true,
   updated_at: true
 }).partial({
@@ -58,6 +61,7 @@ export const CreateWBSNodeSchema = WBSNodeSchema.omit({
 
 export const CreateActivitySchema = ActivitySchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true,
   updated_at: true
 }).partial({

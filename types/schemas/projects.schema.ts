@@ -5,6 +5,7 @@ export const ProjectTypeEnum = z.enum(['residential', 'commercial', 'infrastruct
 
 export const ProjectSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   name: z.string().min(1).max(255),
   code: z.string().min(1).max(50),
   description: z.string().nullable(),
@@ -28,6 +29,7 @@ export const ProjectSchema = z.object({
 
 export const CreateProjectSchema = ProjectSchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true,
   updated_at: true,
   updated_by: true
@@ -50,6 +52,7 @@ export const UpdateProjectSchema = CreateProjectSchema.partial()
 // Company Group Schema
 export const CompanyGroupSchema = z.object({
   grpcompany_code: z.string().min(1).max(10),
+  tenant_id: z.string().uuid(),
   grpcompany_name: z.string().min(1).max(100),
   description: z.string().nullable(),
   is_active: z.boolean().default(true),
@@ -59,6 +62,7 @@ export const CompanyGroupSchema = z.object({
 // Project Category Schema
 export const ProjectCategorySchema = z.object({
   id: z.number(),
+  tenant_id: z.string().uuid(),
   category_code: z.string().min(1).max(20),
   category_name: z.string().min(1).max(100),
   description: z.string().nullable(),

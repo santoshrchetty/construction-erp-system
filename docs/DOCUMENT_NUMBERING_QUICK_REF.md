@@ -2,23 +2,23 @@
 
 ## Format
 ```
-[BASE]-[SUBTYPE]-[YY]-[NUMBER]
-Example: MR-01-24-000123
+[BASE]-[SUBTYPE]-[YYYY]-[NUMBER]
+Example: MR-01-2024-000123
 ```
 
 ## Common Document Types
 
 | Code | Name | Digits | Example |
 |------|------|--------|---------|
-| MR | Material Request | 6 | MR-01-24-000123 |
-| PR | Purchase Requisition | 6 | PR-01-24-000456 |
-| PO | Purchase Order | 6 | PO-01-24-000789 |
-| GR | Goods Receipt | 8 | GR-01-24-00000001 |
-| GI | Goods Issue | 8 | GI-01-24-00000001 |
-| CI | Customer Invoice | 8 | CI-01-24-00000001 |
-| VI | Vendor Invoice | 8 | VI-01-24-00000001 |
-| PD | Payment Document | 8 | PD-01-24-00000001 |
-| JE | Journal Entry | 8 | JE-01-24-00000001 |
+| MR | Material Request | 6 | MR-01-2024-000123 |
+| PR | Purchase Requisition | 6 | PR-01-2024-000456 |
+| PO | Purchase Order | 6 | PO-01-2024-000789 |
+| GR | Goods Receipt | 8 | GR-01-2024-00000001 |
+| GI | Goods Issue | 8 | GI-01-2024-00000001 |
+| CI | Customer Invoice | 8 | CI-01-2024-00000001 |
+| VI | Vendor Invoice | 8 | VI-01-2024-00000001 |
+| PD | Payment Document | 8 | PD-01-2024-00000001 |
+| JE | Journal Entry | 8 | JE-01-2024-00000001 |
 
 ## API Usage
 
@@ -31,7 +31,7 @@ const { data } = await supabase.rpc('get_next_number_by_group', {
   p_fiscal_year: '2024'
 });
 
-// Returns: "MR-01-24-000123"
+// Returns: "MR-01-2024-000123"
 ```
 
 ### Create Document

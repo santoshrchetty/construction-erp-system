@@ -10,18 +10,18 @@ This document defines the complete document numbering system for the Constructio
 
 ### **Universal Format**
 ```
-[BASE]-[SUBTYPE]-[YY]-[NUMBER]
+[BASE]-[SUBTYPE]-[YYYY]-[NUMBER]
 
 Components:
 - BASE: 2-letter document type code (MR, PR, PO, GR, GI, CI, VI, etc.)
 - SUBTYPE: 2-digit subtype code (01-99)
-- YY: 2-digit fiscal year (24, 25, 26...)
+- YYYY: 4-digit fiscal year (2024, 2025, 2026...)
 - NUMBER: 6 or 8 digit sequential number
 
 Examples:
-MR-01-24-000123    (Material Request - Standard)
-GR-01-24-00000001  (Goods Receipt - From PO)
-CI-01-24-00000001  (Customer Invoice - Standard)
+MR-01-2024-000123    (Material Request - Standard)
+GR-01-2024-00000001  (Goods Receipt - From PO)
+CI-01-2024-00000001  (Customer Invoice - Standard)
 ```
 
 ---
@@ -32,14 +32,14 @@ CI-01-24-00000001  (Customer Invoice - Standard)
 ```
 Documents: MR, PR, PO, AD
 Capacity: 1,000,000 per subtype per year
-Format: XXX-XX-XX-000000
+Format: XXX-XX-YYYY-000000
 ```
 
 ### **8 Digits (100M capacity/year) - HIGH VOLUME**
 ```
 Documents: GR, GI, TR, MI, RV, CI, VI, CC, VC, PD, JE, GD, DP, RC, CL
 Capacity: 100,000,000 per subtype per year
-Format: XXX-XX-XX-00000000
+Format: XXX-XX-YYYY-00000000
 ```
 
 ---
@@ -323,9 +323,9 @@ Each company_code represents a separate tenant:
 - C003: Retail Company C
 
 Same document numbers across tenants:
-C001: MR-01-24-000001
-C002: MR-01-24-000001  ← Different tenant, same number OK
-C003: MR-01-24-000001
+C001: MR-01-2024-000001
+C002: MR-01-2024-000001  ← Different tenant, same number OK
+C003: MR-01-2024-000001
 ```
 
 ### **Tenant Configuration**
@@ -350,7 +350,7 @@ document_number_ranges:
   - document_type: Base type (MR, GR, CI, etc.)
   - fiscal_year: Year (2024, 2025, etc.)
   - number_range_group: Subtype (01, 02, 03...)
-  - prefix: Display prefix (MR-01-24-)
+  - prefix: Display prefix (MR-01-2024-)
   - from_number: Start (1)
   - to_number: End (999999 or 99999999)
   - current_number: Last used
@@ -388,7 +388,7 @@ critical_threshold: 95% → Critical at 950,000
 ### **Dual Format Storage**
 ```sql
 material_movements:
-  - document_number: "GR-01-24-00000001" (Display)
+  - document_number: "GR-01-2024-00000001" (Display)
   - sap_mblnr: "5300000001" (SAP MBLNR)
   - sap_mjahr: "2024" (SAP Year)
   - sap_bwart: "101" (SAP Movement Type)
@@ -451,7 +451,7 @@ ALTER TABLE material_requests ADD COLUMN old_document_number VARCHAR;
 
 -- Assign new numbers
 UPDATE material_requests
-SET document_number = 'MR-01-24-' || LPAD(ROW_NUMBER() OVER (ORDER BY created_at)::TEXT, 6, '0'),
+SET document_number = 'MR-01-2024-' || LPAD(ROW_NUMBER() OVER (ORDER BY created_at)::TEXT, 6, '0'),
     old_document_number = document_number;
 ```
 

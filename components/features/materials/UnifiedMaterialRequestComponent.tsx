@@ -319,9 +319,19 @@ export function UnifiedMaterialRequest() {
 
   const loadTemplates = async () => {
     try {
+      // Get tenant ID from localStorage
+      const tenantId = localStorage.getItem('selectedTenant')
+      if (!tenantId) {
+        console.error('No tenant ID found for templates')
+        return
+      }
+
       const response = await fetch('/api/tiles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-tenant-id': tenantId
+        },
         body: JSON.stringify({
           category: 'materials',
           action: 'get-templates',
@@ -338,9 +348,20 @@ export function UnifiedMaterialRequest() {
   const loadRequests = async () => {
     setLoading(true)
     try {
+      // Get tenant ID from localStorage
+      const tenantId = localStorage.getItem('selectedTenant')
+      if (!tenantId) {
+        console.error('No tenant ID found')
+        setRequests([])
+        return
+      }
+
       const response = await fetch('/api/tiles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-tenant-id': tenantId
+        },
         body: JSON.stringify({
           category: 'materials',
           action: 'material-request-list',
@@ -390,9 +411,19 @@ export function UnifiedMaterialRequest() {
     e.preventDefault()
     setSaving(true)
     try {
+      // Get tenant ID from localStorage
+      const tenantId = localStorage.getItem('selectedTenant')
+      if (!tenantId) {
+        alert('No tenant selected. Please log out and log back in.')
+        return
+      }
+
       const response = await fetch('/api/tiles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-tenant-id': tenantId
+        },
         body: JSON.stringify({
           category: 'materials',
           action: 'unified-material-request',
@@ -508,10 +539,20 @@ export function UnifiedMaterialRequest() {
   const handleView = async (request) => {
     try {
       setLoading(true)
+      // Get tenant ID from localStorage
+      const tenantId = localStorage.getItem('selectedTenant')
+      if (!tenantId) {
+        alert('No tenant selected. Please log out and log back in.')
+        return
+      }
+
       // Fetch full request details including line items, WBS, etc.
       const response = await fetch('/api/tiles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-tenant-id': tenantId
+        },
         body: JSON.stringify({
           category: 'materials',
           action: 'get-material-request',
@@ -569,9 +610,19 @@ export function UnifiedMaterialRequest() {
     if (!confirm('Are you sure you want to delete this request?')) return
     
     try {
+      // Get tenant ID from localStorage
+      const tenantId = localStorage.getItem('selectedTenant')
+      if (!tenantId) {
+        alert('No tenant selected. Please log out and log back in.')
+        return
+      }
+
       const response = await fetch('/api/tiles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-tenant-id': tenantId
+        },
         body: JSON.stringify({
           category: 'materials',
           action: 'delete-material-request',

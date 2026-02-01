@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const FIFOLayerSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   store_id: z.string().uuid(),
   stock_item_id: z.string().uuid(),
   batch_reference: z.string(),
@@ -15,6 +16,7 @@ export const FIFOLayerSchema = z.object({
 
 export const EnhancedStoreSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   project_id: z.string().uuid(),
   name: z.string().min(1),
   code: z.string().min(1),
@@ -63,6 +65,7 @@ export const FIFOStockBalanceSchema = z.object({
 
 export const SiteProjectSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   name: z.string().min(1),
   code: z.string().min(1),
   site_code: z.string().max(10).nullable(),

@@ -488,17 +488,26 @@ export const POST = withHighRiskRecovery(async (request: NextRequest) => {
 
       // Unified Material Request handlers
       if (body.action === 'unified-material-request') {
-        const data = await unifiedMaterialRequestService.createMaterialRequest(body.payload, authContext.userId)
+        if (!authContext.tenantId) {
+          return NextResponse.json({ success: false, error: 'Tenant ID is required' }, { status: 400 })
+        }
+        const data = await unifiedMaterialRequestService.createMaterialRequest(body.payload, authContext.userId, authContext.tenantId)
         return NextResponse.json(data)
       }
 
       if (body.action === 'material-request-list') {
-        const data = await unifiedMaterialRequestService.getMaterialRequests(body.payload || {})
+        if (!authContext.tenantId) {
+          return NextResponse.json({ success: false, error: 'Tenant ID is required' }, { status: 400 })
+        }
+        const data = await unifiedMaterialRequestService.getMaterialRequests({ ...body.payload, tenant_id: authContext.tenantId })
         return NextResponse.json(data)
       }
 
       if (body.action === 'get-material-request') {
-        const data = await unifiedMaterialRequestService.getMaterialRequestById(body.payload.id)
+        if (!authContext.tenantId) {
+          return NextResponse.json({ success: false, error: 'Tenant ID is required' }, { status: 400 })
+        }
+        const data = await unifiedMaterialRequestService.getMaterialRequestById(body.payload.id, authContext.tenantId)
         return NextResponse.json(data)
       }
 
@@ -513,7 +522,10 @@ export const POST = withHighRiskRecovery(async (request: NextRequest) => {
       }
 
       if (body.action === 'delete-material-request') {
-        const data = await unifiedMaterialRequestService.deleteMaterialRequest(body.payload.id)
+        if (!authContext.tenantId) {
+          return NextResponse.json({ success: false, error: 'Tenant ID is required' }, { status: 400 })
+        }
+        const data = await unifiedMaterialRequestService.deleteMaterialRequest(body.payload.id, authContext.tenantId)
         return NextResponse.json(data)
       }
 

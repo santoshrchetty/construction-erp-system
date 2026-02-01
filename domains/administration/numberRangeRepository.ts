@@ -114,7 +114,7 @@ export class NumberRangeRepository {
 
   async getUsageHistory(companyCode: string, documentType: string, limit: number = 100) {
     const { data, error } = await supabase
-      .from('number_range_usage_history')
+      .from('num_range_usg_hist')
       .select('*')
       .eq('company_code', companyCode)
       .eq('document_type', documentType)

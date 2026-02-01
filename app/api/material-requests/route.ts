@@ -8,12 +8,19 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     
+    // Get tenant_id from user context
+    const tenantId = context.tenantId
+    if (!tenantId) {
+      return NextResponse.json({ success: false, error: 'Tenant ID required' }, { status: 400 })
+    }
+    
     if (id) {
       // Get single request with items
       const { data: request, error: requestError } = await supabase
         .from('material_requests')
         .select('*')
         .eq('id', id)
+        .eq('tenant_id', tenantId)
         .single()
       
       if (requestError) throw requestError
@@ -35,6 +42,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
         .from('material_request_items')
         .select('*')
         .eq('material_request_id', id)
+        .eq('tenant_id', tenantId)
         .order('line_number')
       
       if (itemsError) throw itemsError
@@ -50,6 +58,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
       .from('material_requests')
       .select('*')
       .eq('requested_by', context.user.id)
+      .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
     
     if (error) throw error
@@ -68,6 +77,12 @@ export const POST = withAuth(async (request: NextRequest, context) => {
     const supabase = await createServiceClient()
     const body = await request.json()
     
+    // Get tenant_id from user context
+    const tenantId = context.tenantId
+    if (!tenantId) {
+      return NextResponse.json({ success: false, error: 'Tenant ID required' }, { status: 400 })
+    }
+    
     // Generate request number from number range
     const { data: numberData, error: numberError } = await supabase.rpc('get_next_number', {
       p_company_code: body.company_code,
@@ -80,18 +95,20 @@ export const POST = withAuth(async (request: NextRequest, context) => {
     
     const requestData = {
       request_number: requestNumber,
+      request_type: body.request_type || 'MATERIAL_REQ',
       company_code: body.company_code,
       plant_code: body.plant_code,
       project_code: body.project_code,
       cost_center: body.cost_center,
       wbs_element: body.wbs_element,
       requested_by: context.user.id,
-      request_date: new Date().toISOString().split('T')[0],
+      created_by: context.user.id,
       required_date: body.required_date,
-      status: 'draft',
-      priority: body.priority || 3,
+      status: 'DRAFT',
+      priority: body.priority || 'MEDIUM',
       justification: body.justification,
-      total_estimated_cost: body.total_estimated_cost || 0
+      total_amount: body.total_amount || 0,
+      tenant_id: tenantId
     }
 
     const { data: newRequest, error: requestError } = await supabase
@@ -113,7 +130,8 @@ export const POST = withAuth(async (request: NextRequest, context) => {
         unit: item.unit,
         estimated_unit_cost: item.estimated_unit_cost || 0,
         estimated_total_cost: item.estimated_total_cost || 0,
-        urgency_level: item.urgency_level || 3
+        urgency_level: item.urgency_level || 3,
+        tenant_id: tenantId
       }))
 
       const { error: itemsError } = await supabase
@@ -144,6 +162,12 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
       return NextResponse.json({ success: false, error: 'Request ID required' }, { status: 400 })
     }
 
+    // Get tenant_id from user context
+    const tenantId = context.tenantId
+    if (!tenantId) {
+      return NextResponse.json({ success: false, error: 'Tenant ID required' }, { status: 400 })
+    }
+
     const updateData = {
       company_code: body.company_code,
       plant_code: body.plant_code,
@@ -153,7 +177,7 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
       required_date: body.required_date,
       priority: body.priority,
       justification: body.justification,
-      total_estimated_cost: body.total_estimated_cost || 0
+      total_amount: body.total_amount || 0
     }
 
     const { data, error } = await supabase
@@ -161,6 +185,7 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
       .update(updateData)
       .eq('id', id)
       .eq('requested_by', context.user.id)
+      .eq('tenant_id', tenantId)
       .select()
       .single()
 

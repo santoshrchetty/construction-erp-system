@@ -1,46 +1,95 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { TenantService } from '@/lib/tenant-service';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { data, error } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('is_active', true)
-      .order('tenant_code');
-
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, data });
-  } catch (error: any) {
+    const { searchParams } = new URL(request.url);
+    const tenantCode = searchParams.get('code');
+    const tenantId = searchParams.get('id');
+    
+    if (tenantCode) {
+      // Get specific tenant by code
+      const tenant = await TenantService.getTenantByCode(tenantCode);
+      if (!tenant) {
+        return NextResponse.json(
+          { error: 'Tenant not found' },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json(tenant);
+    }
+    
+    if (tenantId) {
+      // Get companies for specific tenant
+      const companies = await TenantService.getTenantCompanies(tenantId);
+      return NextResponse.json(companies);
+    }
+    
+    // Get all tenants
+    const tenants = await TenantService.getAllTenants();
+    return NextResponse.json(tenants);
+    
+  } catch (error) {
+    console.error('Error in tenants GET:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { error: 'Failed to fetch tenants' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { tenant_code, tenant_name } = await request.json();
-
-    const { data, error } = await supabase
-      .rpc('create_tenant', {
-        p_tenant_code: tenant_code,
-        p_tenant_name: tenant_name
-      });
-
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, tenant_id: data });
-  } catch (error: any) {
+    const body = await request.json();
+    const { tenant_code, tenant_name } = body;
+    
+    if (!tenant_code || !tenant_name) {
+      return NextResponse.json(
+        { error: 'Tenant code and name are required' },
+        { status: 400 }
+      );
+    }
+    
+    const tenantId = await TenantService.createTenant(tenant_code, tenant_name);
+    
     return NextResponse.json(
-      { success: false, error: error.message },
+      { id: tenantId, message: 'Tenant created successfully' },
+      { status: 201 }
+    );
+    
+  } catch (error) {
+    console.error('Error in tenants POST:', error);
+    return NextResponse.json(
+      { error: 'Failed to create tenant' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { tenantId, companyCode } = await TenantService.validateRequestTenant(
+      request.headers
+    );
+    
+    const body = await request.json();
+    const { action } = body;
+    
+    if (action === 'validate') {
+      // Validate tenant-company combination
+      const isValid = await TenantService.validateTenantCompany(tenantId, companyCode);
+      return NextResponse.json({ valid: isValid });
+    }
+    
+    return NextResponse.json(
+      { error: 'Invalid action' },
+      { status: 400 }
+    );
+    
+  } catch (error) {
+    console.error('Error in tenants PUT:', error);
+    return NextResponse.json(
+      { error: 'Failed to process request' },
       { status: 500 }
     );
   }

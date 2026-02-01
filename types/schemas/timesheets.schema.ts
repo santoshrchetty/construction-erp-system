@@ -5,6 +5,7 @@ export const EntryTypeEnum = z.enum(['regular', 'overtime', 'holiday', 'sick_lea
 
 export const TimesheetSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   user_id: z.string().uuid(),
   project_id: z.string().uuid(),
   week_ending_date: z.string().date(),
@@ -21,6 +22,7 @@ export const TimesheetSchema = z.object({
 
 export const TimesheetEntrySchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   timesheet_id: z.string().uuid(),
   task_id: z.string().uuid().nullable(),
   activity_id: z.string().uuid().nullable(),
@@ -35,6 +37,7 @@ export const TimesheetEntrySchema = z.object({
 
 export const CreateTimesheetSchema = TimesheetSchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true,
   updated_at: true
 }).partial({
@@ -49,6 +52,7 @@ export const CreateTimesheetSchema = TimesheetSchema.omit({
 
 export const CreateTimesheetEntrySchema = TimesheetEntrySchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true
 }).partial({
   task_id: true,

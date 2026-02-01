@@ -17,6 +17,7 @@ export interface AuthContext {
   authorizedObjects: Set<string>
   isAdmin: boolean
   authService: AuthorizationService
+  tenantId: string
 }
 
 export function withAuth(
@@ -35,6 +36,24 @@ export function withAuth(
       const authService = new AuthorizationService(supabase)
       const { profile, authorizedObjects, isAdmin } = await authService.getUserPermissions(user.id)
 
+      // Get tenant_id from secure cookie (set during login)
+      const tenantCookie = request.cookies.get('tenant-id')?.value
+      
+      if (!tenantCookie) {
+        return NextResponse.json({ error: 'No tenant context' }, { status: 401 })
+      }
+      
+      // Validate user belongs to tenant
+      const { data: userProfile, error: profileError } = await supabase
+        .from('users')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single()
+      
+      if (profileError || !userProfile || userProfile.tenant_id !== tenantCookie) {
+        return NextResponse.json({ error: 'Tenant access denied' }, { status: 403 })
+      }
+
       // Check required permissions
       if (requiredPermissions && !isAdmin) {
         const hasPermission = requiredPermissions.some(permission => 
@@ -51,7 +70,8 @@ export function withAuth(
         profile,
         authorizedObjects,
         isAdmin,
-        authService
+        authService,
+        tenantId: tenantCookie
       }
 
       return await handler(request, context)

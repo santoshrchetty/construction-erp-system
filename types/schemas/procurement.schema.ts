@@ -6,6 +6,7 @@ export const POTypeEnum = z.enum(['standard', 'blanket', 'contract', 'emergency'
 
 export const VendorSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   name: z.string().min(1).max(255),
   code: z.string().min(1).max(50),
   contact_person: z.string().max(255).nullable(),
@@ -24,6 +25,7 @@ export const VendorSchema = z.object({
 
 export const PurchaseOrderSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   project_id: z.string().uuid(),
   po_number: z.string().min(1).max(50),
   vendor_id: z.string().uuid(),
@@ -46,6 +48,7 @@ export const PurchaseOrderSchema = z.object({
 
 export const POLineSchema = z.object({
   id: z.string().uuid(),
+  tenant_id: z.string().uuid(),
   po_id: z.string().uuid(),
   line_number: z.number().int().positive(),
   boq_item_id: z.string().uuid().nullable(),
@@ -62,6 +65,7 @@ export const POLineSchema = z.object({
 
 export const CreateVendorSchema = VendorSchema.omit({
   id: true,
+  tenant_id: true,
   created_at: true,
   updated_at: true
 }).partial({
@@ -79,6 +83,7 @@ export const CreateVendorSchema = VendorSchema.omit({
 
 export const CreatePurchaseOrderSchema = PurchaseOrderSchema.omit({
   id: true,
+  tenant_id: true,
   grand_total: true,
   created_at: true,
   updated_at: true
@@ -95,6 +100,7 @@ export const CreatePurchaseOrderSchema = PurchaseOrderSchema.omit({
 
 export const CreatePOLineSchema = POLineSchema.omit({
   id: true,
+  tenant_id: true,
   line_total: true,
   received_quantity: true,
   pending_quantity: true

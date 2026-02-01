@@ -18,5 +18,10 @@ export async function withAuth(request: NextRequest) {
   
   const userRole = profile?.roles?.name as UserRole || UserRole.EMPLOYEE
   
-  return { user, profile, userRole, supabase, userId: user.id }
+  // Get tenant_id from request headers or cookies
+  const tenantId = request.headers.get('x-tenant-id') || 
+                  request.cookies.get('selectedTenant')?.value ||
+                  null
+  
+  return { user, profile, userRole, supabase, userId: user.id, tenantId }
 }

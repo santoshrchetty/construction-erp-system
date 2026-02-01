@@ -1,1 +1,0 @@
-Error: Failed to run sql query: ERROR: 42710: type "project_status" already exists

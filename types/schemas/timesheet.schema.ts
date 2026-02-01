@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 // Employee Schemas
 export const CreateEmployeeSchema = z.object({
+  tenant_id: z.string().uuid(),
   employee_code: z.string().min(1, 'Employee code is required'),
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
@@ -17,6 +18,7 @@ export const UpdateEmployeeSchema = CreateEmployeeSchema.partial().omit({ employ
 
 // Employee Rate Schemas
 export const CreateEmployeeRateSchema = z.object({
+  tenant_id: z.string().uuid(),
   employee_id: z.string().uuid('Invalid employee ID'),
   project_id: z.string().uuid('Invalid project ID').optional(),
   rate_type: z.enum(['regular', 'overtime', 'holiday']).default('regular'),
@@ -35,6 +37,7 @@ export const CreateEmployeeRateSchema = z.object({
 
 // Subcontractor Schemas
 export const CreateSubcontractorSchema = z.object({
+  tenant_id: z.string().uuid(),
   contractor_code: z.string().min(1, 'Contractor code is required'),
   company_name: z.string().min(1, 'Company name is required'),
   contact_person: z.string().optional(),
@@ -47,6 +50,7 @@ export const UpdateSubcontractorSchema = CreateSubcontractorSchema.partial().omi
 
 // Subcontractor Rate Schemas
 export const CreateSubcontractorRateSchema = z.object({
+  tenant_id: z.string().uuid(),
   subcontractor_id: z.string().uuid('Invalid subcontractor ID'),
   project_id: z.string().uuid('Invalid project ID').optional(),
   work_type: z.string().min(1, 'Work type is required'),
@@ -89,6 +93,7 @@ export const TimesheetLineSchema = z.object({
 
 // Daily Timesheet Schema
 export const CreateDailyTimesheetSchema = z.object({
+  tenant_id: z.string().uuid(),
   timesheet_date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid timesheet date'),
   project_id: z.string().uuid('Invalid project ID'),
   employee_id: z.string().uuid().optional(),

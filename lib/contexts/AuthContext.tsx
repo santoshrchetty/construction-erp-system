@@ -3,20 +3,21 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { createClient } from '@/lib/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
+import { extractSubdomain, isLocalDevelopment } from '@/lib/utils/subdomain'
 
 interface AuthContextType {
   user: User | null
   profile: any
   session: Session | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<void>
+  currentTenant: string | null
+  signIn: (email: string, password: string, selectedTenantId?: string) => Promise<{ session: Session | null; profile: any }>
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
+  setCurrentTenant: (tenantId: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
-
-// Single supabase instance
 const supabase = createClient()
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -24,173 +25,163 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<any>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
+  const [currentTenant, setCurrentTenantState] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    let mounted = true
 
-  useEffect(() => {
-    if (!mounted) return
-
-    let timeoutId: NodeJS.Timeout
-    let isCancelled = false
-
-    const getSession = async () => {
+    const initAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        const { data: { session } } = await supabase.auth.getSession()
         
-        if (isCancelled) return
-        
-        if (error) {
-          console.error('Session error:', error)
-        }
+        if (!mounted) return
         
         setSession(session)
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          await fetchUserProfile(session.user.id)
-        } else {
-          setProfile(null)
+          fetchUserProfile(session.user.id)
         }
       } catch (error) {
-        if (!isCancelled) {
-          console.error('Auth initialization error:', error)
-        }
+        console.error('Auth init error:', error)
       } finally {
-        if (!isCancelled) {
-          setLoading(false)
-          if (timeoutId) clearTimeout(timeoutId)
-        }
+        if (mounted) setLoading(false)
       }
     }
 
-    // Set timeout to prevent infinite loading
-    timeoutId = setTimeout(() => {
-      if (!isCancelled) {
-        setLoading(false)
-      }
-    }, 3000)
-
-    getSession()
+    initAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (isCancelled) return
-        
-        // Only log important events
-        if (event !== 'TOKEN_REFRESHED') {
-          console.log('Auth state change:', event)
-        }
+        if (!mounted) return
         
         setSession(session)
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          await fetchUserProfile(session.user.id)
+          fetchUserProfile(session.user.id)
         } else {
           setProfile(null)
         }
         
-        setLoading(false)
-        
-        // Handle auth events
         if (event === 'SIGNED_OUT') {
           setUser(null)
           setProfile(null)
           setSession(null)
           router.push('/login')
-        } else if (event === 'SIGNED_IN' && session?.user) {
-          router.push('/erp-modules')
         }
+        // Don't auto-redirect on SIGNED_IN - let login page handle it
       }
     )
 
     return () => {
-      isCancelled = true
-      if (timeoutId) clearTimeout(timeoutId)
+      mounted = false
       subscription.unsubscribe()
     }
-  }, [mounted, router])
+  }, [router])
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data: profile, error } = await supabase
+      const { data } = await supabase
         .from('users')
         .select('*, roles(*)')
         .eq('id', userId)
         .single()
       
-      if (error) {
-        return
-      }
-      
-      setProfile(profile)
+      if (data) setProfile(data)
     } catch (error) {
-      // Silent fail
+      console.error('Profile fetch error:', error)
     }
   }
 
-  const signIn = async (email: string, password: string) => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      })
-      
-      if (error) throw error
-    } catch (error) {
-      setLoading(false)
-      throw error
+  const signIn = async (email: string, password: string, selectedTenantId?: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw error
+    
+    // Fetch user profile
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('*, roles(*), tenants!inner(id, tenant_code, tenant_name, subdomain)')
+      .eq('id', data.user.id)
+      .single()
+    
+    if (profileError || !userProfile) {
+      throw new Error('Failed to fetch user profile')
     }
+    
+    // Get subdomain from URL
+    const hostname = window.location.hostname
+    const subdomain = isLocalDevelopment(hostname) ? null : extractSubdomain(hostname)
+    
+    // Validate tenant access
+    let tenantId = selectedTenantId || userProfile.tenant_id
+    
+    // If subdomain exists, validate it matches user's tenant
+    if (subdomain && userProfile.tenants?.subdomain !== subdomain) {
+      await supabase.auth.signOut()
+      throw new Error('You do not have access to this organization')
+    }
+    
+    // If tenant selection provided, validate it
+    if (selectedTenantId && userProfile.tenant_id !== selectedTenantId) {
+      await supabase.auth.signOut()
+      throw new Error('You do not have access to the selected organization')
+    }
+    
+    // Set tenant session server-side
+    const tenantResponse = await fetch('/api/auth/tenant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenantId })
+    })
+    
+    if (!tenantResponse.ok) {
+      await supabase.auth.signOut()
+      throw new Error('Failed to establish tenant session')
+    }
+    
+    setProfile(userProfile)
+    setCurrentTenantState(userProfile.tenant_id)
+    
+    return { session: data.session, profile: userProfile }
   }
 
   const signOut = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      })
-      
-      if (!response.ok) throw new Error('Server logout failed')
-      
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+      await supabase.auth.signOut()
       localStorage.clear()
       sessionStorage.clear()
-      
-      setUser(null)
-      setProfile(null)
-      setSession(null)
-      
       window.location.href = '/login'
-      
     } catch (error) {
       console.error('Logout error:', error)
-      localStorage.clear()
-      sessionStorage.clear()
-      setUser(null)
-      setProfile(null)
-      setSession(null)
       window.location.href = '/login'
     }
   }
 
   const refreshSession = async () => {
-    try {
-      const { data, error } = await supabase.auth.refreshSession()
-      if (error) throw error
-      
-      setSession(data.session)
-      setUser(data.user)
-    } catch (error) {
-      console.error('Session refresh error:', error)
-      throw error
-    }
+    const { data, error } = await supabase.auth.refreshSession()
+    if (error) throw error
+    setSession(data.session)
+    setUser(data.user)
   }
 
-  if (!mounted) {
+  const setCurrentTenant = async (tenantId: string) => {
+    if (!user) throw new Error('No user logged in')
+    
+    const { data, error } = await supabase.rpc('set_current_tenant', {
+      user_uuid: user.id,
+      tenant_uuid: tenantId
+    })
+    
+    if (error || !data) throw new Error('Failed to set tenant')
+    
+    setCurrentTenantState(tenantId)
+    localStorage.setItem('selectedTenant', tenantId)
+  }
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -204,9 +195,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile, 
       session, 
       loading, 
+      currentTenant,
       signIn, 
       signOut, 
-      refreshSession 
+      refreshSession,
+      setCurrentTenant
     }}>
       {children}
     </AuthContext.Provider>
