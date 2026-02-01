@@ -297,23 +297,12 @@ export function IndustrialDashboard() {
 }
 
 function renderTileComponent(tile: DatabaseTile) {
-  // Dynamically render component based on construction_action
-  switch (tile.construction_action) {
-    case 'manage-projects':
-      const { ManageProjectsComponent } = require('@/components/tiles/ManageProjectsComponent')
-      return <ManageProjectsComponent />
-    
-    case 'unified-material-request':
-      const { UnifiedMaterialRequest } = require('@/components/tiles/UnifiedMaterialRequestComponent')
-      return <UnifiedMaterialRequest />
-    
-    default:
-      return (
-        <div className="p-8 text-center">
-          <Icons.AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">Component not yet implemented</p>
-          <p className="text-sm text-gray-500 mt-2">Action: {tile.construction_action}</p>
-        </div>
-      )
-  }
+  // Temporarily disabled - components not available
+  return (
+    <div className="p-8 text-center">
+      <Icons.AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+      <p className="text-gray-600">Component not yet implemented</p>
+      <p className="text-sm text-gray-500 mt-2">Action: {tile.construction_action}</p>
+    </div>
+  )
 }
