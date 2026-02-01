@@ -6,7 +6,7 @@ export async function PUT(request: NextRequest) {
   try {
     const { roleId, module } = await request.json()
     
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -33,6 +33,19 @@ export async function PUT(request: NextRequest) {
       }, { status: 404 })
     }
 
+    // Get object IDs for the module first
+    const { data: objectIds } = await supabase
+      .from('authorization_objects')
+      .select('id')
+      .eq('module', module)
+    
+    if (!objectIds || objectIds.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No objects found for module' 
+      }, { status: 404 })
+    }
+
     // Clear only cascade flags, preserve custom assignments
     const { error } = await supabase
       .from('role_authorization_objects')
@@ -42,12 +55,7 @@ export async function PUT(request: NextRequest) {
         inherited_from: null
       })
       .eq('role_id', roleData.id)
-      .in('auth_object_id', 
-        supabase
-          .from('authorization_objects')
-          .select('id')
-          .eq('module', module)
-      )
+      .in('auth_object_id', objectIds.map(obj => obj.id))
 
     if (error) throw error
 
