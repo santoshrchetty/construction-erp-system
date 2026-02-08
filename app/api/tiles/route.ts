@@ -42,11 +42,15 @@ export const GET = withMediumRiskRecovery(async (request: NextRequest) => {
       
       // Get user's authorized module codes using RPC function
       const { data: moduleCodes, error: modulesError } = await supabase
-        .rpc('get_user_modules', { user_id: user.id })
+        .rpc('get_user_modules', { p_user_id: user.id })
       
       if (modulesError) {
         console.error('RPC error:', modulesError)
-        return NextResponse.json({ success: true, tiles: [] })
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Authorization check failed',
+          tiles: [] 
+        })
       }
       
       const authorizedModuleCodes = moduleCodes?.map((row: any) => row.module_code).filter(Boolean) || []
@@ -84,7 +88,7 @@ export const GET = withMediumRiskRecovery(async (request: NextRequest) => {
     }
     
     // Add RBAC check for tile access
-    const authContext = await withAuth(request, Module.COSTING, Permission.VIEW)
+    const authContext = await withAuth(request)
     
     // Handle Materials Stock Overview
     if (category === 'materials' && action === 'stock-overview') {
@@ -319,7 +323,7 @@ export const GET = withMediumRiskRecovery(async (request: NextRequest) => {
 // Protected POST with auto-backup and rollback
 export const POST = withHighRiskRecovery(async (request: NextRequest) => {
   try {
-    const authContext = await withAuth(request, Module.COSTING, Permission.CREATE)
+    const authContext = await withAuth(request)
     const body = await request.json()
     
     // Get category and action from body (not searchParams)
@@ -715,7 +719,7 @@ export async function PUT(request: NextRequest) {
     const action = searchParams.get('action')
     const id = searchParams.get('id')
     
-    const authContext = await withAuth(request, Module.COSTING, Permission.EDIT)
+    const authContext = await withAuth(request)
     const body = await request.json()
     
     if (category === 'finance' && action === 'chart_of_accounts' && id) {
@@ -772,7 +776,7 @@ export async function DELETE(request: NextRequest) {
     const action = searchParams.get('action')
     const id = searchParams.get('id')
     
-    const authContext = await withAuth(request, Module.COSTING, Permission.DELETE)
+    const authContext = await withAuth(request)
     
     if (category === 'finance' && action === 'chart_of_accounts' && id) {
       const supabase = createServerClient(
