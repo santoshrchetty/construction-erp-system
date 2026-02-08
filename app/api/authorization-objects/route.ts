@@ -18,7 +18,10 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     const [objectsRes, roleAuthsRes, rolesRes] = await Promise.all([
       supabase
         .from('authorization_objects')
-        .select('*, authorization_fields(*)')
+        .select(`
+          *,
+          fields:authorization_fields(*)
+        `)
         .eq('tenant_id', tenantId),
       supabase
         .from('role_authorization_objects')
