@@ -22,13 +22,19 @@ export const GET = withAuth(async (request: NextRequest, context) => {
         .eq('tenant_id', tenantId),
       supabase
         .from('role_authorization_objects')
-        .select('*')
+        .select('*, roles(name)')
         .eq('tenant_id', tenantId),
       supabase
         .from('roles')
         .select('id, name')
         .eq('tenant_id', tenantId)
     ])
+
+    // Transform roleAuths to include role_name at top level
+    const roleAuthsWithNames = (roleAuthsRes.data || []).map(auth => ({
+      ...auth,
+      role_name: auth.roles?.name || 'Unknown Role'
+    }))
 
     if (objectsRes.error) throw objectsRes.error
     if (roleAuthsRes.error) throw roleAuthsRes.error
@@ -38,7 +44,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
       success: true,
       data: {
         objects: objectsRes.data || [],
-        roleAuths: roleAuthsRes.data || [],
+        roleAuths: roleAuthsWithNames,
         roles: rolesRes.data || []
       }
     })
