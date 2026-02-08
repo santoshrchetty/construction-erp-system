@@ -101,7 +101,10 @@ export default function AuthorizationObjects() {
         setRoleAuths(data.data.roleAuths || [])
         setRoles(data.data.roles || [])
         console.log('Loaded objects:', data.data.objects?.length || 0)
+        console.log('Loaded roleAuths:', data.data.roleAuths?.length || 0)
         console.log('Loaded roles:', data.data.roles?.length || 0)
+        console.log('Sample object:', data.data.objects?.[0])
+        console.log('Sample roleAuth:', data.data.roleAuths?.[0])
       } else {
         setError(data.error || 'Failed to load data')
         console.error('API Error:', data.error)
@@ -464,15 +467,26 @@ export default function AuthorizationObjects() {
   // Simplified role assignments - just show what we have
   const roleAssignmentsByRole = useMemo(() => {
     const grouped: Record<string, Record<string, RoleAuth[]>> = {}
+    let unmatchedCount = 0
+    
     roleAuths.forEach(auth => {
       if (!grouped[auth.role_name]) grouped[auth.role_name] = {}
       
       const authObject = objects.find(obj => obj.id === auth.auth_object_id)
-      const module = authObject?.module || 'unknown'
+      if (!authObject) {
+        unmatchedCount++
+        console.warn('No object found for auth_object_id:', auth.auth_object_id, 'role:', auth.role_name)
+      }
+      const module = authObject?.module || 'Unknown Module'
       
       if (!grouped[auth.role_name][module]) grouped[auth.role_name][module] = []
       grouped[auth.role_name][module].push(auth)
     })
+    
+    if (unmatchedCount > 0) {
+      console.error(`${unmatchedCount} role assignments have no matching authorization object`)
+    }
+    
     return grouped
   }, [roleAuths, objects])
 
