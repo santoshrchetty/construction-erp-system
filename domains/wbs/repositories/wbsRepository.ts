@@ -6,14 +6,22 @@ export class WBSRepository {
   async getWBSNodes(projectId: string) {
     const supabase = await createServiceClient()
     const { data, error } = await supabase
-      .from('wbs_nodes')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('level', { ascending: true })
-      .order('sequence_order', { ascending: true })
+      .from('wbs_elements')
+      .select('id, wbs_element, wbs_description, company_code, wbs_level, parent_wbs')
+      .eq('project_code', projectId)
+      .eq('is_active', true)
+      .order('wbs_level', { ascending: true })
+      .order('wbs_element', { ascending: true })
     
     if (error) throw error
-    return data || []
+    return (data || []).map(item => ({
+      id: item.id,
+      code: item.wbs_element,
+      name: item.wbs_description,
+      company_code: item.company_code,
+      level: item.wbs_level,
+      parent_id: item.parent_wbs
+    }))
   }
 
   async createWBSNode(nodeData: any) {
@@ -64,15 +72,8 @@ export class WBSRepository {
   }
 
   async getProjectIdByCode(projectCode: string) {
-    const supabase = await createServiceClient()
-    const { data, error } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('project_code', projectCode)
-      .single()
-    
-    if (error) return null
-    return data?.id
+    // Return the project code directly since wbs_elements uses project_code
+    return projectCode
   }
 
   // Activities

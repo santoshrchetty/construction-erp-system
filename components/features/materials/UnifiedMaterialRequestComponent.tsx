@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import * as Icons from 'lucide-react'
 import { MaterialRequestFormData, MaterialRequestItem, validateMaterialRequestData } from '@/types/forms'
 import { MaterialRequest } from '@/types/database'
-import ProductionMaterialRequestForm from './ProductionMaterialRequestForm'
 
 interface Material {
   material_code: string
@@ -17,28 +16,18 @@ interface Material {
   }>
 }
 
-export function UnifiedMaterialRequest() {
+export default function UnifiedMaterialRequest() {
   const [activeTab, setActiveTab] = useState('create')
-  const [requests, setRequests] = useState([])
-  const [templates, setTemplates] = useState([])
-  const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [viewingRequest, setViewingRequest] = useState(null)
-  const [editingRequest, setEditingRequest] = useState(null)
-  const [showProductionForm, setShowProductionForm] = useState(false)
-  const [productionFormMode, setProductionFormMode] = useState<'create' | 'view' | 'edit'>('create')
-  const [selectedRequestId, setSelectedRequestId] = useState<string | undefined>()
   
-  // Filter state
-  const [filters, setFilters] = useState({
-    entryDateFrom: '',
-    entryDateTo: '',
-    requiredDate: '',
-    material: '',
-    priority: '',
-    status: ''
+  // Form state management
+  const [formState, setFormState] = useState({
+    status: 'DRAFT' as 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED',
+    isSubmitted: false,
+    submittedAt: null as string | null,
+    isReadOnly: false
   })
-
+  
   // Master data dropdowns
   const [companies, setCompanies] = useState<any[]>([])
   const [plants, setPlants] = useState<any[]>([])
@@ -51,188 +40,283 @@ export function UnifiedMaterialRequest() {
   const [loadingPlants, setLoadingPlants] = useState(false)
   const [loadingLocations, setLoadingLocations] = useState(false)
   const [loadingProjects, setLoadingProjects] = useState(false)
-  const [loadingWBS, setLoadingWBS] = useState(false)
+  const [loadingWbsElements, setLoadingWbsElements] = useState(false)
   const [loadingActivities, setLoadingActivities] = useState(false)
-  const [loadingCostCenters, setLoadingCostCenters] = useState(false)
   
   // Cost assignment dropdowns
   const [projects, setProjects] = useState<any[]>([])
   const [wbsElements, setWbsElements] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
   const [costCenters, setCostCenters] = useState<any[]>([])
-  // Lazy loading states
-  const [dropdownStates, setDropdownStates] = useState({
-    companiesLoaded: false,
-    plantsLoaded: false,
-    storageLocationsLoaded: false,
-    projectsLoaded: false,
-    wbsElementsLoaded: false,
-    activitiesLoaded: false,
-    costCentersLoaded: false
-  })
 
   const [formData, setFormData] = useState<MaterialRequestFormData>({
-    priority: 'MEDIUM',
-    required_date: '',
+    request_number: '', // Will be generated after submission
     company_code: '',
     plant_code: '',
     storage_location: '',
-    
-    // Cost assignment
-    account_assignment: '',  // 'P' | 'K' | 'M' | 'F'
+    account_assignment: '',
     project_code: '',
     wbs_element: '',
     activity_code: '',
     cost_center: '',
     order_number: '',
-    
     purpose: '',
     justification: '',
     notes: '',
-    items: [{ line_number: 1, material_code: '', material_name: '', requested_quantity: 0, base_uom: 'PCS', available_stock: 0 }]
+    items: [{ 
+      line_number: 1, 
+      material_code: '', 
+      material_name: '', 
+      requested_quantity: 0, 
+      base_uom: 'PCS', 
+      available_stock: 0,
+      priority: 'MEDIUM',
+      required_date: ''
+    }]
   })
 
   const priorities = [
-    { code: 'LOW', name: 'Low', color: 'gray' },
-    { code: 'MEDIUM', name: 'Medium', color: 'yellow' },
-    { code: 'HIGH', name: 'High', color: 'orange' },
-    { code: 'URGENT', name: 'Urgent', color: 'red' }
+    { code: 'LOW', name: 'Low', color: 'bg-gray-100 text-gray-800' },
+    { code: 'MEDIUM', name: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
+    { code: 'HIGH', name: 'High', color: 'bg-orange-100 text-orange-800' },
+    { code: 'URGENT', name: 'Urgent', color: 'bg-red-100 text-red-800' }
   ]
   
   const accountAssignmentTypes = [
-    { code: 'P', name: 'Project', icon: 'Briefcase' },
-    { code: 'K', name: 'Cost Center', icon: 'Building' },
-    { code: 'M', name: 'Maintenance Order', icon: 'Wrench' },
-    { code: 'F', name: 'Production Order', icon: 'Factory' }
+    { code: 'P', name: 'Project', icon: Icons.Briefcase },
+    { code: 'K', name: 'Others', icon: Icons.Building },
+    { code: 'M', name: 'Maintenance Order', icon: Icons.Wrench },
+    { code: 'F', name: 'Production Order', icon: Icons.Factory }
   ]
 
   useEffect(() => {
-    loadTemplates()
-    // Only load companies for new requests
-    if (activeTab === 'create' && !editingRequest) {
-      loadCompaniesOnDemand()
-    }
-    if (activeTab === 'list') loadRequests()
-  }, [activeTab])
+    loadProjectsOnDemand()
+  }, [])
 
-  // Remove automatic loading useEffects for edit mode
   useEffect(() => {
-    // Only auto-load for new requests, not edit mode
-    if (formData.company_code && !editingRequest) {
-      loadPlantsOnDemand(formData.company_code)
-      loadProjectsOnDemand(formData.company_code)
-      loadCostCentersOnDemand(formData.company_code)
+    if (formData.project_code) {
+      // Load WBS elements for the selected project (WBS elements contain company codes)
+      loadWbsElementsOnDemand(formData.project_code)
+      // Reset dependent fields since company code comes from WBS selection
+      setFormData(prev => ({ 
+        ...prev, 
+        plant_code: '', 
+        storage_location: '', 
+        wbs_element: '', 
+        activity_code: '' 
+      }))
+      setPlants([])
+      setStorageLocations([])
+      setActivities([])
+    } else {
+      setWbsElements([])
+      setActivities([])
     }
-  }, [formData.company_code, editingRequest])
+  }, [formData.project_code, projects])
+
+  useEffect(() => {
+    if (formData.company_code) {
+      loadPlantsOnDemand(formData.company_code)
+      loadCostCentersOnDemand(formData.company_code)
+    } else {
+      setPlants([])
+      setStorageLocations([])
+    }
+  }, [formData.company_code])
+
+  useEffect(() => {
+    if (formData.wbs_element) {
+      // Find selected WBS element and auto-populate company code
+      const selectedWbs = wbsElements.find(w => w.id === formData.wbs_element)
+      if (selectedWbs && selectedWbs.company_code && selectedWbs.company_code !== formData.company_code) {
+        setFormData(prev => ({ 
+          ...prev, 
+          company_code: selectedWbs.company_code,
+          plant_code: '',
+          storage_location: ''
+        }))
+        setPlants([])
+        setStorageLocations([])
+      }
+      
+      // Load activities for the selected WBS element
+      loadActivitiesOnDemand(formData.project_code, formData.wbs_element)
+    } else {
+      setActivities([])
+      // Clear company code if no WBS selected
+      if (formData.company_code) {
+        setFormData(prev => ({ 
+          ...prev, 
+          company_code: '',
+          plant_code: '',
+          storage_location: ''
+        }))
+        setPlants([])
+        setStorageLocations([])
+      }
+    }
+  }, [formData.wbs_element, wbsElements, formData.project_code])
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (materialSearch.length >= 2 && formData.plant_code) searchMaterials()
     }, 300)
     return () => clearTimeout(timer)
-  }, [materialSearch, formData.plant_code, formData.storage_location])
+  }, [materialSearch, formData.plant_code])
 
-  // Load WBS when project changes
-  useEffect(() => {
-    if (formData.project_code) {
-      loadWBSElements(formData.project_code)
-    } else {
+  const loadWbsElementsOnDemand = async (projectCode: string) => {
+    console.log('Loading WBS elements for project:', projectCode)
+    setLoadingWbsElements(true)
+    try {
+      const response = await fetch(`/api/wbs?projectCode=${projectCode}`)
+      console.log('WBS API response status:', response.status)
+      if (!response.ok) {
+        console.warn('WBS elements API not available')
+        setWbsElements([])
+        return
+      }
+      const data = await response.json()
+      console.log('WBS API response data:', data)
+      if (data.success) {
+        setWbsElements(data.data || [])
+        console.log('WBS elements loaded:', data.data?.length || 0)
+      }
+    } catch (error) {
+      console.error('Failed to load WBS elements:', error)
       setWbsElements([])
-      setActivities([])
+    } finally {
+      setLoadingWbsElements(false)
     }
-  }, [formData.project_code])
+  }
 
-  // Load Activities when WBS changes
-  useEffect(() => {
-    if (formData.wbs_element) {
-      loadActivities(formData.wbs_element)
-    } else {
+  const loadActivitiesOnDemand = async (projectCode: string, wbsElementId: string) => {
+    setLoadingActivities(true)
+    try {
+      // Find the WBS element to get its code
+      const selectedWbs = wbsElements.find(w => w.id === wbsElementId)
+      if (!selectedWbs) {
+        console.warn('WBS element not found for activities')
+        setActivities([])
+        return
+      }
+      
+      const response = await fetch(`/api/activities?projectCode=${projectCode}&wbsElement=${selectedWbs.code}`)
+      if (!response.ok) {
+        console.warn('Activities API not available')
+        setActivities([])
+        return
+      }
+      const data = await response.json()
+      if (data.success) {
+        setActivities(data.data || [])
+      }
+    } catch (error) {
+      console.error('Failed to load activities:', error)
       setActivities([])
+    } finally {
+      setLoadingActivities(false)
     }
-  }, [formData.wbs_element])
+  }
 
   const loadCompaniesOnDemand = async () => {
-    if (dropdownStates.companiesLoaded) return
     setLoadingCompanies(true)
     try {
       const response = await fetch('/api/erp-config/companies')
+      if (!response.ok) {
+        console.warn('Companies API not available')
+        setCompanies([])
+        return
+      }
       const data = await response.json()
       if (data.success) {
         setCompanies(data.data)
-        setDropdownStates(prev => ({ ...prev, companiesLoaded: true }))
       }
     } catch (error) {
       console.error('Failed to load companies:', error)
+      setCompanies([])
     } finally {
       setLoadingCompanies(false)
     }
   }
 
   const loadPlantsOnDemand = async (companyCode: string) => {
-    if (dropdownStates.plantsLoaded) return
     setLoadingPlants(true)
     try {
       const response = await fetch(`/api/erp-config/plants?companyCode=${companyCode}`)
+      if (!response.ok) {
+        console.warn('Plants API not available')
+        setPlants([])
+        return
+      }
       const data = await response.json()
       if (data.success) {
         setPlants(data.data)
-        setDropdownStates(prev => ({ ...prev, plantsLoaded: true }))
       }
     } catch (error) {
       console.error('Failed to load plants:', error)
+      setPlants([])
     } finally {
       setLoadingPlants(false)
     }
   }
 
   const loadStorageLocationsOnDemand = async (plantCode: string) => {
-    if (dropdownStates.storageLocationsLoaded) return
     setLoadingLocations(true)
     try {
-      const response = await fetch(`/api/erp-config/storage-locations?plantCode=${plantCode}`)
+      const response = await fetch(`/api/erp-config/storage-locations?plantCode=${plantCode}&active=true`)
+      if (!response.ok) {
+        console.warn('Storage locations API not available')
+        setStorageLocations([])
+        return
+      }
       const data = await response.json()
       if (data.success) {
         setStorageLocations(data.data)
-        setDropdownStates(prev => ({ ...prev, storageLocationsLoaded: true }))
       }
     } catch (error) {
       console.error('Failed to load storage locations:', error)
+      setStorageLocations([])
     } finally {
       setLoadingLocations(false)
     }
   }
 
-  const loadProjectsOnDemand = async (companyCode: string) => {
-    if (dropdownStates.projectsLoaded) return
+  const loadProjectsOnDemand = async () => {
     setLoadingProjects(true)
     try {
-      const response = await fetch(`/api/projects?companyCode=${companyCode}`)
+      const response = await fetch('/api/projects')
+      if (!response.ok) {
+        console.warn('Projects API not available')
+        setProjects([])
+        return
+      }
       const data = await response.json()
       if (data.success) {
         setProjects(data.data || [])
-        setDropdownStates(prev => ({ ...prev, projectsLoaded: true }))
       }
     } catch (error) {
       console.error('Failed to load projects:', error)
+      setProjects([])
     } finally {
       setLoadingProjects(false)
     }
   }
-  
+
   const loadCostCentersOnDemand = async (companyCode: string) => {
-    if (dropdownStates.costCentersLoaded) return
-    setLoadingCostCenters(true)
     try {
       const response = await fetch(`/api/cost-centers?companyCode=${companyCode}`)
+      if (!response.ok) {
+        console.warn('Cost centers API not available')
+        setCostCenters([])
+        return
+      }
       const data = await response.json()
       if (data.success) {
-        setCostCenters(Array.isArray(data.data) ? data.data : [])
-        setDropdownStates(prev => ({ ...prev, costCentersLoaded: true }))
+        setCostCenters(data.data || [])
       }
     } catch (error) {
       console.error('Failed to load cost centers:', error)
-    } finally {
-      setLoadingCostCenters(false)
+      setCostCenters([])
     }
   }
 
@@ -245,7 +329,6 @@ export function UnifiedMaterialRequest() {
         limit: '20'
       })
       
-      // Filter by storage location if selected, otherwise by plant
       if (formData.storage_location) {
         params.append('storageLocation', formData.storage_location)
       } else if (formData.plant_code) {
@@ -253,250 +336,61 @@ export function UnifiedMaterialRequest() {
       }
       
       const response = await fetch(`/api/materials?${params}`)
+      if (!response.ok) {
+        console.warn('Materials API not available')
+        setMaterials([])
+        return
+      }
       const data = await response.json()
       if (data.success) setMaterials(data.data)
     } catch (error) {
       console.error('Failed to search materials:', error)
+      setMaterials([])
     } finally {
       setSearchingMaterials(false)
     }
   }
-  
-  const loadProjects = async (companyCode: string) => {
-    setLoadingProjects(true)
-    try {
-      const response = await fetch(`/api/projects?companyCode=${companyCode}`)
-      const data = await response.json()
-      if (data.success) setProjects(data.data || [])
-    } catch (error) {
-      console.error('Failed to load projects:', error)
-    } finally {
-      setLoadingProjects(false)
+
+  const handleFormChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    
+    if (field === 'plant_code') {
+      setFormData(prev => ({ ...prev, storage_location: '' }))
+      setStorageLocations([])
+      if (value) loadStorageLocationsOnDemand(value)
     }
-  }
-  
-  const loadWBSElements = async (projectCode: string) => {
-    setLoadingWBS(true)
-    setWbsElements([])
-    setActivities([])
-    try {
-      const response = await fetch(`/api/wbs?projectCode=${projectCode}`)
-      const data = await response.json()
-      if (data.success) setWbsElements(Array.isArray(data.data) ? data.data : [])
-    } catch (error) {
-      console.error('Failed to load WBS elements:', error)
-    } finally {
-      setLoadingWBS(false)
-    }
-  }
-  
-  const loadActivities = async (wbsCode: string) => {
-    setLoadingActivities(true)
-    setActivities([])
-    try {
-      const response = await fetch(`/api/activities?wbsCode=${wbsCode}`)
-      const data = await response.json()
-      if (data.success) setActivities(Array.isArray(data.data) ? data.data : [])
-    } catch (error) {
-      console.error('Failed to load activities:', error)
-    } finally {
-      setLoadingActivities(false)
-    }
-  }
-  
-  const loadCostCenters = async (companyCode: string) => {
-    setLoadingCostCenters(true)
-    try {
-      const response = await fetch(`/api/cost-centers?companyCode=${companyCode}`)
-      const data = await response.json()
-      if (data.success) setCostCenters(Array.isArray(data.data) ? data.data : [])
-    } catch (error) {
-      console.error('Failed to load cost centers:', error)
-    } finally {
-      setLoadingCostCenters(false)
+    
+    if (field === 'wbs_element') {
+      setFormData(prev => ({ ...prev, activity_code: '' }))
+      setActivities([])
+      // Company code will be set by useEffect when WBS element changes
     }
   }
 
-  const loadTemplates = async () => {
-    try {
-      // Get tenant ID from localStorage
-      const tenantId = localStorage.getItem('selectedTenant')
-      if (!tenantId) {
-        console.error('No tenant ID found for templates')
-        return
-      }
-
-      const response = await fetch('/api/tiles', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-tenant-id': tenantId
-        },
-        body: JSON.stringify({
-          category: 'materials',
-          action: 'get-templates',
-          payload: { template_type: 'MATERIAL_REQ' }
-        })
-      })
-      const data = await response.json()
-      if (data.success) setTemplates(data.data || [])
-    } catch (error) {
-      console.error('Failed to load templates:', error)
+  const addMaterialItem = () => {
+    const newItem: MaterialRequestItem = {
+      line_number: formData.items.length + 1,
+      material_code: '',
+      material_name: '',
+      requested_quantity: 0,
+      base_uom: 'PCS',
+      available_stock: 0,
+      priority: 'MEDIUM',
+      required_date: ''
     }
+    setFormData(prev => ({ ...prev, items: [...prev.items, newItem] }))
   }
 
-  const loadRequests = async () => {
-    setLoading(true)
-    try {
-      // Get tenant ID from localStorage
-      const tenantId = localStorage.getItem('selectedTenant')
-      if (!tenantId) {
-        console.error('No tenant ID found')
-        setRequests([])
-        return
-      }
-
-      const response = await fetch('/api/tiles', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-tenant-id': tenantId
-        },
-        body: JSON.stringify({
-          category: 'materials',
-          action: 'material-request-list',
-          payload: { 
-            request_type: 'MATERIAL_REQ',
-            ...(filters.priority && { priority: filters.priority }),
-            ...(filters.status && { status: filters.status })
-          }
-        })
-      })
-      const data = await response.json()
-      if (data.success) {
-        let filteredRequests = data.data || []
-        
-        // Client-side filtering
-        if (filters.entryDateFrom) {
-          filteredRequests = filteredRequests.filter(r => 
-            new Date(r.created_at) >= new Date(filters.entryDateFrom)
-          )
-        }
-        if (filters.entryDateTo) {
-          filteredRequests = filteredRequests.filter(r => 
-            new Date(r.created_at) <= new Date(filters.entryDateTo)
-          )
-        }
-        if (filters.requiredDate) {
-          filteredRequests = filteredRequests.filter(r => 
-            r.required_date === filters.requiredDate
-          )
-        }
-        if (filters.material) {
-          filteredRequests = filteredRequests.filter(r => 
-            r.request_number?.toLowerCase().includes(filters.material.toLowerCase())
-          )
-        }
-        
-        setRequests(filteredRequests)
-      }
-    } catch (error) {
-      console.error('Failed to load requests:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      // Get tenant ID from localStorage
-      const tenantId = localStorage.getItem('selectedTenant')
-      if (!tenantId) {
-        alert('No tenant selected. Please log out and log back in.')
-        return
-      }
-
-      const response = await fetch('/api/tiles', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-tenant-id': tenantId
-        },
-        body: JSON.stringify({
-          category: 'materials',
-          action: 'unified-material-request',
-          payload: {
-            request_type: 'MATERIAL_REQ',
-            priority: formData.priority,
-            required_date: formData.required_date,
-            company_code: formData.company_code,
-            plant_code: formData.plant_code,
-            storage_location: formData.storage_location,
-            project_code: formData.project_code,
-            wbs_element: formData.wbs_element,
-            activity_code: formData.activity_code,
-            cost_center: formData.cost_center,
-            order_number: formData.order_number,
-            purpose: formData.purpose,
-            justification: formData.justification,
-            notes: formData.notes,
-            items: formData.items
-          }
-        })
-      })
-      const data = await response.json()
-      if (data.success) {
-        alert('Material Request created successfully!')
-        clearForm()
-        setActiveTab('list')
-      } else {
-        alert('Error: ' + data.error)
-      }
-    } catch (error) {
-      alert('Error: ' + error.message)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const applyTemplate = (template) => {
-    setFormData(prev => ({
-      ...prev,
-      priority: template.default_priority,
-      purpose: template.default_purpose || '',
-      items: template.template_items.map((item, index) => ({
-        line_number: index + 1,
-        material_code: item.material_code,
-        requested_quantity: item.quantity,
-        base_uom: item.uom
+  const removeMaterialItem = (index: number) => {
+    if (formData.items.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        items: prev.items.filter((_, i) => i !== index)
       }))
-    }))
+    }
   }
 
-  const addItem = () => {
-    setFormData(prev => ({
-      ...prev,
-      items: [...prev.items, {
-        line_number: prev.items.length + 1,
-        material_code: '',
-        material_name: '',
-        requested_quantity: 0,
-        base_uom: 'PCS',
-        available_stock: 0
-      }]
-    }))
-  }
-
-  const removeItem = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index)
-    }))
-  }
-
-  const updateItem = (index, field, value) => {
+  const updateMaterialItem = (index: number, field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
       items: prev.items.map((item, i) => 
@@ -505,10 +399,179 @@ export function UnifiedMaterialRequest() {
     }))
   }
 
-  const clearForm = () => {
+  const selectMaterial = (index: number, material: Material) => {
+    const stockData = material.material_storage_data?.[0]
+    updateMaterialItem(index, 'material_code', material.material_code)
+    updateMaterialItem(index, 'material_name', material.material_name)
+    updateMaterialItem(index, 'base_uom', material.base_uom)
+    updateMaterialItem(index, 'available_stock', stockData?.available_stock || 0)
+    setActiveSearchIndex(null)
+    setMaterialSearch('')
+  }
+
+  const handleSaveDraft = async () => {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/material-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, status: 'draft' })
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        alert('Draft saved successfully!')
+      } else {
+        alert('Failed to save draft: ' + data.message)
+      }
+    } catch (error) {
+      console.error('Save draft error:', error)
+      alert('Failed to save draft')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handlePreview = () => {
+    const validation = validateMaterialRequestData(formData)
+    if (!validation.isValid) {
+      alert('Please fix validation errors before preview: ' + (validation.errors?.join(', ') || 'Unknown validation errors'))
+      return
+    }
+    
+    // Open preview in new window
+    const previewWindow = window.open('', '_blank', 'width=800,height=600')
+    if (previewWindow) {
+      previewWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Material Request Preview</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+              .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+              .title { font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 10px; }
+              .subtitle { color: #64748b; font-size: 14px; }
+              .section { margin-bottom: 25px; }
+              .section-title { font-size: 16px; font-weight: bold; color: #374151; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
+              .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+              .info-item { display: flex; }
+              .info-label { font-weight: bold; color: #4b5563; min-width: 140px; }
+              .info-value { color: #111827; }
+              .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              .items-table th, .items-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+              .items-table th { background-color: #f8fafc; font-weight: bold; color: #374151; }
+              .items-table tr:hover { background-color: #f8fafc; }
+              .priority { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+              .priority-low { background: #f3f4f6; color: #6b7280; }
+              .priority-medium { background: #fef3c7; color: #d97706; }
+              .priority-high { background: #fed7aa; color: #ea580c; }
+              .priority-urgent { background: #fecaca; color: #dc2626; }
+              .print-btn { background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; }
+              .print-btn:hover { background: #1d4ed8; }
+              @media print { .print-btn { display: none; } }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="title">Material Request Preview</div>
+                <div class="subtitle">${formData.request_number ? `MR Number: ${formData.request_number} | ` : ''}Generated on ${new Date().toLocaleDateString()}</div>
+              </div>
+              
+              <div class="section">
+                <div class="section-title">Request Information</div>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">Project:</span>
+                    <span class="info-value">${formData.project_code || 'Not specified'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Account Assignment:</span>
+                    <span class="info-value">${formData.account_assignment || 'Not specified'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">WBS Element:</span>
+                    <span class="info-value">${formData.wbs_element || 'Not specified'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Activity Code:</span>
+                    <span class="info-value">${formData.activity_code || 'Not specified'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Company Code:</span>
+                    <span class="info-value">${formData.company_code || 'Not specified'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Plant Code:</span>
+                    <span class="info-value">${formData.plant_code || 'Not specified'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Receiving Location:</span>
+                    <span class="info-value">${formData.storage_location || 'Not specified'}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Cost Center:</span>
+                    <span class="info-value">${formData.cost_center || 'Not specified'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              ${formData.purpose || formData.justification || formData.notes ? `
+              <div class="section">
+                <div class="section-title">Additional Information</div>
+                ${formData.purpose ? `<div class="info-item"><span class="info-label">Purpose:</span><span class="info-value">${formData.purpose}</span></div>` : ''}
+                ${formData.justification ? `<div class="info-item"><span class="info-label">Justification:</span><span class="info-value">${formData.justification}</span></div>` : ''}
+                ${formData.notes ? `<div class="info-item"><span class="info-label">Notes:</span><span class="info-value">${formData.notes}</span></div>` : ''}
+              </div>
+              ` : ''}
+              
+              <div class="section">
+                <div class="section-title">Material Items (${formData.items.length})</div>
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Material Code</th>
+                      <th>Material Name</th>
+                      <th>Quantity</th>
+                      <th>Unit</th>
+                      <th>Priority</th>
+                      <th>Required Date</th>
+                      <th>Available Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${formData.items.map((item, i) => `
+                      <tr>
+                        <td>${i + 1}</td>
+                        <td>${item.material_code || 'Not specified'}</td>
+                        <td>${item.material_name || 'Not specified'}</td>
+                        <td>${item.requested_quantity || 0}</td>
+                        <td>${item.base_uom || 'PCS'}</td>
+                        <td><span class="priority priority-${item.priority?.toLowerCase() || 'medium'}">${item.priority || 'MEDIUM'}</span></td>
+                        <td>${item.required_date || 'Not specified'}</td>
+                        <td>${item.available_stock || 0} ${item.base_uom || 'PCS'}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              
+              <button class="print-btn" onclick="window.print()">Print Preview</button>
+            </div>
+          </body>
+        </html>
+      `)
+      previewWindow.document.close()
+    }
+  }
+
+  const createNewRequest = () => {
+    // Reset form to initial state
     setFormData({
-      priority: 'MEDIUM',
-      required_date: '',
+      request_number: '',
       company_code: '',
       plant_code: '',
       storage_location: '',
@@ -521,1055 +584,507 @@ export function UnifiedMaterialRequest() {
       purpose: '',
       justification: '',
       notes: '',
-      items: [{ line_number: 1, material_code: '', material_name: '', requested_quantity: 0, base_uom: 'PCS', available_stock: 0 }]
+      items: [{ 
+        line_number: 1, 
+        material_code: '', 
+        material_name: '', 
+        requested_quantity: 0, 
+        base_uom: 'PCS', 
+        available_stock: 0,
+        priority: 'MEDIUM',
+        required_date: ''
+      }]
     })
-    setEditingRequest(null)
-    // Reset dropdown states
-    setDropdownStates({
-      companiesLoaded: false,
-      plantsLoaded: false,
-      storageLocationsLoaded: false,
-      projectsLoaded: false,
-      wbsElementsLoaded: false,
-      activitiesLoaded: false,
-      costCentersLoaded: false
-    })
-  }
-
-  const handleView = async (request) => {
-    try {
-      setLoading(true)
-      // Get tenant ID from localStorage
-      const tenantId = localStorage.getItem('selectedTenant')
-      if (!tenantId) {
-        alert('No tenant selected. Please log out and log back in.')
-        return
-      }
-
-      // Fetch full request details including line items, WBS, etc.
-      const response = await fetch('/api/tiles', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-tenant-id': tenantId
-        },
-        body: JSON.stringify({
-          category: 'materials',
-          action: 'get-material-request',
-          payload: { id: request.id }
-        })
-      })
-      const data = await response.json()
-      
-      // Debug: Log the response
-      console.log('Material Request API Response:', {
-        success: data.success,
-        hasData: !!data.data,
-        requestData: data.data ? {
-          id: data.data.id,
-          request_number: data.data.request_number,
-          company_code: data.data.company_code,
-          plant_code: data.data.plant_code,
-          project_code: data.data.project_code,
-          cost_center: data.data.cost_center,
-          wbs_element: data.data.wbs_element,
-          storage_location: data.data.storage_location,
-          activity_code: data.data.activity_code,
-          company_display: data.data.company_display,
-          plant_display: data.data.plant_display,
-          project_display: data.data.project_display,
-          cost_center_display: data.data.cost_center_display,
-          wbs_display: data.data.wbs_display,
-          storage_location_display: data.data.storage_location_display,
-          activity_display: data.data.activity_display,
-          itemsCount: data.data.items?.length || 0
-        } : null,
-        error: data.error
-      })
-      
-      if (data.success) {
-        setViewingRequest(data.data)
-      } else {
-        alert('Error loading request details: ' + data.error)
-      }
-    } catch (error) {
-      console.error('Error fetching request details:', error)
-      alert('Error loading request details: ' + error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleEdit = async (request) => {
-    setSelectedRequestId(request.id)
-    setProductionFormMode('edit')
-    setShowProductionForm(true)
-  }
-
-  const handleDelete = async (requestId) => {
-    if (!confirm('Are you sure you want to delete this request?')) return
     
-    try {
-      // Get tenant ID from localStorage
-      const tenantId = localStorage.getItem('selectedTenant')
-      if (!tenantId) {
-        alert('No tenant selected. Please log out and log back in.')
-        return
-      }
+    // Reset form state
+    setFormState({
+      status: 'DRAFT',
+      isSubmitted: false,
+      submittedAt: null,
+      isReadOnly: false
+    })
+    
+    // Clear dependent dropdowns
+    setWbsElements([])
+    setActivities([])
+    setPlants([])
+    setStorageLocations([])
+  }
 
-      const response = await fetch('/api/tiles', {
+  const handleSubmit = async () => {
+    const validation = validateMaterialRequestData(formData)
+    if (!validation.isValid) {
+      alert('Please fix validation errors: ' + (validation.errors?.join(', ') || 'Unknown validation errors'))
+      return
+    }
+
+    setSaving(true)
+    try {
+      const response = await fetch('/api/material-requests', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-tenant-id': tenantId
-        },
-        body: JSON.stringify({
-          category: 'materials',
-          action: 'delete-material-request',
-          payload: { id: requestId }
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       })
+      
       const data = await response.json()
       if (data.success) {
-        alert('Request deleted successfully')
-        loadRequests()
+        // Update form data with the generated MR number
+        if (data.data?.request_number) {
+          setFormData(prev => ({ ...prev, request_number: data.data.request_number }))
+        }
+        
+        // Update form state to submitted
+        setFormState({
+          status: 'SUBMITTED',
+          isSubmitted: true,
+          submittedAt: new Date().toISOString(),
+          isReadOnly: true
+        })
+        
+        alert('Material request submitted successfully! MR Number: ' + (data.data?.request_number || 'Generated'))
       } else {
-        alert('Error: ' + data.error)
+        alert('Failed to submit request: ' + data.message)
       }
     } catch (error) {
-      alert('Error: ' + error.message)
+      console.error('Submit error:', error)
+      alert('Failed to submit request')
+    } finally {
+      setSaving(false)
     }
   }
 
-  const getStatusColor = (status) => {
-    const colors = {
-      'DRAFT': 'bg-gray-100 text-gray-800',
-      'SUBMITTED': 'bg-blue-100 text-blue-800',
-      'APPROVED': 'bg-green-100 text-green-800',
-      'REJECTED': 'bg-red-100 text-red-800',
-      'FULFILLED': 'bg-purple-100 text-purple-800'
+  const getLocationIcon = (category: string) => {
+    const icons = {
+      'WAREHOUSE': '🏭',
+      'SITE': '🏗️',
+      'OFFICE': '🏢',
+      'YARD': '🏞️',
+      'VEHICLE': '🚛',
+      'TEMPORARY': '⛺'
     }
-    return colors[status] || 'bg-gray-100 text-gray-800'
+    return icons[category as keyof typeof icons] || '📍'
   }
 
   return (
-    <div className="p-6">
-      {/* Production Form Modal */}
-      {showProductionForm && (
-        <ProductionMaterialRequestForm
-          mode={productionFormMode}
-          requestId={selectedRequestId}
-          projectCode={formData.project_code || 'HW-0001'}
-          onClose={() => {
-            setShowProductionForm(false)
-            setSelectedRequestId(undefined)
-          }}
-          onSave={(request) => {
-            console.log('Request saved:', request)
-            setShowProductionForm(false)
-            setSelectedRequestId(undefined)
-            if (activeTab === 'list') {
-              loadRequests()
-            }
-          }}
-        />
-      )}
-      
-      <div className="bg-white rounded-lg shadow">
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
-            <button
-              onClick={() => setActiveTab('create')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'create'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Icons.Plus className="w-4 h-4 inline mr-2" />
-              Create Request
-            </button>
-            <button
-              onClick={() => setActiveTab('list')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'list'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Icons.List className="w-4 h-4 inline mr-2" />
-              My Requests
-            </button>
-            <button
-              onClick={() => setActiveTab('templates')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'templates'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Icons.FileText className="w-4 h-4 inline mr-2" />
-              Templates
-            </button>
-          </nav>
-        </div>
-
-        {/* Tab Content */}
-        <div className="p-6">
-          {/* Create Request Tab */}
-          {activeTab === 'create' && (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Quick Templates */}
-              {templates.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-blue-900 mb-2">Quick Start Templates</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {templates.slice(0, 3).map(template => (
-                      <button
-                        key={template.id}
-                        type="button"
-                        onClick={() => applyTemplate(template)}
-                        className="bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm hover:bg-blue-200"
-                      >
-                        {template.template_name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-blue-900 mb-3 flex items-center">
-                    <Icons.Building2 className="w-4 h-4 mr-2" />
-                    Organizational Details
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Company <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <select
-                          required
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                          value={formData.company_code}
-                          onFocus={() => loadCompaniesOnDemand()}
-                          onChange={(e) => {
-                            setFormData(prev => ({ ...prev, company_code: e.target.value, plant_code: '', storage_location: '' }))
-                            // Reset dependent dropdowns when company changes
-                            setDropdownStates(prev => ({ ...prev, plantsLoaded: false, storageLocationsLoaded: false, projectsLoaded: false, costCentersLoaded: false }))
-                            // Clear dependent data
-                            setPlants([])
-                            setStorageLocations([])
-                            setProjects([])
-                            setCostCenters([])
-                          }}
-                        >
-                          <option value="">Select Company</option>
-                          {companies.map(c => (
-                            <option key={c.id} value={c.company_code}>
-                              {c.company_code} - {c.company_name}
-                            </option>
-                          ))}
-                        </select>
-                        {loadingCompanies && (
-                          <Icons.Loader className="w-4 h-4 absolute right-10 top-3 animate-spin text-gray-400" />
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Plant <span className="text-red-500">*</span>
-                        {!formData.company_code && <span className="text-xs text-gray-500 ml-1">(Select company first)</span>}
-                      </label>
-                      <div className="relative">
-                        <select
-                          required
-                          disabled={!formData.company_code || loadingPlants}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 transition-all"
-                          value={formData.plant_code}
-                          onFocus={() => formData.company_code && loadPlantsOnDemand(formData.company_code)}
-                          onChange={(e) => {
-                            setFormData(prev => ({ ...prev, plant_code: e.target.value, storage_location: '' }))
-                            setDropdownStates(prev => ({ ...prev, storageLocationsLoaded: false }))
-                          }}
-                        >
-                          <option value="">{loadingPlants ? 'Loading...' : 'Select Plant'}</option>
-                          {plants.map(p => (
-                            <option key={p.id} value={p.plant_code}>
-                              {p.plant_code} - {p.plant_name}
-                            </option>
-                          ))}
-                        </select>
-                        {loadingPlants && (
-                          <Icons.Loader className="w-4 h-4 absolute right-10 top-3 animate-spin text-blue-500" />
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Storage Location
-                        {!formData.plant_code && <span className="text-xs text-gray-500 ml-1">(Select plant first)</span>}
-                      </label>
-                      <div className="relative">
-                        <select
-                          disabled={!formData.plant_code || loadingLocations}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 transition-all"
-                          value={formData.storage_location}
-                          onFocus={() => formData.plant_code && loadStorageLocationsOnDemand(formData.plant_code)}
-                          onChange={(e) => setFormData(prev => ({ ...prev, storage_location: e.target.value }))}
-                        >
-                          <option value="">{loadingLocations ? 'Loading...' : 'Select Storage Location'}</option>
-                          {storageLocations.map(sl => (
-                            <option key={sl.id} value={sl.sloc_code}>
-                              {sl.sloc_code} - {sl.sloc_name}
-                            </option>
-                          ))}
-                        </select>
-                        {loadingLocations && (
-                          <Icons.Loader className="w-4 h-4 absolute right-10 top-3 animate-spin text-blue-500" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-purple-900 mb-3 flex items-center">
-                    <Icons.Calendar className="w-4 h-4 mr-2" />
-                    Request Details
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Required Date <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                        value={formData.required_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, required_date: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Priority <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                        value={formData.priority}
-                        onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
-                      >
-                        {priorities.map(priority => (
-                          <option key={priority.code} value={priority.code}>
-                            {priority.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Purpose</label>
-                      <input
-                        type="text"
-                        placeholder="Optional"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                        value={formData.purpose}
-                        onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-orange-900 mb-3 flex items-center">
-                    <Icons.Target className="w-4 h-4 mr-2" />
-                    Cost Assignment
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Account Assignment <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                        value={formData.account_assignment}
-                        onChange={(e) => setFormData(prev => ({ 
-                          ...prev, 
-                          account_assignment: e.target.value,
-                          project_code: '',
-                          wbs_element: '',
-                          activity_code: '',
-                          cost_center: '',
-                          order_number: ''
-                        }))}
-                      >
-                        <option value="">Select Assignment Type</option>
-                        {accountAssignmentTypes.map(type => (
-                          <option key={type.code} value={type.code}>
-                            {type.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    {formData.account_assignment === 'P' && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Project <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            required
-                            disabled={loadingProjects}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-50 transition-all"
-                            value={formData.project_code}
-                            onFocus={() => formData.company_code && loadProjectsOnDemand(formData.company_code)}
-                            onChange={(e) => setFormData(prev => ({ ...prev, project_code: e.target.value, wbs_element: '', activity_code: '' }))}
-                          >
-                            <option value="">{loadingProjects ? 'Loading...' : 'Select Project'}</option>
-                            {projects.map(p => (
-                              <option key={p.id} value={p.project_code}>
-                                {p.project_code} - {p.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            WBS Element
-                            {!formData.project_code && <span className="text-xs text-gray-500 ml-1">(Select project first)</span>}
-                          </label>
-                          <select
-                            disabled={!formData.project_code || loadingWBS}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-50 transition-all"
-                            value={formData.wbs_element}
-                            onChange={(e) => setFormData(prev => ({ ...prev, wbs_element: e.target.value, activity_code: '' }))}
-                          >
-                            <option value="">{loadingWBS ? 'Loading...' : 'Select WBS (Optional)'}</option>
-                            {Array.isArray(wbsElements) && wbsElements.map(w => (
-                              <option key={w.id} value={w.code}>
-                                {w.code} - {w.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Activity
-                            {!formData.wbs_element && <span className="text-xs text-gray-500 ml-1">(Select WBS first)</span>}
-                          </label>
-                          <select
-                            disabled={!formData.wbs_element || loadingActivities}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-50 transition-all"
-                            value={formData.activity_code}
-                            onChange={(e) => setFormData(prev => ({ ...prev, activity_code: e.target.value }))}
-                          >
-                            <option value="">{loadingActivities ? 'Loading...' : 'Select Activity (Optional)'}</option>
-                            {Array.isArray(activities) && activities.map(a => (
-                              <option key={a.id} value={a.code}>
-                                {a.code} - {a.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </>
-                    )}
-                    
-                    {formData.account_assignment === 'K' && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Cost Center <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          required
-                          disabled={loadingCostCenters}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-50 transition-all"
-                          value={formData.cost_center}
-                          onFocus={() => formData.company_code && loadCostCentersOnDemand(formData.company_code)}
-                          onChange={(e) => setFormData(prev => ({ ...prev, cost_center: e.target.value }))}
-                        >
-                          <option value="">{loadingCostCenters ? 'Loading...' : 'Select Cost Center'}</option>
-                          {costCenters.map(cc => (
-                            <option key={cc.id} value={cc.cost_center_code}>
-                              {cc.cost_center_code} - {cc.cost_center_name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    
-                    {(formData.account_assignment === 'M' || formData.account_assignment === 'F') && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {formData.account_assignment === 'M' ? 'Maintenance' : 'Production'} Order <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Enter order number"
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                          value={formData.order_number}
-                          onChange={(e) => setFormData(prev => ({ ...prev, order_number: e.target.value }))}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Material Items */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-semibold text-green-900 flex items-center">
-                    <Icons.Package className="w-4 h-4 mr-2" />
-                    Material Items ({formData.items.length})
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={addItem}
-                    disabled={!formData.plant_code}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center shadow-sm"
-                  >
-                    <Icons.Plus className="w-4 h-4 mr-1" />
-                    Add Item
-                  </button>
-                </div>
-                
-                {!formData.plant_code && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-start">
-                    <Icons.AlertCircle className="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-yellow-800">
-                      <p className="font-medium">Plant selection required</p>
-                      <p className="text-xs mt-1">Please select a company and plant before adding materials</p>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="space-y-4">
-                  {formData.items.map((item, index) => (
-                    <div key={index} className="bg-white border-2 border-gray-200 rounded-lg p-4 space-y-3 hover:border-green-300 transition-all">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">Item #{index + 1}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition-all"
-                          disabled={formData.items.length === 1}
-                          title="Remove item"
-                        >
-                          <Icons.X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <div className="md:col-span-3">
-                          <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                            Material Search <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              placeholder={item.material_code ? `${item.material_code} - ${item.material_name}` : "Type to search materials..."}
-                              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm pr-10 focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-50 transition-all"
-                              value={activeSearchIndex === index ? materialSearch : ''}
-                              onChange={(e) => {
-                                setMaterialSearch(e.target.value)
-                                setActiveSearchIndex(index)
-                              }}
-                              onFocus={() => setActiveSearchIndex(index)}
-                              disabled={!formData.plant_code}
-                            />
-                            <div className="absolute right-3 top-2.5">
-                              {searchingMaterials && activeSearchIndex === index ? (
-                                <Icons.Loader className="w-5 h-5 animate-spin text-green-500" />
-                              ) : (
-                                <Icons.Search className="w-5 h-5 text-gray-400" />
-                              )}
-                            </div>
-                          </div>
-                          {activeSearchIndex === index && materialSearch.length >= 2 && materials.length > 0 && (
-                            <div className="absolute z-20 mt-1 w-full md:w-2/3 bg-white border-2 border-green-300 rounded-lg shadow-xl max-h-72 overflow-y-auto">
-                              <div className="sticky top-0 bg-green-50 px-3 py-2 border-b border-green-200">
-                                <p className="text-xs font-medium text-green-900">{materials.length} materials found</p>
-                              </div>
-                              {materials.map((mat) => {
-                                const stock = mat.material_storage_data?.[0]
-                                const stockStatus = stock?.available_stock > 0 ? '🟢' : stock?.current_stock > 0 ? '🟡' : '🔴'
-                                const stockLabel = stock?.available_stock > 0 ? 'In Stock' : stock?.current_stock > 0 ? 'Reserved' : 'Out of Stock'
-                                return (
-                                  <button
-                                    key={mat.material_code}
-                                    type="button"
-                                    className="w-full text-left px-4 py-3 hover:bg-green-50 border-b last:border-b-0 transition-colors"
-                                    onClick={() => {
-                                      updateItem(index, 'material_code', mat.material_code)
-                                      updateItem(index, 'material_name', mat.material_name)
-                                      updateItem(index, 'base_uom', mat.base_uom)
-                                      updateItem(index, 'available_stock', stock?.available_stock || 0)
-                                      setMaterialSearch('')
-                                      setMaterials([])
-                                      setActiveSearchIndex(null)
-                                    }}
-                                  >
-                                    <div className="flex justify-between items-start gap-3">
-                                      <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-semibold text-gray-900 truncate">{mat.material_code}</div>
-                                        <div className="text-xs text-gray-600 mt-0.5">{mat.material_name}</div>
-                                        {mat.category_name && (
-                                          <div className="text-xs text-gray-500 mt-0.5 flex items-center">
-                                            <Icons.Tag className="w-3 h-3 mr-1" />
-                                            {mat.category_name}
-                                          </div>
-                                        )}
-                                      </div>
-                                      <div className="text-right flex-shrink-0">
-                                        <div className="text-xs font-bold text-gray-900">{stockStatus} {stock?.available_stock || 0} {mat.base_uom}</div>
-                                        <div className="text-xs text-gray-500 mt-0.5">{stockLabel}</div>
-                                      </div>
-                                    </div>
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          )}
-                          {activeSearchIndex === index && materialSearch.length >= 2 && materials.length === 0 && !searchingMaterials && (
-                            <div className="absolute z-20 mt-1 w-full md:w-2/3 bg-white border-2 border-gray-300 rounded-lg shadow-lg p-4 text-center">
-                              <Icons.Search className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                              <p className="text-sm text-gray-600">No materials found</p>
-                              <p className="text-xs text-gray-500 mt-1">Try a different search term</p>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                            Quantity <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="number"
-                            required
-                            min="0.001"
-                            step="0.001"
-                            placeholder="0.00"
-                            className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                            value={item.requested_quantity || ''}
-                            onChange={(e) => updateItem(index, 'requested_quantity', parseFloat(e.target.value) || 0)}
-                          />
-                        </div>
-                      </div>
-                      {item.material_code && (
-                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-3 border border-gray-200">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1">
-                              <p className="text-sm font-semibold text-gray-900">{item.material_code}</p>
-                              <p className="text-xs text-gray-600 mt-0.5">{item.material_name}</p>
-                            </div>
-                            <span className="text-xs font-medium text-gray-600 bg-white px-2 py-1 rounded border">{item.base_uom}</span>
-                          </div>
-                          {item.available_stock !== undefined && (
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-300">
-                              <div className="flex items-center space-x-2">
-                                {item.available_stock >= item.requested_quantity ? (
-                                  <>
-                                    <div className="flex items-center text-green-700 bg-green-100 px-2 py-1 rounded">
-                                      <Icons.CheckCircle className="w-4 h-4 mr-1" />
-                                      <span className="text-xs font-medium">Available: {item.available_stock} {item.base_uom}</span>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <div className="flex items-center text-red-700 bg-red-100 px-2 py-1 rounded">
-                                      <Icons.AlertTriangle className="w-4 h-4 mr-1" />
-                                      <span className="text-xs font-medium">Only {item.available_stock} {item.base_uom} available</span>
-                                    </div>
-                                    <span className="text-xs font-semibold text-red-600">Insufficient stock!</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Additional Information */}
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Justification</label>
-                  <textarea
-                    className="w-full border rounded-lg px-3 py-2"
-                    rows={3}
-                    placeholder="Provide justification for this request..."
-                    value={formData.justification}
-                    onChange={(e) => setFormData(prev => ({ ...prev, justification: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-4">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center"
-                >
-                  {saving ? (
-                    <>
-                      <Icons.Loader className="w-4 h-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Icons.Send className="w-4 h-4 mr-2" />
-                      Create Material Request
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={clearForm}
-                  className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
-                >
-                  Clear
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* View Modal */}
-          {viewingRequest && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4">
-                <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">Request Details - {viewingRequest.request_number}</h2>
-                  <button onClick={() => setViewingRequest(null)} className="text-gray-500 hover:text-gray-700">
-                    <Icons.X className="w-6 h-6" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Request Number</label>
-                      <p className="mt-1 text-sm font-semibold">{viewingRequest.request_number}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Request Type</label>
-                      <p className="mt-1 text-sm">{viewingRequest.request_type}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Status</label>
-                      <p className="mt-1">
-                        <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(viewingRequest.status)}`}>
-                          {viewingRequest.status}
-                        </span>
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Priority</label>
-                      <p className="mt-1">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-${priorities.find(p => p.code === viewingRequest.priority)?.color}-100 text-${priorities.find(p => p.code === viewingRequest.priority)?.color}-800`}>
-                          {viewingRequest.priority}
-                        </span>
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Entry Date</label>
-                      <p className="mt-1 text-sm">{new Date(viewingRequest.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Required Date</label>
-                      <p className="mt-1 text-sm">{viewingRequest.required_date}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Company</label>
-                      <p className="mt-1 text-sm">{viewingRequest.company_display || '-'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Plant</label>
-                      <p className="mt-1 text-sm">{viewingRequest.plant_display || '-'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Storage Location</label>
-                      <p className="mt-1 text-sm">{viewingRequest.storage_location_display || '-'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Project</label>
-                      <p className="mt-1 text-sm">{viewingRequest.project_display || '-'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Cost Center</label>
-                      <p className="mt-1 text-sm">{viewingRequest.cost_center_display || '-'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">WBS Element</label>
-                      <p className="mt-1 text-sm">{viewingRequest.wbs_display || '-'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Activity</label>
-                      <p className="mt-1 text-sm">{viewingRequest.activity_display || '-'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Requested By</label>
-                      <p className="mt-1 text-sm">{viewingRequest.requested_by_display || '-'}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <label className="text-sm font-medium text-gray-500">Purpose</label>
-                      <p className="mt-1 text-sm">{viewingRequest.purpose || '-'}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <label className="text-sm font-medium text-gray-500">Justification</label>
-                      <p className="mt-1 text-sm">{viewingRequest.justification || '-'}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <label className="text-sm font-medium text-gray-500">Notes</label>
-                      <p className="mt-1 text-sm">{viewingRequest.notes || '-'}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg mb-3 flex items-center">
-                      <Icons.Package className="w-5 h-5 mr-2" />
-                      Material Items ({(viewingRequest.items || []).length})
-                    </h3>
-                    <div className="border rounded-lg overflow-hidden">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Material Code</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Material Name</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">UOM</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {(viewingRequest.items || []).length === 0 ? (
-                            <tr>
-                              <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-500">
-                                No items found
-                              </td>
-                            </tr>
-                          ) : (
-                            (viewingRequest.items || []).map((item, idx) => (
-                              <tr key={idx} className="hover:bg-gray-50">
-                                <td className="px-4 py-3 text-sm text-gray-500">{item.line_number || idx + 1}</td>
-                                <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.material_code}</td>
-                                <td className="px-4 py-3 text-sm text-gray-600">{item.material_name || '-'}</td>
-                                <td className="px-4 py-3 text-sm text-right font-semibold text-gray-900">{item.requested_quantity}</td>
-                                <td className="px-4 py-3 text-sm text-gray-600">{item.base_uom}</td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-                <div className="border-t px-6 py-4 flex justify-end">
-                  <button 
-                    onClick={() => setViewingRequest(null)}
-                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* List Tab */}
-          {activeTab === 'list' && (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Main Card */}
+        <div className="bg-white rounded-lg shadow-lg border-0 overflow-hidden">
+          <div className="p-8 space-y-8">
+            {/* Requested for */}
             <div className="space-y-4">
-              {/* Filters */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Entry Date From</label>
-                    <input 
-                      type="date" 
-                      className="w-full border rounded px-3 py-2 text-sm"
-                      value={filters.entryDateFrom}
-                      onChange={(e) => setFilters({...filters, entryDateFrom: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Entry Date To</label>
-                    <input 
-                      type="date" 
-                      className="w-full border rounded px-3 py-2 text-sm"
-                      value={filters.entryDateTo}
-                      onChange={(e) => setFilters({...filters, entryDateTo: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Required Date</label>
-                    <input 
-                      type="date" 
-                      className="w-full border rounded px-3 py-2 text-sm"
-                      value={filters.requiredDate}
-                      onChange={(e) => setFilters({...filters, requiredDate: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Material</label>
-                    <input 
-                      type="text" 
-                      placeholder="Search material..." 
-                      className="w-full border rounded px-3 py-2 text-sm"
-                      value={filters.material}
-                      onChange={(e) => setFilters({...filters, material: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
-                    <select 
-                      className="w-full border rounded px-3 py-2 text-sm"
-                      value={filters.priority}
-                      onChange={(e) => setFilters({...filters, priority: e.target.value})}
-                    >
-                      <option value="">All Priorities</option>
-                      {priorities.map(p => (
-                        <option key={p.code} value={p.code}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-                    <select 
-                      className="w-full border rounded px-3 py-2 text-sm"
-                      value={filters.status}
-                      onChange={(e) => setFilters({...filters, status: e.target.value})}
-                    >
-                      <option value="">All Statuses</option>
-                      <option value="DRAFT">Draft</option>
-                      <option value="SUBMITTED">Submitted</option>
-                      <option value="APPROVED">Approved</option>
-                      <option value="REJECTED">Rejected</option>
-                      <option value="FULFILLED">Fulfilled</option>
-                    </select>
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <button 
-                      onClick={loadRequests}
-                      className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
-                    >
-                      <Icons.Search className="w-4 h-4 inline mr-1" />
-                      Filter
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setFilters({
-                          entryDateFrom: '',
-                          entryDateTo: '',
-                          requiredDate: '',
-                          material: '',
-                          priority: '',
-                          status: ''
-                        })
-                        loadRequests()
-                      }}
-                      className="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600"
-                    >
-                      Clear
-                    </button>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-lg font-semibold text-slate-800">
+                  <Icons.Target className="h-5 w-5 text-blue-600" />
+                  <span>Requested for</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  {formData.request_number && (
+                    <div className="text-sm text-slate-600">
+                      <span className="font-medium">MR Number:</span> {formData.request_number}
+                    </div>
+                  )}
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    formState.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
+                    formState.status === 'SUBMITTED' ? 'bg-blue-100 text-blue-800' :
+                    formState.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {formState.status}
                   </div>
                 </div>
               </div>
               
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request #</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entry Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Required Date</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {requests.map((request, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 text-sm font-medium text-gray-900">{request.request_number}</td>
-                        <td className="px-4 py-4 text-sm text-gray-900">{new Date(request.created_at).toLocaleDateString()}</td>
-                        <td className="px-4 py-4 text-sm text-gray-900">{request.request_type}</td>
-                        <td className="px-4 py-4 text-sm">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-${priorities.find(p => p.code === request.priority)?.color}-100 text-${priorities.find(p => p.code === request.priority)?.color}-800`}>
-                            {request.priority}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
-                            {request.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-900">{request.required_date}</td>
-                        <td className="px-4 py-4 text-center">
-                          <div className="flex justify-center gap-2">
-                            <button 
-                              onClick={() => handleView(request)}
-                              className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs hover:bg-blue-200"
-                            >
-                              View
-                            </button>
-                            {(request.status === 'DRAFT' || request.status === 'SUBMITTED') && (
-                              <>
-                                <button 
-                                  onClick={() => handleEdit(request)}
-                                  className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs hover:bg-green-200"
-                                >
-                                  Change
-                                </button>
-                                <button 
-                                  onClick={() => handleDelete(request.id)}
-                                  className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs hover:bg-red-200"
-                                >
-                                  Delete
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Templates Tab */}
-          {activeTab === 'templates' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {templates.map(template => (
-                <div key={template.id} className="border rounded-lg p-4 hover:shadow-md">
-                  <h3 className="font-medium text-gray-900 mb-2">{template.template_name}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{template.default_purpose}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500">{template.template_items.length} items</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {accountAssignmentTypes.map(type => {
+                  const IconComponent = type.icon
+                  return (
                     <button
-                      onClick={() => {
-                        applyTemplate(template)
-                        setActiveTab('create')
-                      }}
-                      className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                      key={type.code}
+                      type="button"
+                      className={`h-16 flex flex-col items-center justify-center space-y-1 border rounded-md transition-colors ${
+                        formData.account_assignment === type.code 
+                          ? 'bg-blue-600 text-white border-blue-600' 
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      } ${formState.isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => !formState.isReadOnly && handleFormChange('account_assignment', type.code)}
+                      disabled={formState.isReadOnly}
                     >
-                      Use Template
+                      <IconComponent className="h-5 w-5" />
+                      <span className="text-xs">{type.name}</span>
                     </button>
+                  )
+                })}
+              </div>
+
+
+
+              {/* Cost Center Assignment */}
+              {formData.account_assignment === 'K' && (
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-slate-700">
+                      Cost Center <span className="text-red-500">*</span>
+                    </label>
+                    <select 
+                      value={formData.cost_center} 
+                      onChange={(e) => handleFormChange('cost_center', e.target.value)}
+                      className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select cost center</option>
+                      {costCenters.map(costCenter => (
+                        <option key={costCenter.cost_center_code} value={costCenter.cost_center_code}>
+                          {costCenter.cost_center_code} - {costCenter.cost_center_name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-          )}
+
+            <div className="border-t border-slate-200 my-8"></div>
+
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 text-lg font-semibold text-slate-800">
+                <Icons.Info className="h-5 w-5 text-blue-600" />
+                <span>Basic Information</span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Project <span className="text-red-500">*</span>
+                  </label>
+                  <select 
+                    value={formData.project_code} 
+                    onChange={(e) => handleFormChange('project_code', e.target.value)}
+                    disabled={formState.isReadOnly}
+                    className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select project</option>
+                    {projects.map(project => (
+                      <option key={project.project_code} value={project.project_code}>
+                        {project.project_code} - {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {formData.account_assignment === 'P' && formData.project_code && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-slate-700">
+                      WBS Element <span className="text-red-500">*</span>
+                    </label>
+                    <select 
+                      value={formData.wbs_element} 
+                      onChange={(e) => handleFormChange('wbs_element', e.target.value)}
+                      disabled={loadingWbsElements || formState.isReadOnly}
+                      className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="">Select WBS element</option>
+                      {wbsElements.map(wbs => (
+                        <option key={wbs.id} value={wbs.id}>
+                          {wbs.code} - {wbs.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {formData.company_code && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-slate-700">
+                      Company Code
+                    </label>
+                    <input
+                      value={formData.company_code}
+                      readOnly
+                      placeholder="Auto-populated from WBS element"
+                      className="w-full h-11 px-3 border border-slate-300 rounded-md bg-slate-50 text-slate-600"
+                    />
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Plant Code <span className="text-red-500">*</span>
+                  </label>
+                  <select 
+                    value={formData.plant_code} 
+                    onChange={(e) => handleFormChange('plant_code', e.target.value)}
+                    disabled={!formData.company_code}
+                    className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50"
+                  >
+                    <option value="">Select plant</option>
+                    {plants.map(plant => (
+                      <option key={plant.plant_code} value={plant.plant_code}>
+                        {plant.plant_code} - {plant.plant_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Receiving Location <span className="text-red-500">*</span>
+                  </label>
+                  <select 
+                    value={formData.storage_location} 
+                    onChange={(e) => handleFormChange('storage_location', e.target.value)}
+                    disabled={!formData.plant_code}
+                    className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50"
+                  >
+                    <option value="">Select location</option>
+                    {storageLocations.map(location => (
+                      <option key={location.sloc_code} value={location.sloc_code}>
+                        📍 {location.sloc_code} - {location.sloc_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {formData.account_assignment === 'P' && formData.wbs_element && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-slate-700">
+                      Activity Code
+                    </label>
+                    <select 
+                      value={formData.activity_code} 
+                      onChange={(e) => handleFormChange('activity_code', e.target.value)}
+                      disabled={loadingActivities}
+                      className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50"
+                    >
+                      <option value="">Select activity (optional)</option>
+                      {activities.map(activity => (
+                        <option key={activity.id} value={activity.code}>
+                          {activity.code} - {activity.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 my-8"></div>
+
+            {/* Material Items */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-lg font-semibold text-slate-800">
+                  <Icons.Package className="h-5 w-5 text-blue-600" />
+                  <span>Material Items</span>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={addMaterialItem}
+                  className="flex items-center space-x-2 px-4 py-2 text-sm border border-slate-300 rounded-md hover:bg-slate-50"
+                >
+                  <Icons.Plus className="h-4 w-4" />
+                  <span>Add Item</span>
+                </button>
+              </div>
+
+              <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 flex items-start space-x-3">
+                <Icons.Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <p className="text-blue-800 text-sm">
+                  Material availability and pricing are checked in real-time. Stock levels shown are current.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {formData.items.map((item, index) => (
+                  <div key={index} className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                    <div className="grid grid-cols-1 md:grid-cols-8 gap-4 items-end">
+                      <div className="md:col-span-2 space-y-2">
+                        <label className="block text-sm font-medium text-slate-700">Material</label>
+                        <div className="relative">
+                          <input
+                            value={activeSearchIndex === index ? materialSearch : item.material_name || item.material_code}
+                            onChange={(e) => {
+                              setMaterialSearch(e.target.value)
+                              setActiveSearchIndex(index)
+                            }}
+                            onFocus={() => setActiveSearchIndex(index)}
+                            placeholder="Search materials..."
+                            className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          
+                          {/* Material Search Results */}
+                          {activeSearchIndex === index && materials.length > 0 && materialSearch.length >= 2 && (
+                            <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                              {materials.map((material) => {
+                                const stockData = material.material_storage_data?.[0]
+                                return (
+                                  <div
+                                    key={material.material_code}
+                                    className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
+                                    onClick={() => selectMaterial(index, material)}
+                                  >
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <p className="font-medium text-slate-900">{material.material_name}</p>
+                                        <p className="text-sm text-slate-500">{material.material_code}</p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-sm font-medium">£{material.standard_price?.toFixed(2)}</p>
+                                        {stockData && (
+                                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                                            stockData.available_stock > 0 
+                                              ? 'bg-green-100 text-green-800' 
+                                              : 'bg-red-100 text-red-800'
+                                          }`}>
+                                            {stockData.available_stock} {material.base_uom}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-slate-700">Quantity</label>
+                        <input
+                          type="number"
+                          value={item.requested_quantity}
+                          onChange={(e) => updateMaterialItem(index, 'requested_quantity', parseFloat(e.target.value) || 0)}
+                          min="0"
+                          step="0.01"
+                          className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-slate-700">Unit</label>
+                        <input
+                          value={item.base_uom}
+                          readOnly
+                          className="w-full h-11 px-3 border border-slate-300 rounded-md bg-slate-50 text-slate-600"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-slate-700">Priority</label>
+                        <select 
+                          value={item.priority} 
+                          onChange={(e) => updateMaterialItem(index, 'priority', e.target.value)}
+                          className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {priorities.map(priority => (
+                            <option key={priority.code} value={priority.code}>
+                              {priority.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-slate-700">Required Date</label>
+                        <input
+                          type="date"
+                          value={item.required_date}
+                          onChange={(e) => updateMaterialItem(index, 'required_date', e.target.value)}
+                          className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-slate-700">Available Stock</label>
+                        <div className="flex items-center space-x-2 h-11">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            item.available_stock > 0 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {item.available_stock} {item.base_uom}
+                          </span>
+                          {item.available_stock < item.requested_quantity && (
+                            <Icons.AlertTriangle className="h-4 w-4 text-orange-500" title="Insufficient stock" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => removeMaterialItem(index)}
+                          disabled={formData.items.length === 1}
+                          className="h-11 w-11 flex items-center justify-center border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50"
+                        >
+                          <Icons.Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="bg-slate-50 px-8 py-6 border-t border-slate-200 flex justify-end space-x-4">
+            {formState.isSubmitted ? (
+              <>
+                <button 
+                  type="button"
+                  onClick={handlePreview}
+                  className="px-6 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-100 flex items-center space-x-2"
+                >
+                  <Icons.Eye className="h-4 w-4" />
+                  <span>View Request</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={createNewRequest}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-2"
+                >
+                  <Icons.Plus className="h-4 w-4" />
+                  <span>Create New Request</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  type="button"
+                  onClick={handleSaveDraft}
+                  disabled={saving}
+                  className="px-6 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-100 flex items-center space-x-2 disabled:opacity-50"
+                >
+                  <Icons.Save className="h-4 w-4" />
+                  <span>Save Draft</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={handlePreview}
+                  className="px-6 py-2 border border-slate-300 rounded-md text-slate-700 hover:bg-slate-100 flex items-center space-x-2"
+                >
+                  <Icons.Eye className="h-4 w-4" />
+                  <span>Preview</span>
+                </button>
+                <button 
+                  onClick={handleSubmit} 
+                  disabled={saving}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+                >
+                  {saving ? (
+                    <Icons.Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Icons.Send className="h-4 w-4" />
+                  )}
+                  <span>Submit for Approval</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

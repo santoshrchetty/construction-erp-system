@@ -63,8 +63,8 @@ class UnifiedMaterialRequestService {
       if (!request.company_code) {
         return { success: false, error: 'Company code is required' }
       }
-      if (!request.required_date) {
-        return { success: false, error: 'Required date is required' }
+      if (!request.items || request.items.length === 0) {
+        return { success: false, error: 'At least one material item is required' }
       }
       if (!tenantId) {
         return { success: false, error: 'Tenant ID is required' }
@@ -85,7 +85,6 @@ class UnifiedMaterialRequestService {
           request_number: requestNumber,
           request_type: request.request_type || 'MATERIAL_REQ',
           priority: request.priority || 'MEDIUM',
-          required_date: request.required_date,
           company_code: request.company_code,
           plant_code: request.plant_code,
           project_code: request.project_code,
@@ -120,6 +119,8 @@ class UnifiedMaterialRequestService {
           base_uom: item.base_uom || item.unit,
           estimated_price: item.estimated_price,
           currency_code: item.currency_code || 'USD',
+          required_date: item.required_date, // Item-level required date
+          priority: item.priority || 'MEDIUM', // Item-level priority
           delivery_date: item.delivery_date,
           notes: item.notes,
           storage_location: item.storage_location,

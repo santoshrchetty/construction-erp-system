@@ -1,29 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { ERPConfigService } from '@/domains/administration/erpConfigService';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const erpConfigService = new ERPConfigService();
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const companyCode = searchParams.get('companyCode');
     
-    let query = supabase
-      .from('plants')
-      .select('id, plant_code, plant_name, plant_type, company_code')
-      .eq('is_active', true);
-    
-    if (companyCode) {
-      query = query.eq('company_code', companyCode);
-    }
-    
-    const { data, error } = await query.order('plant_code');
-
-    if (error) throw error;
-
+    const data = await erpConfigService.getPlants(companyCode || undefined);
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     return NextResponse.json(

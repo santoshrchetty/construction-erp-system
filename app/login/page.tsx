@@ -121,7 +121,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#F7F7F7] via-white to-[#F0F8FF] flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-8 md:p-10">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-light text-[#32363A] mb-3 tracking-tight">Nexus ERP</h1>
+          <h1 className="text-4xl font-light text-[#32363A] mb-3 tracking-tight">Omega Build ERP</h1>
           <div className="h-1 w-16 bg-gradient-to-r from-[#0A6ED1] to-[#0080FF] mx-auto mb-4 rounded-full"></div>
           {tenant && (
             <p className="text-[#6A6D70] font-light mb-2">{tenant.tenant_name}</p>

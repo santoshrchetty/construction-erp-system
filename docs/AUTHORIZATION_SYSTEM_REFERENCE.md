@@ -39,25 +39,40 @@ SAP-style authorization system with:
 
 ## Architecture
 
-### Three-Layer Authorization Model
+### Four-Layer Authorization Model
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Layer 1: Authorization Objects (What can be accessed)      │
-│ - 116 objects across 15 modules                            │
-│ - Each object has authorization fields                     │
-│ - Fields define access dimensions (COMP_CODE, PLANT, etc.) │
+│ Layer 1: Field Configuration (Global catalog)              │
+│ - authorization_field_config table                         │
+│ - Defines available field types (COMP_CODE, PLANT, etc.)  │
+│ - Specifies data sources for each field                   │
+│ - No tenant_id (global configuration)                      │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ Layer 2: Role Assignments (Who has access)                 │
-│ - Roles assigned to authorization objects                  │
+│ Layer 2: Authorization Objects (What can be accessed)      │
+│ - authorization_objects table                              │
+│ - 116 objects across 15 modules                            │
+│ - Linked to fields via authorization_object_fields         │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Layer 3: Object-Field Mapping (Which fields per object)    │
+│ - authorization_object_fields junction table               │
+│ - Links objects to field configurations                    │
+│ - Defines which fields are required                        │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Layer 4: Role Assignments (Who has access with what values)│
+│ - role_authorization_objects table                         │
 │ - Field values define restrictions                         │
 │ - Default: Full access (*) for all fields                  │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ Layer 3: Module Filtering (What tiles are visible)         │
+│ Layer 5: Module Filtering (What tiles are visible)         │
 │ - get_user_modules() RPC returns user's modules            │
 │ - Tiles filtered by module_code                            │
 │ - Tenant-isolated at every step                            │
@@ -101,31 +116,59 @@ CREATE TABLE authorization_objects (
 - integration: 2 objects
 - reporting: 5 objects
 
-#### 2. authorization_fields
+#### 2. authorization_field_config (Global Configuration)
 ```sql
-CREATE TABLE authorization_fields (
+CREATE TABLE authorization_field_config (
+  id uuid PRIMARY KEY,
+  field_code varchar(50) UNIQUE NOT NULL,  -- e.g., 'COMP_CODE', 'PLANT', 'ACTVT'
+  field_name varchar(100) NOT NULL,        -- Display name
+  field_category varchar(50) NOT NULL,     -- Activity/Organizational/Business
+  data_source_type varchar(50) NOT NULL,   -- static/table/enum
+  source_table varchar(100),               -- Table to fetch values from
+  source_value_column varchar(100),
+  source_display_column varchar(100),
+  static_values jsonb,                     -- For static fields
+  default_value varchar(10) DEFAULT '*',
+  is_active boolean DEFAULT true,
+  display_order integer,
+  help_text text,
+  created_at timestamptz,
+  updated_at timestamptz
+);
+```
+
+**Purpose**: Global catalog of available field types (no tenant_id)
+
+**Common Fields**:
+- `ACTVT` → Activity (static: 01=Create, 02=Change, 03=Display, 06=Delete)
+- `COMP_CODE` → Company Code (from company_codes table)
+- `PLANT` → Plant (from plants table)
+- `DEPT` → Department (from departments table)
+- `STORAGE_LOC` → Storage Location (from storage_locations table)
+- `COST_CENTER` → Cost Center (from cost_centers table)
+- `PURCH_ORG` → Purchasing Organization (from purchasing_organizations table)
+- `PROJ_TYPE` → Project Type (enum from projects.project_type)
+- `MR_TYPE` → Material Request Type (enum from material_requests.mr_type)
+- `PR_TYPE` → Purchase Requisition Type (enum from purchase_requisitions.pr_type)
+- `MAT_TYPE` → Material Type (enum from materials.material_type)
+- `PO_TYPE` → Purchase Order Type (static values)
+
+#### 3. authorization_object_fields (Junction Table)
+```sql
+CREATE TABLE authorization_object_fields (
   id uuid PRIMARY KEY,
   auth_object_id uuid NOT NULL REFERENCES authorization_objects(id),
-  field_name text NOT NULL,            -- e.g., 'COMP_CODE', 'PLANT', 'ACTVT'
-  field_description text,
-  field_values text[],                 -- Possible values (for reference)
+  field_code varchar(50) NOT NULL,     -- References authorization_field_config.field_code
   is_required boolean DEFAULT false,
-  is_organizational boolean DEFAULT false,
   tenant_id uuid NOT NULL REFERENCES tenants(id),
   created_at timestamptz,
   updated_at timestamptz
 );
 ```
 
-**Common Fields**:
-- `COMP_CODE` / `BUKRS` → Company Code (from company_codes table)
-- `PLANT` / `WERKS` → Plant (from plants table)
-- `DEPT` → Department (from departments table)
-- `LGORT` → Storage Location (from storage_locations table)
-- `KOSTL` → Cost Center (from cost_centers table)
-- `ACTVT` → Activity (01=Create, 02=Change, 03=Display, 06=Delete)
+**Purpose**: Links authorization objects to fields (which fields does each object have?)
 
-#### 3. role_authorization_objects
+#### 4. role_authorization_objects
 ```sql
 CREATE TABLE role_authorization_objects (
   id uuid PRIMARY KEY,
@@ -153,7 +196,7 @@ CREATE TABLE role_authorization_objects (
 }
 ```
 
-#### 4. roles
+#### 5. roles
 ```sql
 CREATE TABLE roles (
   id uuid PRIMARY KEY,
@@ -166,7 +209,7 @@ CREATE TABLE roles (
 );
 ```
 
-#### 5. user_roles
+#### 6. user_roles
 ```sql
 CREATE TABLE user_roles (
   id uuid PRIMARY KEY,
@@ -304,6 +347,21 @@ Restricted Roles:
 ```
 
 ### Field Value Sources
+
+**Field Configuration** (from authorization_field_config):
+- Defines available field types globally
+- Specifies data source for each field type
+- No tenant_id (shared across all tenants)
+
+**Object-Field Mapping** (from authorization_object_fields):
+- Links fields to specific authorization objects
+- Defines which fields are required per object
+- Tenant-specific assignments
+
+**Field Value Assignment** (in role_authorization_objects.field_values):
+- Actual restrictions per role
+- Stored as JSONB
+- Defaults to '*' (full access)
 
 **Organizational Fields** (from database):
 - `COMP_CODE` → `company_codes.company_code`
@@ -501,6 +559,8 @@ Response: {
 - `database/EXECUTION_GUIDE.md` - Migration guide
 
 **Database Scripts**:
+- `database/authorization_field_config.sql` - Field configuration table
+- `database/migrate_restructure_authorization_fields.sql` - Junction table migration
 - `database/get_user_modules_tenant_aware.sql` - Tenant-aware RPC function
 - `database/verify_tenant_isolation_authorization.sql` - Verification queries
 - `database/authorization_field_sources.sql` - Field value mappings
@@ -519,6 +579,8 @@ Response: {
 | Concept | Description |
 |---------|-------------|
 | **Authorization Object** | Defines what can be accessed (e.g., MATERIAL_MASTER_READ) |
+| **Field Configuration** | Global catalog of available field types (authorization_field_config) |
+| **Object-Field Mapping** | Links objects to fields via junction table (authorization_object_fields) |
 | **Authorization Field** | Defines access dimension (e.g., COMP_CODE, PLANT, ACTVT) |
 | **Role Assignment** | Links role to object with field values |
 | **Module** | Groups related objects (e.g., materials, projects) |
@@ -527,6 +589,23 @@ Response: {
 | **Field Restriction** | Specific values per field (specialized roles) |
 
 ### Common Queries
+
+**Get available field types**:
+```sql
+SELECT field_code, field_name, field_category, data_source_type
+FROM authorization_field_config
+WHERE is_active = true
+ORDER BY display_order;
+```
+
+**Get fields for an authorization object**:
+```sql
+SELECT aof.field_code, afc.field_name, aof.is_required
+FROM authorization_object_fields aof
+JOIN authorization_field_config afc ON aof.field_code = afc.field_code
+WHERE aof.auth_object_id = 'object-uuid'
+  AND aof.tenant_id = 'tenant-uuid';
+```
 
 **Get user's modules**:
 ```sql

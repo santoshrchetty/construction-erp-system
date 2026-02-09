@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
     
     switch (action) {
       case 'number-ranges':
-        const ranges = await numberRangeService.getAllNumberRanges(companyCode || undefined);
+        const ranges = await numberRangeService.getNumberRanges(companyCode || undefined);
         return NextResponse.json({ success: true, data: ranges });
         
       case 'alerts':
-        const alerts = await numberRangeService.getNumberRangeAlerts(companyCode || undefined);
+        const alerts = await numberRangeService.getAlerts(companyCode || undefined);
         return NextResponse.json({ success: true, data: alerts });
         
       case 'stats':
@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
         const updatedRange = await numberRangeService.updateNumberRange(data.id, data);
         return NextResponse.json({ success: true, data: updatedRange });
         
-      case 'reset':
-        const resetRange = await numberRangeService.resetNumberRange(data.id, data.newCurrentNumber, data.userId);
-        return NextResponse.json({ success: true, data: resetRange });
+      // case 'reset':
+      //   const resetRange = await numberRangeService.resetNumberRange(data.id, data.newCurrentNumber, data.userId);
+      //   return NextResponse.json({ success: true, data: resetRange });
         
       case 'get_next_number':
         const { data: nextNumber, error: nextError } = await supabase

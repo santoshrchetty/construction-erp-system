@@ -1,3 +1,7 @@
+// COMMENTED OUT - References non-existent tables: timesheets, timesheet_entries
+// Uncomment when these tables are created in Supabase
+
+/*
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '../supabase/database.types'
 import { BaseRepository } from './base.repository'
@@ -257,3 +261,4 @@ export class TimesheetEntriesRepository {
     return data?.reduce((sum, entry) => sum + entry.hours, 0) || 0
   }
 }
+*/

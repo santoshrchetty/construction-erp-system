@@ -60,7 +60,7 @@ const MaterialStockOverview = lazy(() => import('../features/inventory/MaterialS
 const ExtendMaterialToPlant = lazy(() => import('../features/materials/MaterialPlantComponents').then(module => ({ default: module.ExtendMaterialToPlant })))
 const MaterialPlantParameters = lazy(() => import('../features/materials/MaterialPlantComponents').then(module => ({ default: module.MaterialPlantParameters })))
 const MaterialReservations = lazy(() => import('../features/materials/MaterialReservationsComponent').then(module => ({ default: module.MaterialReservations })))
-const UnifiedMaterialRequest = lazy(() => import('../features/materials/UnifiedMaterialRequestComponent').then(module => ({ default: module.UnifiedMaterialRequest })))
+const UnifiedMaterialRequest = lazy(() => import('../features/materials/UnifiedMaterialRequestComponent'))
 const ApprovalConfiguration = lazy(() => import('../features/approvals/approval-configuration'))
 const WBSManagement = lazy(() => import('../features/projects/WBSManagementWithSelector'))
 const ActivitiesManagement = lazy(() => import('../features/projects/ActivitiesManagementWithSelector'))
@@ -306,6 +306,9 @@ export default function EnhancedConstructionTiles() {
       case 'Material Requests':
       case 'Unified Material Request':
         return <UnifiedMaterialRequest />
+      case 'Material Request List':
+        const { MaterialRequestList } = require('../features/materials/MaterialRequestList')
+        return <MaterialRequestList onNavigateToCreate={() => setActiveComponent('Unified Material Request')} />
       case 'Material Request Approvals':
         const { MaterialRequestApprovalsComponent } = require('../features/materials/MaterialRequestApprovalsComponent')
         return <MaterialRequestApprovalsComponent />
@@ -658,7 +661,7 @@ export default function EnhancedConstructionTiles() {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl md:text-4xl font-light text-[#32363A] mb-2 tracking-tight">Nexus ERP</h1>
+              <h1 className="text-3xl md:text-4xl font-light text-[#32363A] mb-2 tracking-tight">Omega Build ERP</h1>
               <div className="h-1 w-20 bg-gradient-to-r from-[#0A6ED1] to-[#0080FF] rounded-full mb-2"></div>
               <p className="text-sm text-[#6A6D70] font-light">Enterprise Resource Planning for Construction</p>
             </div>

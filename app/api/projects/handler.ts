@@ -8,7 +8,7 @@ export async function handleProjects(action: string, body: any, method: string =
     console.log('handleProjects called:', { action, body, method })
     switch (action) {
       case 'list':
-        const projects = await projectCrudService.getAllProjects(body?.companyId)
+        const projects = await projectCrudService.getAllProjects()
         console.log('Projects fetched:', projects)
         return projects
       

@@ -33,7 +33,7 @@ export default function ERPConfigurationTile() {
   const [materialGroups, setMaterialGroups] = useState<MaterialGroup[]>([])
   const [vendorCategories, setVendorCategories] = useState<VendorCategory[]>([])
   const [paymentTerms, setPaymentTerms] = useState<PaymentTerm[]>([])
-  const [accountDetermination, setAccountDetermination] = useState<any[]>([]))
+  const [accountDetermination, setAccountDetermination] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -321,7 +321,7 @@ export default function ERPConfigurationTile() {
           )}
         </div>
       </div>
-    </div>
+
       {/* Create/Edit Form Modal */}
       {(showCreateForm || showEditForm) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -423,6 +423,7 @@ export default function ERPConfigurationTile() {
           </div>
         </div>
       )}
+    </div>
   )
 }
 

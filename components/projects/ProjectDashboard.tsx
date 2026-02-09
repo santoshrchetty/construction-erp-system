@@ -132,21 +132,31 @@ export function ProjectsOverviewDashboard() {
   }
 
   const fetchStats = async () => {
-    const { data: projects } = await supabase
-      .from('projects')
-      .select('status, budget')
+    try {
+      const { data: projects, error } = await supabase
+        .from('projects')
+        .select('status, budget')
 
-    if (projects) {
-      const stats = projects.reduce((acc, project) => {
-        acc.total++
-        acc.totalBudget += project.budget || 0
-        if (project.status === 'active') acc.active++
-        if (project.status === 'completed') acc.completed++
-        if (project.status === 'planning') acc.planning++
-        return acc
-      }, { total: 0, active: 0, completed: 0, planning: 0, totalBudget: 0 })
-      
-      setStats(stats)
+      if (error) {
+        console.error('Supabase error fetching stats:', error)
+        return
+      }
+
+      if (projects) {
+        const stats = projects.reduce((acc, project) => {
+          acc.total++
+          acc.totalBudget += project.budget || 0
+          if (project.status === 'active') acc.active++
+          if (project.status === 'completed') acc.completed++
+          if (project.status === 'planning') acc.planning++
+          return acc
+        }, { total: 0, active: 0, completed: 0, planning: 0, totalBudget: 0 })
+        
+        console.log('Project stats:', stats)
+        setStats(stats)
+      }
+    } catch (error) {
+      console.error('Exception fetching stats:', error)
     }
   }
 
@@ -159,14 +169,19 @@ export function ProjectsOverviewDashboard() {
         .limit(5)
 
       if (error) {
-        console.error('Error fetching recent projects:', error)
+        console.error('Supabase error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        })
         return
       }
       
-      console.log('Recent projects loaded:', data)
+      console.log('Recent projects loaded:', data?.length || 0, 'projects')
       setRecentProjects(data || [])
     } catch (error) {
-      console.error('Failed to load recent projects:', error)
+      console.error('Exception loading recent projects:', error)
     }
   }
 
@@ -178,14 +193,15 @@ export function ProjectsOverviewDashboard() {
         .not('category_code', 'is', null)
 
       if (error) {
-        console.error('Error fetching categories:', error)
+        console.error('Supabase error fetching categories:', error)
         return
       }
       
       const uniqueCategories = [...new Set(data?.map(p => p.category_code) || [])]
+      console.log('Categories loaded:', uniqueCategories.length)
       setCategories(uniqueCategories)
     } catch (error) {
-      console.error('Failed to load categories:', error)
+      console.error('Exception loading categories:', error)
     }
   }
 

@@ -111,4 +111,8 @@ export class AuthorizationService {
   invalidateUserCache(userId: string) {
     authCache.clearUser(userId)
   }
+
+  hasPermission(authorizedObjects: Set<string>, permission: string): boolean {
+    return authorizedObjects.has(permission)
+  }
 }

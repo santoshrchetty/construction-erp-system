@@ -290,24 +290,44 @@ export class WorkflowRepository {
     }
 
     const sanitizedUpdates = {
-      ...updates,
-      decision_date: new Date().toISOString(),
+      status: updates.status,
       comments: updates.comments?.substring(0, 500)
     };
 
-    const { data, error } = await supabase
+    // First, update the step instance
+    const { data: stepData, error: stepError } = await supabase
       .from('step_instances')
       .update(sanitizedUpdates)
       .eq('id', stepInstanceId)
-      .select(`
-        *,
-        workflow_instances (*),
-        workflow_steps (*)
-      `)
+      .select()
       .single();
     
-    if (error) throw new Error(`Failed to update step instance: ${error.message}`);
-    return data;
+    if (stepError) {
+      console.error('Step instance update error:', stepError);
+      throw new Error(`Failed to update step instance: ${stepError.message}`);
+    }
+    if (!stepData) {
+      throw new Error('Step instance not found');
+    }
+
+    // Then fetch related data separately
+    const { data: instanceData } = await supabase
+      .from('workflow_instances')
+      .select('*')
+      .eq('id', stepData.workflow_instance_id)
+      .single();
+
+    const { data: stepDefData } = await supabase
+      .from('workflow_steps')
+      .select('*')
+      .eq('id', stepData.workflow_step_id)
+      .single();
+
+    return {
+      ...stepData,
+      workflow_instances: instanceData,
+      workflow_steps: stepDefData
+    };
   }
 
   static async getStepInstances(instanceId: string, stepSequence: number): Promise<any[]> {

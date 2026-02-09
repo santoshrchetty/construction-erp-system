@@ -1,21 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { ERPConfigService } from '@/domains/administration/erpConfigService';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const erpConfigService = new ERPConfigService();
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('company_codes')
-      .select('id, company_code, company_name, currency, grpcompany_code')
-      .eq('is_active', true)
-      .order('company_code');
-
-    if (error) throw error;
-
+    const data = await erpConfigService.getCompanies();
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     return NextResponse.json(

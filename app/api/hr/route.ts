@@ -4,7 +4,7 @@ import { Module, Permission } from '@/lib/permissions/types'
 import * as hrServices from '@/domains/hr/hrServices'
 
 async function handleHR(action: string, request: NextRequest, method: string = 'GET') {
-  const authContext = await withAuth(request, Module.EMPLOYEES, Permission.VIEW)
+  const authContext = await withAuth(request)
   
   switch (action) {
     case 'timesheets':

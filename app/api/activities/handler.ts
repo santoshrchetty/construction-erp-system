@@ -8,15 +8,22 @@ export async function handleActivities(action: string, request: NextRequest, met
     if (method === 'GET') {
       const { searchParams } = new URL(request.url)
       const wbsCode = searchParams.get('wbsCode')
-      const projectId = searchParams.get('projectId')
+      const wbsElement = searchParams.get('wbsElement')
+      const projectCode = searchParams.get('projectCode')
+      
+      // Handle wbsElement parameter (used by Material Request component)
+      if (wbsElement) {
+        const data = await activityService.getActivitiesByWBSCode(wbsElement)
+        return { success: true, data }
+      }
       
       if (wbsCode) {
         const data = await activityService.getActivitiesByWBSCode(wbsCode)
         return { success: true, data }
       }
       
-      if (projectId) {
-        const data = await activityService.getActivitiesByProject(projectId)
+      if (projectCode) {
+        const data = await activityService.getActivitiesByProject(projectCode)
         return { success: true, data }
       }
       

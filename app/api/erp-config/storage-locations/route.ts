@@ -10,17 +10,22 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const plantCode = searchParams.get('plantCode');
+    const activeOnly = searchParams.get('active') || request.url.includes('/active');
     
     let query = supabase
       .from('storage_locations')
-      .select('id, sloc_code, sloc_name, location_type, plant_code')
-      .eq('is_active', true);
+      .select('sloc_code, sloc_name, plant_code')
+    
+    // Filter by active status
+    if (activeOnly) {
+      query = query.eq('is_active', true);
+    }
     
     if (plantCode) {
       query = query.eq('plant_code', plantCode);
     }
     
-    const { data, error } = await query.order('sloc_code');
+    const { data, error } = await query.order('sloc_name');
 
     if (error) throw error;
 

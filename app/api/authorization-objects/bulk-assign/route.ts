@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     // Bulk insert role authorization assignments
     const assignments = objectIds.map((objectId: string) => ({
-      role_id: roleId,
+      role_id: actualRoleId,
       auth_object_id: objectId,
       field_values: fieldValues,
       is_active: true

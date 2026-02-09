@@ -57,56 +57,22 @@ export class DocumentNumberingService {
 
     const currentYear = new Date().getFullYear().toString()
     const subtype = customSubtype || config.subtype
-    const digits = config.digits
 
-    try {
-      // Try to use proper number range system first
-      const { data, error } = await this.supabase.rpc('get_next_number_by_group', {
-        p_company_code: companyCode,
-        p_document_type: config.documentType,
-        p_number_range_group: subtype,
-        p_fiscal_year: currentYear
-      })
-
-      if (!error && data) {
-        return data
-      }
-    } catch (error) {
-      console.warn('RPC function not available, using fallback numbering')
+    const { data, error } = await this.supabase.rpc('get_next_document_number', {
+      p_company_code: companyCode,
+      p_document_type: config.documentType,
+      p_number_range_group: subtype,
+      p_fiscal_year: currentYear
+    })
+    
+    if (error || !data) {
+      throw new Error(`Failed to generate document number: ${error?.message || 'No data returned'}`)
     }
 
-    // Fallback: Generate sequential number
-    const sequentialNumber = await this.generateSequentialNumber(
-      config.documentType, 
-      subtype, 
-      currentYear, 
-      tenantId, 
-      digits
-    )
-
-    return `${config.documentType}-${subtype}-${currentYear}-${sequentialNumber}`
+    return data
   }
 
-  /**
-   * Generate sequential number as fallback
-   */
-  private async generateSequentialNumber(
-    documentType: string,
-    subtype: string,
-    year: string,
-    tenantId: string,
-    digits: number
-  ): Promise<string> {
-    // Get the highest existing number for this type/subtype/year/tenant
-    const prefix = `${documentType}-${subtype}-${year}-`
-    
-    // This is a simplified approach - in production, you'd want proper number range tables
-    const timestamp = Date.now().toString().slice(-6)
-    const random = Math.floor(Math.random() * 100).toString().padStart(2, '0')
-    const combined = timestamp + random
-    
-    return combined.slice(-digits).padStart(digits, '0')
-  }
+
 
   /**
    * Get all available document types

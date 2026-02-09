@@ -21,11 +21,11 @@ export abstract class BaseRepository<T extends keyof Database['public']['Tables'
     const { data, error } = await this.supabase
       .from(this.tableName)
       .select('*')
-      .eq('id', id)
+      .eq('id' as any, id)
       .single()
 
     if (error) throw error
-    return data
+    return data as any
   }
 
   async findAll(): Promise<Database['public']['Tables'][T]['Row'][]> {
@@ -34,37 +34,37 @@ export abstract class BaseRepository<T extends keyof Database['public']['Tables'
       .select('*')
 
     if (error) throw error
-    return data || []
+    return (data || []) as any
   }
 
   async create(data: Database['public']['Tables'][T]['Insert']): Promise<Database['public']['Tables'][T]['Row']> {
     const { data: result, error } = await this.supabase
       .from(this.tableName)
-      .insert(data)
+      .insert(data as any)
       .select()
       .single()
 
     if (error) throw error
-    return result
+    return result as any
   }
 
   async update(id: string, data: Database['public']['Tables'][T]['Update']): Promise<Database['public']['Tables'][T]['Row']> {
     const { data: result, error } = await this.supabase
       .from(this.tableName)
-      .update(data)
-      .eq('id', id)
+      .update(data as any)
+      .eq('id' as any, id)
       .select()
       .single()
 
     if (error) throw error
-    return result
+    return result as any
   }
 
   async delete(id: string): Promise<void> {
     const { error } = await this.supabase
       .from(this.tableName)
       .delete()
-      .eq('id', id)
+      .eq('id' as any, id)
 
     if (error) throw error
   }

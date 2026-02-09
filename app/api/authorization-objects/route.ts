@@ -20,7 +20,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
         .from('authorization_objects')
         .select(`
           *,
-          fields:authorization_fields(*)
+          fields:authorization_object_fields(*)
         `)
         .eq('tenant_id', tenantId),
       supabase

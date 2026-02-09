@@ -15,11 +15,8 @@ interface AuthObject {
 
 interface AuthField {
   id: string
-  field_name: string
-  field_description: string
-  field_values: string[]
+  field_code: string
   is_required: boolean
-  is_organizational?: boolean
 }
 
 interface RoleAuth {
@@ -54,6 +51,7 @@ export default function AuthorizationObjects() {
   const [selectedModuleObjects, setSelectedModuleObjects] = useState<Record<string, Set<string>>>({})
   const [fieldSelections, setFieldSelections] = useState<Record<string, Record<string, string[]>>>({})
   const [isMobile, setIsMobile] = useState(false)
+  const [availableFieldNames, setAvailableFieldNames] = useState<Array<{value: string, label: string, category: string}>>([])
   
   // Form states
   const [showObjectForm, setShowObjectForm] = useState(false)
@@ -70,15 +68,13 @@ export default function AuthorizationObjects() {
   })
 
   const [fieldForm, setFieldForm] = useState({
-    field_name: '',
-    field_description: '',
-    field_values: [''],
-    is_required: true,
-    is_organizational: false
+    field_code: '',
+    is_required: true
   })
 
   useEffect(() => {
     loadData()
+    loadAvailableFieldNames()
   }, [])
 
   useEffect(() => {
@@ -87,6 +83,52 @@ export default function AuthorizationObjects() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  const loadAvailableFieldNames = async () => {
+    try {
+      // Static activity field
+      const fields = [
+        { value: 'ACTVT', label: 'ACTVT - Activity', category: 'Activity' }
+      ]
+      
+      // Fetch organizational fields from their respective tables
+      const orgFields = [
+        { field: 'COMP_CODE', table: 'company_codes', col: 'company_code', name: 'Company Code' },
+        { field: 'PLANT', table: 'plants', col: 'plant_code', name: 'Plant' },
+        { field: 'DEPT', table: 'departments', col: 'dept_code', name: 'Department' },
+        { field: 'STORAGE_LOC', table: 'storage_locations', col: 'sloc_code', name: 'Storage Location' },
+        { field: 'COST_CENTER', table: 'cost_centers', col: 'cost_center_code', name: 'Cost Center' },
+        { field: 'PURCH_ORG', table: 'purchasing_organizations', col: 'porg_code', name: 'Purchasing Organization' }
+      ]
+      
+      for (const orgField of orgFields) {
+        fields.push({
+          value: orgField.field,
+          label: `${orgField.field} - ${orgField.name}`,
+          category: 'Organizational'
+        })
+      }
+      
+      // Project types from projects table
+      fields.push(
+        { value: 'PROJ_TYPE', label: 'PROJ_TYPE - Project Type', category: 'Organizational' },
+        { value: 'MR_TYPE', label: 'MR_TYPE - Material Request Type', category: 'Organizational' },
+        { value: 'PR_TYPE', label: 'PR_TYPE - Purchase Requisition Type', category: 'Organizational' },
+        { value: 'MAT_TYPE', label: 'MAT_TYPE - Material Type', category: 'Organizational' }
+      )
+      
+      // Static business fields
+      fields.push(
+        { value: 'PO_TYPE', label: 'PO_TYPE - Purchase Order Type', category: 'Business' },
+        { value: 'PO_VALUE', label: 'PO_VALUE - PO Value Limit', category: 'Business' },
+        { value: 'GL_ACCT', label: 'GL_ACCT - GL Account Range', category: 'Business' }
+      )
+      
+      setAvailableFieldNames(fields)
+    } catch (error) {
+      console.error('Failed to load field names:', error)
+    }
+  }
 
   const loadData = async () => {
     try {
@@ -126,16 +168,16 @@ export default function AuthorizationObjects() {
   const getFieldDescription = (fieldName: string): string => {
     const descriptions: Record<string, string> = {
       'ACTVT': 'Activity',
-      'COMP_CODE': 'Company Code', 
+      'COMP_CODE': 'Company Code',
       'PLANT': 'Plant',
+      'STORAGE_LOC': 'Storage Location',
       'DEPT': 'Department',
-      'BUKRS': 'Company Code',
-      'EKORG': 'Purchasing Organization',
-      'WERKS': 'Plant',
-      'LGORT': 'Storage Location',
-      'KOSTL': 'Cost Center',
+      'COST_CENTER': 'Cost Center',
+      'PURCH_ORG': 'Purchasing Organization',
       'PROJ_TYPE': 'Project Type',
+      'MR_TYPE': 'Material Request Type',
       'PO_TYPE': 'Purchase Order Type',
+      'PR_TYPE': 'Purchase Requisition Type',
       'MAT_TYPE': 'Material Type',
       'PO_VALUE': 'PO Value Limit',
       'GL_ACCT': 'GL Account Range'
@@ -146,18 +188,21 @@ export default function AuthorizationObjects() {
   const getDefaultValues = (fieldName: string): string[] => {
     const defaults: Record<string, string[]> = {
       'ACTVT': ['01', '02', '03', '05', '06'],
-      'BUKRS': ['C001', 'C002', 'C003', 'C004'],
-      'EKORG': ['PO01', 'PO02', 'PO03', 'PO04'],
-      'WERKS': ['P001', 'P002', 'P003', 'P004'],
-      'LGORT': ['0001', '0002', '0003', '0004'],
-      'KOSTL': ['CC001', 'CC002', 'CC003', 'CC004'],
-      'PROJ_TYPE': ['commercial', 'residential', 'infrastructure', 'industrial'],
-      'PO_TYPE': ['standard', 'blanket', 'contract', 'emergency'],
-      'MAT_TYPE': ['FERT', 'ROH', 'HALB', 'ERSA'],
-      'PO_VALUE': ['50000', '100000', '500000', '1000000'],
-      'GL_ACCT': ['100000-199999', '200000-299999', '400000-499999', '600000-699999']
+      'COMP_CODE': ['*'],
+      'PLANT': ['*'],
+      'STORAGE_LOC': ['*'],
+      'DEPT': ['*'],
+      'COST_CENTER': ['*'],
+      'PURCH_ORG': ['*'],
+      'PROJ_TYPE': ['*'],
+      'MR_TYPE': ['*'],
+      'PO_TYPE': ['*'],
+      'PR_TYPE': ['*'],
+      'MAT_TYPE': ['*'],
+      'PO_VALUE': ['*'],
+      'GL_ACCT': ['*']
     }
-    return defaults[fieldName] || ['']
+    return defaults[fieldName] || ['*']
   }
 
   const handleCreateObject = async () => {
@@ -249,10 +294,16 @@ export default function AuthorizationObjects() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           auth_object_id: selectedObjectId,
-          ...fieldForm,
-          field_values: fieldForm.field_values.filter(v => v.trim())
+          ...fieldForm
         })
       })
+      
+      if (!response.ok) {
+        const text = await response.text()
+        console.error('API Error:', text)
+        alert(`Failed to create field: ${response.status} ${response.statusText}`)
+        return
+      }
       
       const result = await response.json()
       if (result.success) {
@@ -265,18 +316,15 @@ export default function AuthorizationObjects() {
       }
     } catch (error) {
       console.error('Failed to create field:', error)
-      alert('Failed to create field')
+      alert('Failed to create field. Please restart the dev server.')
     }
   }
 
   const handleEditField = (field: AuthField) => {
     setEditingField(field)
     setFieldForm({
-      field_name: field.field_name,
-      field_description: field.field_description,
-      field_values: field.field_values,
-      is_required: field.is_required,
-      is_organizational: field.is_organizational || false
+      field_code: field.field_code,
+      is_required: field.is_required
     })
     setShowFieldForm(true)
   }
@@ -290,8 +338,7 @@ export default function AuthorizationObjects() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingField.id,
-          ...fieldForm,
-          field_values: fieldForm.field_values.filter(v => v.trim())
+          ...fieldForm
         })
       })
       
@@ -311,7 +358,7 @@ export default function AuthorizationObjects() {
   }
 
   const handleDeleteField = async (field: AuthField) => {
-    if (!confirm(`Delete field ${field.field_name}?`)) return
+    if (!confirm(`Delete field ${field.field_code}?`)) return
     
     try {
       const response = await fetch('/api/authorization-objects/fields', {
@@ -365,6 +412,8 @@ export default function AuthorizationObjects() {
   const [availableModulesForRole, setAvailableModulesForRole] = useState<string[]>([])
   const [selectedModulesForAssignment, setSelectedModulesForAssignment] = useState<Set<string>>(new Set())
   const [showModuleAssignmentModal, setShowModuleAssignmentModal] = useState(false)
+  const [assignmentStep, setAssignmentStep] = useState<1 | 2>(1)
+  const [selectedObjectsForAssignment, setSelectedObjectsForAssignment] = useState<Set<string>>(new Set())
 
   // Get unassigned modules for a role
   const getUnassignedModules = (roleName: string): string[] => {
@@ -407,49 +456,85 @@ export default function AuthorizationObjects() {
     setSelectedModulesForAssignment(new Set(availableModulesForRole))
   }
 
-  // Assign selected modules to role
-  const assignSelectedModules = async () => {
+  // Toggle object selection
+  const toggleObjectSelection = (objectId: string) => {
+    const newSelected = new Set(selectedObjectsForAssignment)
+    if (newSelected.has(objectId)) {
+      newSelected.delete(objectId)
+    } else {
+      newSelected.add(objectId)
+    }
+    setSelectedObjectsForAssignment(newSelected)
+  }
+
+  // Select all objects in a module
+  const selectAllInModule = (module: string) => {
+    const newSelected = new Set(selectedObjectsForAssignment)
+    const moduleObjects = objectsByModule[module] || []
+    moduleObjects.forEach(obj => newSelected.add(obj.id))
+    setSelectedObjectsForAssignment(newSelected)
+  }
+
+  // Deselect all objects in a module
+  const deselectAllInModule = (module: string) => {
+    const newSelected = new Set(selectedObjectsForAssignment)
+    const moduleObjects = objectsByModule[module] || []
+    moduleObjects.forEach(obj => newSelected.delete(obj.id))
+    setSelectedObjectsForAssignment(newSelected)
+  }
+
+  // Proceed to object selection (Step 2)
+  const proceedToObjectSelection = () => {
     if (selectedModulesForAssignment.size === 0) return
+    
+    // Pre-select all objects from selected modules
+    const allObjectIds = new Set<string>()
+    selectedModulesForAssignment.forEach(module => {
+      const moduleObjects = objectsByModule[module] || []
+      moduleObjects.forEach(obj => allObjectIds.add(obj.id))
+    })
+    setSelectedObjectsForAssignment(allObjectIds)
+    setAssignmentStep(2)
+  }
+
+  // Assign selected objects to role
+  const assignSelectedObjects = async () => {
+    if (selectedObjectsForAssignment.size === 0) return
 
     try {
       setLoading(true)
-      let successCount = 0
       
-      for (const module of selectedModulesForAssignment) {
-        const moduleObjects = objectsByModule[module] || []
-        const objectIds = moduleObjects.map(obj => obj.id)
-        
-        const response = await fetch('/api/authorization-objects/bulk-assign', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            roleId: selectedRoleForAssignment,
-            objectIds: objectIds,
-            template: 'full_access',
-            cascadeLevel: 'module',
-            module: module
-          })
+      // Get role ID from role name
+      const role = roles.find(r => r.name === selectedRoleForAssignment)
+      if (!role) {
+        alert('Role not found')
+        return
+      }
+      
+      const response = await fetch('/api/authorization-objects/bulk-assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roleId: role.id,
+          objectIds: Array.from(selectedObjectsForAssignment),
+          template: 'full_access',
+          cascadeLevel: 'object'
         })
-        
-        if (response.ok) {
-          successCount++
-        }
-      }
+      })
       
-      setShowModuleAssignmentModal(false)
-      setSelectedModulesForAssignment(new Set())
-      
-      // Show success message
-      if (successCount === selectedModulesForAssignment.size) {
-        alert(`Successfully assigned ${successCount} modules to ${selectedRoleForAssignment} with full access permissions.`)
+      if (response.ok) {
+        setShowModuleAssignmentModal(false)
+        setAssignmentStep(1)
+        setSelectedModulesForAssignment(new Set())
+        setSelectedObjectsForAssignment(new Set())
+        alert(`Successfully assigned ${selectedObjectsForAssignment.size} objects to ${selectedRoleForAssignment}.`)
+        loadData()
       } else {
-        alert(`Assigned ${successCount} of ${selectedModulesForAssignment.size} modules. Some assignments may have failed.`)
+        alert('Failed to assign objects. Please try again.')
       }
-      
-      loadData()
     } catch (error) {
-      console.error('Failed to assign modules:', error)
-      alert('Failed to assign modules. Please try again.')
+      console.error('Failed to assign objects:', error)
+      alert('Failed to assign objects. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -805,7 +890,7 @@ export default function AuthorizationObjects() {
     }
   }
   const resetFieldForm = () => {
-    setFieldForm({ field_name: '', field_description: '', field_values: [''], is_required: true, is_organizational: false })
+    setFieldForm({ field_code: '', is_required: true })
   }
 
   const resetObjectForm = () => {
@@ -1147,31 +1232,15 @@ export default function AuthorizationObjects() {
                                             <div className="flex items-center space-x-2 mb-2">
                                               <Icons.Tag className="w-4 h-4 text-purple-600" />
                                               <span className="font-mono text-sm font-semibold text-purple-700 bg-purple-100 px-2 py-1 rounded">
-                                                {field.field_name}
+                                                {field.field_code}
                                               </span>
                                               {field.is_required && (
                                                 <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-medium">
                                                   Required
                                                 </span>
                                               )}
-                                              {field.is_organizational && (
-                                                <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">
-                                                  Organizational
-                                                </span>
-                                              )}
                                             </div>
-                                            <p className="text-sm text-gray-600 mb-2">{field.field_description}</p>
-                                            <div className="flex flex-wrap gap-1">
-                                              <span className="text-xs text-gray-500 mr-2">Values:</span>
-                                              {field.field_values?.map((value, idx) => (
-                                                <span key={idx} className={`text-xs px-2 py-1 rounded font-medium ${
-                                                  value === '*' ? 'bg-red-100 text-red-800' : 
-                                                  field.is_organizational ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                                                }`}>
-                                                  {value}
-                                                </span>
-                                              ))}
-                                            </div>
+                                            <p className="text-sm text-gray-600 mb-2">{getFieldDescription(field.field_code)}</p>
                                           </div>
                                           <div className="flex items-center space-x-1">
                                             <button
@@ -1653,88 +1722,193 @@ export default function AuthorizationObjects() {
           </div>
         )}
 
-        {/* Module Assignment Modal */}
+        {/* Module Assignment Modal - Two-Step Wizard */}
         {showModuleAssignmentModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+            <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Assign Modules to {selectedRoleForAssignment}</h3>
-                <button onClick={() => setShowModuleAssignmentModal(false)}>
+                <h3 className="text-lg font-semibold">
+                  {assignmentStep === 1 ? 'Step 1: Select Modules' : 'Step 2: Select Objects'} - {selectedRoleForAssignment}
+                </h3>
+                <button onClick={() => {
+                  setShowModuleAssignmentModal(false)
+                  setAssignmentStep(1)
+                  setSelectedModulesForAssignment(new Set())
+                  setSelectedObjectsForAssignment(new Set())
+                }}>
                   <X className="h-5 w-5" />
                 </button>
               </div>
               
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-600">
-                    Select modules to assign to this role. Each module will be assigned with full access.
-                  </p>
-                  <button
-                    onClick={selectAllAvailableModules}
-                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-                  >
-                    Select All ({availableModulesForRole.length})
-                  </button>
-                </div>
-                
-                <div className="max-h-60 overflow-y-auto border rounded-lg">
-                  {availableModulesForRole.length > 0 ? (
-                    <div className="divide-y">
-                      {availableModulesForRole.map(module => {
-                        const moduleObjects = objectsByModule[module] || []
-                        return (
-                          <label key={module} className="flex items-center p-3 hover:bg-gray-50 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={selectedModulesForAssignment.has(module)}
-                              onChange={() => toggleModuleForAssignment(module)}
-                              className="w-4 h-4 text-blue-600 mr-3"
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2">
-                                <span className="font-medium capitalize">{module}</span>
-                                <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
-                                  {moduleObjects.length} objects
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-500">
-                                {moduleObjects.map(obj => obj.object_name).slice(0, 3).join(', ')}
-                                {moduleObjects.length > 3 && ` +${moduleObjects.length - 3} more`}
-                              </p>
-                            </div>
-                          </label>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <div className="p-8 text-center text-gray-500">
-                      <Folder className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                      <p>All modules are already assigned to this role</p>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <span className="text-sm text-gray-600">
-                    {selectedModulesForAssignment.size} modules selected
-                  </span>
-                  <div className="flex space-x-3">
+              {/* Step 1: Module Selection */}
+              {assignmentStep === 1 && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-gray-600">
+                      Select modules to assign to this role.
+                    </p>
                     <button
-                      onClick={() => setShowModuleAssignmentModal(false)}
-                      className="px-4 py-2 text-gray-600 border rounded-md hover:bg-gray-50"
+                      onClick={selectAllAvailableModules}
+                      className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
                     >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={assignSelectedModules}
-                      disabled={selectedModulesForAssignment.size === 0}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      Assign {selectedModulesForAssignment.size} Modules
+                      Select All ({availableModulesForRole.length})
                     </button>
                   </div>
+                  
+                  <div className="max-h-60 overflow-y-auto border rounded-lg">
+                    {availableModulesForRole.length > 0 ? (
+                      <div className="divide-y">
+                        {availableModulesForRole.map(module => {
+                          const moduleObjects = objectsByModule[module] || []
+                          return (
+                            <label key={module} className="flex items-center p-3 hover:bg-gray-50 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedModulesForAssignment.has(module)}
+                                onChange={() => toggleModuleForAssignment(module)}
+                                className="w-4 h-4 text-blue-600 mr-3"
+                              />
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium capitalize">{module}</span>
+                                  <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                                    {moduleObjects.length} objects
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-500">
+                                  {moduleObjects.map(obj => obj.object_name).slice(0, 3).join(', ')}
+                                  {moduleObjects.length > 3 && ` +${moduleObjects.length - 3} more`}
+                                </p>
+                              </div>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        <Folder className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                        <p>All modules are already assigned to this role</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <span className="text-sm text-gray-600">
+                      {selectedModulesForAssignment.size} modules selected
+                    </span>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => {
+                          setShowModuleAssignmentModal(false)
+                          setSelectedModulesForAssignment(new Set())
+                        }}
+                        className="px-4 py-2 text-gray-600 border rounded-md hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={proceedToObjectSelection}
+                        disabled={selectedModulesForAssignment.size === 0}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
+                      >
+                        Next: Select Objects →
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Step 2: Object Selection */}
+              {assignmentStep === 2 && (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>Selected Modules:</strong> {Array.from(selectedModulesForAssignment).join(', ')}
+                    </p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      {selectedObjectsForAssignment.size} of {Array.from(selectedModulesForAssignment).reduce((sum, m) => sum + (objectsByModule[m]?.length || 0), 0)} objects selected
+                    </p>
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto border rounded-lg">
+                    {Array.from(selectedModulesForAssignment).map(module => {
+                      const moduleObjects = objectsByModule[module] || []
+                      
+                      return (
+                        <div key={module} className="border-b last:border-b-0">
+                          <div className="bg-gray-50 p-3 flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Folder className="w-4 h-4 text-blue-600" />
+                              <span className="font-medium capitalize">{module} Module</span>
+                              <span className="text-xs text-gray-600">
+                                ({moduleObjects.filter(obj => selectedObjectsForAssignment.has(obj.id)).length}/{moduleObjects.length})
+                              </span>
+                            </div>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => selectAllInModule(module)}
+                                className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
+                              >
+                                Select All
+                              </button>
+                              <button
+                                onClick={() => deselectAllInModule(module)}
+                                className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200"
+                              >
+                                Deselect All
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="divide-y">
+                            {moduleObjects.map(obj => (
+                              <label key={obj.id} className="flex items-start p-3 hover:bg-gray-50 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedObjectsForAssignment.has(obj.id)}
+                                  onChange={() => toggleObjectSelection(obj.id)}
+                                  className="w-4 h-4 text-blue-600 mt-1 mr-3"
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2">
+                                    <Shield className="w-4 h-4 text-green-600" />
+                                    <span className="font-mono text-sm font-semibold">{obj.object_name}</span>
+                                  </div>
+                                  <p className="text-sm text-gray-600 mt-1">{obj.description}</p>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <button
+                      onClick={() => {
+                        setAssignmentStep(1)
+                        setSelectedObjectsForAssignment(new Set())
+                      }}
+                      className="px-4 py-2 text-gray-600 border rounded-md hover:bg-gray-50 flex items-center"
+                    >
+                      ← Back to Modules
+                    </button>
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm text-gray-600">
+                        {selectedObjectsForAssignment.size} objects selected
+                      </span>
+                      <button
+                        onClick={assignSelectedObjects}
+                        disabled={selectedObjectsForAssignment.size === 0}
+                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        Assign {selectedObjectsForAssignment.size} Objects
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1745,109 +1919,63 @@ export default function AuthorizationObjects() {
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">{editingField ? 'Edit Authorization Field' : 'Add Authorization Field'}</h3>
-                <button onClick={() => setShowFieldForm(false)}>
+                <button onClick={() => {
+                  setShowFieldForm(false)
+                  setEditingField(null)
+                  resetFieldForm()
+                }}>
                   <X className="h-5 w-5" />
                 </button>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Field Name</label>
+                  <label className="block text-sm font-medium mb-1">Field Type</label>
                   <select
-                    value={fieldForm.field_name}
-                    onChange={(e) => {
-                      const selectedField = e.target.value
-                      const isOrg = ['BUKRS', 'EKORG', 'WERKS', 'LGORT', 'KOSTL'].includes(selectedField)
-                      setFieldForm({
-                        ...fieldForm, 
-                        field_name: selectedField,
-                        is_organizational: isOrg,
-                        field_description: getFieldDescription(selectedField),
-                        field_values: getDefaultValues(selectedField)
-                      })
-                    }}
+                    value={fieldForm.field_code}
+                    onChange={(e) => setFieldForm({ ...fieldForm, field_code: e.target.value })}
                     className="w-full px-3 py-2 border rounded-md"
+                    disabled={!!editingField}
                   >
                     <option value="">Select Field</option>
-                    <optgroup label="Activity Fields">
-                      <option value="ACTVT">ACTVT - Activity</option>
-                    </optgroup>
-                    <optgroup label="Organizational Fields">
-                      <option value="BUKRS">BUKRS - Company Code</option>
-                      <option value="EKORG">EKORG - Purchasing Organization</option>
-                      <option value="WERKS">WERKS - Plant</option>
-                      <option value="LGORT">LGORT - Storage Location</option>
-                      <option value="KOSTL">KOSTL - Cost Center</option>
-                    </optgroup>
-                    <optgroup label="Business Fields">
-                      <option value="PROJ_TYPE">PROJ_TYPE - Project Type</option>
-                      <option value="PO_TYPE">PO_TYPE - Purchase Order Type</option>
-                      <option value="MAT_TYPE">MAT_TYPE - Material Type</option>
-                      <option value="PO_VALUE">PO_VALUE - PO Value Limit</option>
-                      <option value="GL_ACCT">GL_ACCT - GL Account Range</option>
-                    </optgroup>
+                    {['Activity', 'Organizational', 'Business'].map(category => {
+                      const categoryFields = availableFieldNames.filter(f => f.category === category)
+                      if (categoryFields.length === 0) return null
+                      return (
+                        <optgroup key={category} label={`${category} Fields`}>
+                          {categoryFields.map(field => (
+                            <option key={field.value} value={field.value}>{field.label}</option>
+                          ))}
+                        </optgroup>
+                      )
+                    })}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <input
-                    type="text"
-                    value={fieldForm.field_description}
-                    onChange={(e) => setFieldForm({...fieldForm, field_description: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Field Values</label>
-                  {fieldForm.field_values.map((value, idx) => (
-                    <div key={idx} className="flex space-x-2 mb-2">
-                      <input
-                        type="text"
-                        value={value}
-                        onChange={(e) => {
-                          const newValues = [...fieldForm.field_values]
-                          newValues[idx] = e.target.value
-                          setFieldForm({...fieldForm, field_values: newValues})
-                        }}
-                        className="flex-1 px-3 py-2 border rounded-md"
-                        placeholder="01, 02, 03..."
-                      />
-                      {idx > 0 && (
-                        <button
-                          onClick={() => {
-                            const newValues = fieldForm.field_values.filter((_, i) => i !== idx)
-                            setFieldForm({...fieldForm, field_values: newValues})
-                          }}
-                          className="text-red-600"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => setFieldForm({...fieldForm, field_values: [...fieldForm.field_values, '']})}
-                    className="text-blue-600 text-sm"
-                  >
-                    + Add Value
-                  </button>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={fieldForm.is_required}
-                      onChange={(e) => setFieldForm({...fieldForm, is_required: e.target.checked})}
-                      className="mr-2"
-                    />
-                    <label className="text-sm">Required Field</label>
-                  </div>
-                  {fieldForm.is_organizational && (
-                    <div className="flex items-center">
-                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                        Organizational Field
-                      </span>
-                    </div>
+                  {fieldForm.field_code && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {fieldForm.field_code === 'ACTVT' && '📊 Static values: Activity codes'}
+                      {fieldForm.field_code === 'COMP_CODE' && '🏢 From: company_codes table'}
+                      {fieldForm.field_code === 'PLANT' && '🏭 From: plants table'}
+                      {fieldForm.field_code === 'STORAGE_LOC' && '📦 From: storage_locations table'}
+                      {fieldForm.field_code === 'DEPT' && '👥 From: departments table'}
+                      {fieldForm.field_code === 'COST_CENTER' && '💰 From: cost_centers table'}
+                      {fieldForm.field_code === 'PURCH_ORG' && '🛒 From: purchasing_organizations table'}
+                      {fieldForm.field_code === 'PROJ_TYPE' && '📋 From: projects.project_type (distinct values)'}
+                      {fieldForm.field_code === 'MR_TYPE' && '📝 From: material_requests.mr_type (distinct values)'}
+                      {fieldForm.field_code === 'PR_TYPE' && '📄 From: purchase_requisitions.pr_type (distinct values)'}
+                      {fieldForm.field_code === 'MAT_TYPE' && '🔧 From: materials.material_type (distinct values)'}
+                      {fieldForm.field_code === 'PO_TYPE' && '📑 Static values: Purchase Order types'}
+                      {fieldForm.field_code === 'PO_VALUE' && '💵 Custom: Value limits'}
+                      {fieldForm.field_code === 'GL_ACCT' && '📊 Custom: GL account ranges'}
+                    </p>
                   )}
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={fieldForm.is_required}
+                    onChange={(e) => setFieldForm({...fieldForm, is_required: e.target.checked})}
+                    className="mr-2"
+                  />
+                  <label className="text-sm">Required Field</label>
                 </div>
                 <div className="flex justify-end space-x-3">
                   <button

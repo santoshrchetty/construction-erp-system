@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase-client'
 
 export default function EmployeeDashboard() {
   const [user, setUser] = useState<any>(null)
@@ -19,29 +18,17 @@ export default function EmployeeDashboard() {
 
   useEffect(() => {
     const getUser = async () => {
-      // Wait a bit for Supabase session hydration
       await new Promise((r) => setTimeout(r, 300))
 
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
+      const response = await fetch('/api/auth/user')
+      if (!response.ok) {
         router.push('/login')
         return
       }
 
-      setUser(user)
-      
-      // Get user role
-      const { data: userData } = await supabase
-        .from('users')
-        .select('*, roles(name)')
-        .eq('id', user.id)
-        .single() as { data: { roles: { name: string } } | null }
-      
-      if (userData?.roles?.name) {
-        setUserRole(userData.roles.name)
-      }
-      
+      const { user: userData, role } = await response.json()
+      setUser(userData)
+      setUserRole(role)
       setLoading(false)
     }
 
@@ -50,15 +37,12 @@ export default function EmployeeDashboard() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut()
-      // Clear all storage
+      await fetch('/api/auth/logout', { method: 'POST' })
       localStorage.clear()
       sessionStorage.clear()
-      // Force page reload to clear any cached state
       window.location.href = '/login'
     } catch (error) {
       console.error('Logout error:', error)
-      // Force redirect even if logout fails
       window.location.href = '/login'
     }
   }

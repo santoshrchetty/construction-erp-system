@@ -7,7 +7,7 @@ import RoleManagement from './RoleManagement'
 import UserRoleAssignment from './UserRoleAssignment'
 import AuthorizationObjects from './AuthorizationObjects'
 import ChartOfAccounts from './ChartOfAccounts'
-import ERPConfigurationTile from './ERPConfigurationTile'
+import { MaterialRequestList } from '@/components/features/materials/MaterialRequestList'
 
 interface ConstructionTile {
   id: string
@@ -127,6 +127,8 @@ export default function ConstructionTiles() {
         return <AuthorizationObjects />
       case 'Chart of Accounts':
         return <ChartOfAccounts />
+      case 'Material Request List':
+        return <MaterialRequestList />
       case 'ERP Configuration':
         return <ERPConfigurationTile />
       default:

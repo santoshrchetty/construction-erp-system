@@ -37,6 +37,9 @@ export default function Navigation() {
               <Link href="/procurement" style={{color: '#374151', textDecoration: 'none', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: '500'}}>
                 Procurement
               </Link>
+              <Link href="/materials" style={{color: '#374151', textDecoration: 'none', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: '500'}}>
+                Materials
+              </Link>
               <Link href="/timesheets" style={{color: '#374151', textDecoration: 'none', padding: '0.5rem 0.75rem', fontSize: '0.875rem', fontWeight: '500'}}>
                 Timesheets
               </Link>
@@ -76,6 +79,9 @@ export default function Navigation() {
             </Link>
             <Link href="/procurement" style={{display: 'block', padding: '0.75rem', color: '#374151', textDecoration: 'none', fontSize: '1rem', fontWeight: '500'}}>
               Procurement
+            </Link>
+            <Link href="/materials" style={{display: 'block', padding: '0.75rem', color: '#374151', textDecoration: 'none', fontSize: '1rem', fontWeight: '500'}}>
+              Materials
             </Link>
             <Link href="/timesheets" style={{display: 'block', padding: '0.75rem', color: '#374151', textDecoration: 'none', fontSize: '1rem', fontWeight: '500'}}>
               Timesheets

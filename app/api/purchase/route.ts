@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action') || 'list'
     
-    const authContext = await withAuth(request, Module.MM, Permission.READ)
+    const authContext = await withAuth(request)
     const result = await handlePurchaseOrders(action, request, 'GET')
     
     return NextResponse.json({
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action') || 'create'
     
-    const authContext = await withAuth(request, Module.MM, Permission.CREATE)
+    const authContext = await withAuth(request)
     const result = await handlePurchaseOrders(action, request, 'POST')
     
     return NextResponse.json({
@@ -48,7 +48,7 @@ export async function PUT(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action') || 'update'
     
-    const authContext = await withAuth(request, Module.MM, Permission.MODIFY)
+    const authContext = await withAuth(request)
     const result = await handlePurchaseOrders(action, request, 'PUT')
     
     return NextResponse.json({
@@ -68,7 +68,7 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action') || 'delete-item'
     
-    const authContext = await withAuth(request, Module.MM, Permission.DELETE)
+    const authContext = await withAuth(request)
     const result = await handlePurchaseOrders(action, request, 'DELETE')
     
     return NextResponse.json({

@@ -1,273 +1,102 @@
-# Document Numbering System - Implementation Summary
+# Authorization Fields Migration - Implementation Status
 
-## ✅ COMPLETED
+## ✅ Completed Steps
 
-### 1. **Schema Design**
-- ✅ Codes-only approach (dropped UUID foreign keys from material_requests)
-- ✅ Added activity_code, storage_location columns
-- ✅ Projects table migrated from `code` to `project_code`
-- ✅ Updated current_schema.sql
+### 1. Database Migration SQL Created
+- **File**: `database/migrate_restructure_authorization_fields.sql`
+- **Status**: Ready to run in Supabase
+- **Actions**: Rename table, drop redundant columns, add field_code
 
-### 2. **Documentation**
-- ✅ Created DOCUMENT_NUMBERING_SYSTEM.md (comprehensive reference)
-- ✅ Updated SAP_S4HANA_Field_Mapping_Final.csv with 61+ new mappings
-- ✅ Defined all document types (MR, PR, PO, GR, GI, CI, VI, PD, JE, etc.)
+### 2. API Endpoint Restored
+- **File**: `app/api/authorization-objects/fields/route.ts`
+- **Status**: ✅ Created with correct table name
+- **Changes**: Uses `authorization_object_fields` table with tenant filtering
 
-### 3. **Design Decisions**
-- ✅ Format: [BASE]-[SUBTYPE]-[YY]-[NUMBER]
-- ✅ 6 digits for low volume (MR, PR, PO)
-- ✅ 8 digits for high volume (GR, GI, CI, VI, PD, JE)
-- ✅ Year-dependent numbering for transactional docs
-- ✅ Multi-tenant SaaS compatible (company_code isolation)
-- ✅ SAP integration ready (dual format storage)
+### 3. Main API Route Updated
+- **File**: `app/api/authorization-objects/route.ts`
+- **Status**: ✅ Updated
+- **Changes**: Restored fields join using `authorization_object_fields`
 
-### 4. **Migrations Executed**
-- ✅ migrate_projects_to_project_code.sql (renamed code → project_code)
-- ✅ add_activity_code_to_mr.sql (added activity_code column)
-- ✅ add_storage_location_to_mr.sql (added storage_location column)
-- ✅ migrate_to_codes_only.sql (dropped UUID FKs, added code FKs)
-- ✅ fix_mr_company_code.sql (updated MR range from 1000 → C001)
+### 4. Frontend Interface Updated
+- **File**: `components/features/administration/AuthorizationObjects.tsx`
+- **Status**: ⚠️ Partially updated
+- **Completed**:
+  - ✅ AuthField interface updated to use field_code
+  - ✅ fieldForm state updated
+  - ✅ handleCreateField updated
+  - ✅ handleEditField updated
+  - ✅ handleUpdateField updated
+  - ✅ resetFieldForm updated
 
-### 5. **API Updates**
-- ✅ Fixed projects API to use project_code
-- ✅ Fixed wbsRepository to use project_code
-- ✅ Fixed material-requests API to show project_display
-- ✅ Fixed materials API to support plantCode filtering
-- ✅ Updated UnifiedMaterialRequestComponent to use project_code
+## ⏳ Remaining Frontend Updates
 
----
+### Issues in AuthorizationObjects.tsx
 
-## 🚧 PENDING IMPLEMENTATION
+1. **Line 395**: `handleDeleteField` still references `field.field_name`
+   ```typescript
+   // CURRENT (WRONG):
+   if (!confirm(`Delete field ${field.field_name}?`)) return
+   
+   // SHOULD BE:
+   if (!confirm(`Delete field ${field.field_code}?`)) return
+   ```
 
-### Phase 1: Database Infrastructure (CRITICAL)
+2. **Lines 1200-1250**: Field display in UI still shows `field.field_name`, `field.field_description`, `field.field_values`
+   - Need to fetch field details from `authorization_field_config` using `field.field_code`
+   - Display field_name and help_text from config table
+   - Don't show field_values (those are in role assignments)
 
-#### A. Create New Tables
-```sql
--- Run these in order:
-1. CREATE TABLE document_type_config
-2. CREATE TABLE sap_document_type_mapping
-3. CREATE TABLE number_range_audit_log
-4. ALTER TABLE document_number_ranges (add auto_extend, extend_by, last_used_date)
-```
+3. **Lines 1500-1600**: Field form modal still has old structure
+   - Remove field_description input
+   - Remove field_values inputs
+   - Keep only field_code dropdown and is_required checkbox
 
-#### B. Create RPC Function
-```sql
-CREATE OR REPLACE FUNCTION get_next_number_by_group(
-    p_company_code VARCHAR,
-    p_document_type VARCHAR,
-    p_number_range_group VARCHAR,
-    p_fiscal_year VARCHAR
-) RETURNS VARCHAR
--- With auto-extension logic
-```
+### Solution Approach
 
-#### C. Create Monitoring View
-```sql
-CREATE VIEW v_number_range_health
--- Shows utilization, health status
-```
-
----
-
-### Phase 2: Seed Data (REQUIRED)
-
-#### A. Document Type Configuration
-```sql
--- Insert for company C001:
-- MR subtypes (01-06): Standard, Emergency, Stock Transfer, Subcontractor, Project, Maintenance
-- PR subtypes (01-05): Standard, Capital, Service, Import, Consignment
-- PO subtypes (01-08): Standard, Framework, Subcontract, Emergency, Rental, Service, Consignment, Import
-- GR subtypes (01-06): From PO, Without PO, From Production, Return, Transfer, Initial Stock
-- GI subtypes (01-05): To Cost Center, To Project, To Production, Scrapping, Sampling
-- TR subtypes (01-03): Plant Transfer, Storage Transfer, One-Step
-- CI subtypes (01-05): Standard, Proforma, Tax, Export, Intercompany
-- VI subtypes (01-05): Standard, Import, Service, Intercompany, Subcontractor
-- PD subtypes (01-10): Outgoing, Incoming, Bank, Cash, Check, Credit Card, Wire, Online, NEFT, LC
-- JE subtypes (01-10): Standard, Recurring, Reversing, Accrual, Depreciation, Revaluation, Consolidation, Correction, Opening, Closing
-```
-
-#### B. Number Ranges
-```sql
--- Create ranges for C001:
-- MR-01 to MR-06 (6 digits, 1M capacity)
-- PR-01 to PR-05 (6 digits, 1M capacity)
-- PO-01 to PO-08 (6 digits, 1M capacity)
-- GR-01 to GR-06 (8 digits, 100M capacity)
-- GI-01 to GI-05 (8 digits, 100M capacity)
-- TR-01 to TR-03 (8 digits, 100M capacity)
-- CI-01 to CI-05 (8 digits, 100M capacity)
-- VI-01 to VI-05 (8 digits, 100M capacity)
-- PD-01 to PD-10 (8 digits, 100M capacity)
-- JE-01 to JE-10 (8 digits, 100M capacity)
-```
-
-#### C. SAP Mappings
-```sql
--- Insert SAP document type mappings:
-- MR → BANF
-- GR → MBLNR + BWART (101, 501, etc.)
-- CI → DR
-- VI → KR
-- PD → DZ
-- JE → SA
-```
-
----
-
-### Phase 3: API Layer (REQUIRED)
-
-#### A. Create Number Generation API
+**Option A: Fetch field config separately**
 ```typescript
-// app/api/document-numbers/route.ts
-POST /api/document-numbers
-{
-  "company_code": "C001",
-  "document_type": "MR",
-  "subtype_code": "01",
-  "fiscal_year": "2024"
-}
-→ Returns: "MR-01-24-000123"
+const [fieldConfigs, setFieldConfigs] = useState<Record<string, FieldConfig>>({})
+
+useEffect(() => {
+  // Fetch from /api/authorization-objects/authfield-config
+  // Store in fieldConfigs by field_code
+}, [])
+
+// Then in display:
+const config = fieldConfigs[field.field_code]
+<span>{config?.field_name}</span>
+<p>{config?.help_text}</p>
 ```
 
-#### B. Update Existing APIs
+**Option B: Join in API** (Recommended)
+Update `/api/authorization-objects` route to join with authorization_field_config:
 ```typescript
-// Material Requests
-- Use get_next_number_by_group instead of get_next_number
-- Pass subtype_code from form
-
-// Purchase Orders
-- Implement number generation
-- Add subtype selection
-
-// Material Movements (future)
-- GR, GI, TR APIs with number generation
+.select(`
+  *,
+  fields:authorization_object_fields(
+    *,
+    config:authorization_field_config!field_code(*)
+  )
+`)
 ```
 
----
+## 📋 Next Steps
 
-### Phase 4: UI Components (REQUIRED)
+1. **Run SQL Migration** in Supabase (Step 1 from MIGRATION_STEPS.md)
+2. **Choose approach** for fetching field config (Option A or B)
+3. **Update remaining frontend code**:
+   - Fix handleDeleteField
+   - Update field display to use config
+   - Simplify field form modal
+4. **Test the flow**:
+   - Create authorization object
+   - Add fields to object
+   - Verify fields display correctly
+   - Edit/delete fields
 
-#### A. Document Type Selector
-```typescript
-// components/DocumentTypeSelector.tsx
-- Fetch document types for company
-- Show subtype dropdown
-- Display format preview
-```
+## 🎯 Goal
 
-#### B. Update Forms
-```typescript
-// Material Request Form
-- Add subtype selector (01-06)
-- Remove manual number entry
-- Show generated number after save
-
-// Purchase Order Form
-- Add subtype selector
-- Implement number generation
-```
-
----
-
-### Phase 5: Monitoring & Admin (RECOMMENDED)
-
-#### A. Number Range Dashboard
-```typescript
-// app/admin/number-ranges/page.tsx
-- Show all ranges with utilization
-- Health status indicators
-- Extension history
-- Manual extension option
-```
-
-#### B. Audit Log Viewer
-```typescript
-// app/admin/number-range-audit/page.tsx
-- Show generation history
-- Extension events
-- Exhaustion alerts
-```
-
----
-
-## 📋 IMPLEMENTATION CHECKLIST
-
-### Immediate (This Week)
-- [ ] Run Phase 1 migrations (infrastructure)
-- [ ] Run Phase 2 seed data (C001 configuration)
-- [ ] Update material-requests API to use new function
-- [ ] Test MR creation with new numbering
-
-### Short Term (Next Week)
-- [ ] Implement document-numbers API
-- [ ] Update all document creation forms
-- [ ] Add subtype selectors to UI
-- [ ] Create number range health dashboard
-
-### Medium Term (Next Month)
-- [ ] Implement GR/GI/TR document types
-- [ ] Implement FI document types (CI, VI, PD, JE)
-- [ ] Add SAP integration fields
-- [ ] Create audit log viewer
-
-### Long Term (Future)
-- [ ] Multi-company rollout (C002, C003, etc.)
-- [ ] SAP bidirectional sync
-- [ ] Advanced analytics on document volumes
-- [ ] Automated range extension alerts
-
----
-
-## 🎯 PRIORITY ORDER
-
-1. **CRITICAL** - Phase 1 (Infrastructure) - Without this, nothing works
-2. **CRITICAL** - Phase 2 (Seed Data) - Need at least MR-01 configured
-3. **HIGH** - Phase 3A (Number Generation API) - Core functionality
-4. **HIGH** - Phase 3B (Update MR API) - Make it work end-to-end
-5. **MEDIUM** - Phase 4 (UI Updates) - Better UX
-6. **LOW** - Phase 5 (Monitoring) - Nice to have
-
----
-
-## 🚀 QUICK START (Minimum Viable)
-
-To get Material Requests working with new numbering:
-
-```sql
--- 1. Create tables (5 min)
--- Run infrastructure script
-
--- 2. Insert MR-01 config (1 min)
-INSERT INTO document_type_config VALUES
-('uuid', 'C001', 'MR', '01', 'Standard MR', 'Regular material requests', 
- 'BANF', '01', 'MR-01-{year:02d}-{number:06d}', 6, 'LOW', true, 1, NOW(), NOW());
-
--- 3. Update MR range (1 min)
-UPDATE document_number_ranges 
-SET prefix = 'MR-01-24-',
-    number_range_group = '01',
-    auto_extend = true,
-    extend_by = 1000000
-WHERE company_code = 'C001' AND document_type = 'MR';
-
--- 4. Update API (5 min)
--- Change get_next_number to get_next_number_by_group
-
--- 5. Test (2 min)
--- Create a new MR, should get MR-01-24-000015
-```
-
-**Total Time: ~15 minutes for MVP!**
-
----
-
-## 📞 SUPPORT
-
-- Reference: DOCUMENT_NUMBERING_SYSTEM.md
-- SAP Mapping: SAP_S4HANA_Field_Mapping_Final.csv
-- Questions: Check conversation history for detailed discussions
-
----
-
-**Status**: Ready for Phase 1 implementation
-**Last Updated**: 2024-01-26
+Clean three-table architecture:
+- `authorization_field_config` → Global field definitions
+- `authorization_object_fields` → Which fields each object has
+- `role_authorization_objects` → Field values per role

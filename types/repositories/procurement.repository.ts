@@ -47,7 +47,7 @@ export class VendorRepository extends BaseRepository<'vendors'> {
   async updateRating(id: string, rating: number): Promise<VendorRow> {
     const { data, error } = await this.supabase
       .from('vendors')
-      .update({ rating })
+      .update({ rating } as any)
       .eq('id', id)
       .select()
       .single()

@@ -40,12 +40,12 @@ export const GET = withMediumRiskRecovery(async (request: NextRequest) => {
       const userRole = profile?.roles?.name
       console.log('User role:', userRole)
       
-      // Get user's authorized module codes using RPC function
-      const { data: moduleCodes, error: modulesError } = await supabase
-        .rpc('get_user_modules', { p_user_id: user.id })
+      // Get user's authorized tiles using RPC function (object-level authorization)
+      const { data: authorizedTiles, error: tilesAuthError } = await supabase
+        .rpc('get_user_authorized_tiles', { p_user_id: user.id })
       
-      if (modulesError) {
-        console.error('RPC error:', modulesError)
+      if (tilesAuthError) {
+        console.error('Tiles authorization error:', tilesAuthError)
         return NextResponse.json({ 
           success: false, 
           error: 'Authorization check failed',
@@ -53,27 +53,22 @@ export const GET = withMediumRiskRecovery(async (request: NextRequest) => {
         })
       }
       
-      const authorizedModuleCodes = moduleCodes?.map((row: any) => row.module_code).filter(Boolean) || []
+      const authorizedTileIds = authorizedTiles?.map((row: any) => row.tile_id).filter(Boolean) || []
       
-      console.log('Authorized module codes:', authorizedModuleCodes)
+      console.log('Authorized tile IDs:', authorizedTileIds)
       
-      // Fetch only tiles that match user's authorized modules
-      let tilesQuery = supabase
-        .from('tiles')
-        .select('*')
-        .eq('is_active', true)
-      
-      // Fetch only tiles that match user's authorized modules (sorted by category and sequence)
-      if (authorizedModuleCodes.length > 0) {
-        tilesQuery = tilesQuery
-          .in('module_code', authorizedModuleCodes)
-          .order('tile_category', { ascending: true })
-          .order('sequence_order', { ascending: true })
-      } else {
+      // Fetch only tiles that user has authorization for
+      if (authorizedTileIds.length === 0) {
         return NextResponse.json({ success: true, tiles: [] })
       }
       
-      const { data: tiles, error: tilesError } = await tilesQuery.order('id')
+      const { data: tiles, error: tilesError } = await supabase
+        .from('tiles')
+        .select('*')
+        .eq('is_active', true)
+        .in('id', authorizedTileIds)
+        .order('tile_category', { ascending: true })
+        .order('sequence_order', { ascending: true })
       
       if (tilesError) {
         console.error('Tiles fetch error:', tilesError)

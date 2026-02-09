@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action')
     
-    const authContext = await withAuth(request, Module.COSTING, Permission.VIEW)
+    const authContext = await withAuth(request)
     
     if (action === 'consolidated_stock') {
       const groupCode = searchParams.get('group_code')

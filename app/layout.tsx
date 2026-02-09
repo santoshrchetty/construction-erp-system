@@ -3,7 +3,6 @@ import './globals.css'
 import { AuthProvider } from '@/lib/contexts/AuthContext'
 import { PermissionProvider } from '@/components/shared/permissions/PermissionContext'
 import { TenantProvider } from '@/contexts/TenantProvider'
-import ErrorBoundary from '@/components/ui/feedback/ErrorBoundary'
 
 export const metadata: Metadata = {
   title: 'Construction Management SaaS',
@@ -25,15 +24,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50">
-        <ErrorBoundary>
-          <TenantProvider>
-            <AuthProvider>
-              <PermissionProvider>
-                <main>{children}</main>
-              </PermissionProvider>
-            </AuthProvider>
-          </TenantProvider>
-        </ErrorBoundary>
+        <TenantProvider>
+          <AuthProvider>
+            <PermissionProvider>
+              <main>{children}</main>
+            </PermissionProvider>
+          </AuthProvider>
+        </TenantProvider>
       </body>
     </html>
   )

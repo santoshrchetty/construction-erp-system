@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Request - Omega Build</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 20px auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+        .form-section { padding: 20px; }
+        .form-row { display: flex; gap: 20px; margin-bottom: 15px; }
+        .form-group { flex: 1; }
+        .form-group.full-width { flex: 100%; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #3498db; }
+        .readonly { background: #f8f9fa; color: #666; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-reserved { background: #cce5ff; color: #004085; }
+        .material-items { margin-top: 20px; }
+        .item-row { display: flex; gap: 10px; align-items: end; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        .cost-summary { background: #e8f4fd; padding: 15px; border-radius: 4px; margin-top: 15px; }
+    </style>
+    <script>
+        // Load only active storage locations
+        async function loadActiveStorageLocations() {
+            try {
+                const response = await fetch('/api/storage-locations/active');
+                const locations = await response.json();
+                
+                const select = document.getElementById('storageLocation');
+                select.innerHTML = '<option value="">Select Location</option>';
+                
+                locations.forEach(location => {
+                    const option = document.createElement('option');
+                    option.value = location.storage_location_code;
+                    option.textContent = `${location.storage_location_name} - ${location.description || location.location_type}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load storage locations:', error);
+            }
+        }
+
+
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadActiveStorageLocations();
+            toggleFields();
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Material Request</h1>
+            <p>MR-2024-001 | <span class="status-badge status-pending">Pending Approval</span></p>
+        </div>
+
+        <div class="form-section">
+            <!-- MR Type Selection -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>MR Type *</label>
+                    <select id="mrType" onchange="toggleFields()" required>
+                        <option value="">Select MR Type</option>
+                        <option value="PROJECT" selected>Project Material Request</option>
+                        <option value="MAINTENANCE">Maintenance & Repair</option>
+                        <option value="OFFICE">Office & Administrative</option>
+                        <option value="SAFETY">Safety & PPE</option>
+                        <option value="EQUIPMENT">Equipment & Tools</option>
+                        <option value="GENERAL">General Store Request</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select>
+                        <option value="NORMAL" selected>Normal</option>
+                        <option value="URGENT">Urgent</option>
+                        <option value="EMERGENCY">Emergency</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Basic Information -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>MR Number</label>
+                    <input type="text" value="PMR-2024-001" class="readonly" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Request Date</label>
+                    <input type="date" value="2024-03-15" required>
+                </div>
+                <div class="form-group">
+                    <label>Required Date</label>
+                    <input type="date" value="2024-03-25" required>
+                </div>
+            </div>
+
+            <!-- Project & Location (Project MR Only) -->
+            <div class="form-row" id="projectFields">
+                <div class="form-group">
+                    <label>Project *</label>
+                    <select required>
+                        <option value="">Select Project</option>
+                        <option value="PRJ001" selected>Building A - Foundation</option>
+                        <option value="PRJ002">Building B - Structure</option>
+                        <option value="PRJ003">Site Infrastructure</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Activity/Phase</label>
+                    <select>
+                        <option value="">Select Activity</option>
+                        <option value="ACT001" selected>Concrete Pour - Foundation</option>
+                        <option value="ACT002">Steel Erection</option>
+                        <option value="ACT003">Masonry Work</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Department & Cost Center (Non-Project MR) -->
+            <div class="form-row" id="departmentFields" style="display: none;">
+                <div class="form-group">
+                    <label>Department *</label>
+                    <select>
+                        <option value="">Select Department</option>
+                        <option value="MAINT">Maintenance</option>
+                        <option value="ADMIN">Administration</option>
+                        <option value="HR">Human Resources</option>
+                        <option value="SAFETY">Safety Department</option>
+                        <option value="IT">IT Department</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cost Center</label>
+                    <select>
+                        <option value="">Select Cost Center</option>
+                        <option value="CC001">General Maintenance</option>
+                        <option value="CC002">Office Operations</option>
+                        <option value="CC003">Safety & Training</option>
+                        <option value="CC004">Equipment Maintenance</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Delivery Location *</label>
+                    <select id="storageLocation" required>
+                        <option value="">Select Location</option>
+                        <!-- Options populated by loadActiveStorageLocations() -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Requested By</label>
+                    <input type="text" value="John Smith - Site Manager" class="readonly" readonly>
+                </div>
+            </div>
+
+            <!-- Material Items -->
+            <div class="material-items">
+                <h3>Material Items</h3>
+                
+                <div class="item-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label>Material</label>
+                        <select>
+                            <option value="MAT001" selected>Cement - OPC 42.5 Grade</option>
+                            <option value="MAT002">Steel Rebar - 16mm</option>
+                            <option value="MAT003">Concrete Aggregate</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" value="100" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <input type="text" value="Tons" class="readonly" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Standard Price</label>
+                        <input type="text" value="£50.00" class="readonly" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Stock</label>
+                        <input type="text" value="150 Tons" class="readonly" readonly>
+                    </div>
+                </div>
+
+                <div class="item-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label>Material</label>
+                        <select>
+                            <option value="">Select Material</option>
+                            <option value="MAT002" selected>Steel Rebar - 16mm</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" value="50" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <input type="text" value="Tons" class="readonly" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Standard Price</label>
+                        <input type="text" value="£800.00" class="readonly" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Stock</label>
+                        <input type="text" value="25 Tons" class="readonly" readonly style="color: #e74c3c;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Summary -->
+            <div class="cost-summary">
+                <h4>Cost Summary (Warehouse Prices)</h4>
+                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                    <span>Cement (100 tons × £50.00):</span>
+                    <span>£5,000.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                    <span>Steel Rebar (50 tons × £800.00):</span>
+                    <span>£40,000.00</span>
+                </div>
+                <hr style="margin: 10px 0;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                    <span>Total Warehouse Value:</span>
+                    <span>£45,000.00</span>
+                </div>
+                <small style="color: #666; font-style: italic;">
+                    Note: Transport and handling costs will be added during site transfer
+                </small>
+            </div>
+
+            <!-- Purpose/Remarks -->
+            <div class="form-row" style="margin-top: 20px;">
+                <div class="form-group full-width">
+                    <label>Purpose/Remarks</label>
+                    <textarea rows="3" placeholder="Materials required for foundation concrete pour scheduled for 25th March 2024">Materials required for foundation concrete pour scheduled for 25th March 2024. Cement to be delivered 2 days prior to pour date. Steel rebar requires procurement as current stock insufficient.</textarea>
+                </div>
+            </div>
+
+            <!-- Stock Availability Alert -->
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 15px 0;">
+                <strong>⚠️ Stock Alert:</strong> Steel Rebar quantity (50 tons) exceeds available stock (25 tons). 
+                Shortfall of 25 tons will require procurement.
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="btn-actions">
+                <button class="btn btn-secondary">Save Draft</button>
+                <button class="btn btn-primary">Submit for Approval</button>
+                <button class="btn btn-success">Check Stock & Reserve</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle fields based on MR Type
+        function toggleFields() {
+            const mrType = document.getElementById('mrType').value;
+            const projectFields = document.getElementById('projectFields');
+            const departmentFields = document.getElementById('departmentFields');
+            const mrNumber = document.querySelector('input[value="PMR-2024-001"]');
+            
+            if (mrType === 'PROJECT') {
+                projectFields.style.display = 'flex';
+                departmentFields.style.display = 'none';
+                mrNumber.value = 'PMR-2024-001';
+            } else if (mrType === 'MAINTENANCE') {
+                projectFields.style.display = 'none';
+                departmentFields.style.display = 'flex';
+                mrNumber.value = 'MMR-2024-001';
+            } else if (mrType === 'OFFICE') {
+                projectFields.style.display = 'none';
+                departmentFields.style.display = 'flex';
+                mrNumber.value = 'OMR-2024-001';
+            } else if (mrType === 'SAFETY') {
+                projectFields.style.display = 'none';
+                departmentFields.style.display = 'flex';
+                mrNumber.value = 'SMR-2024-001';
+            } else if (mrType === 'EQUIPMENT') {
+                projectFields.style.display = 'none';
+                departmentFields.style.display = 'flex';
+                mrNumber.value = 'EMR-2024-001';
+            } else if (mrType === 'GENERAL') {
+                projectFields.style.display = 'none';
+                departmentFields.style.display = 'flex';
+                mrNumber.value = 'GMR-2024-001';
+            }
+        }
+
+        // Auto-calculate totals and check stock availability
+        function updateCostSummary() {
+            // Implementation for real-time cost calculation
+        }
+
+        // Stock availability checking
+        function checkStockAvailability() {
+            // Implementation for stock checking
+        }
+
+        // Add new material row
+        function addMaterialRow() {
+            // Implementation for adding new material items
+        }
+    </script>
+</body>
+</html>

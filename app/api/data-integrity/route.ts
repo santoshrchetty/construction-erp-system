@@ -5,7 +5,7 @@ import { dataIntegrityService } from '@/lib/services/dataIntegrityService'
 
 export async function GET(request: NextRequest) {
   try {
-    await withAuth(request, Module.ADMINISTRATION, Permission.VIEW)
+    await withAuth(request)
     
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action') || 'check'
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await withAuth(request, Module.ADMINISTRATION, Permission.EDIT)
+    await withAuth(request)
     
     const { action } = await request.json()
     

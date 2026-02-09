@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { error } = await supabase.from(table).insert([insertData])
+    const { error } = await supabase.from(table as any).insert([insertData])
     if (error) throw error
 
     return NextResponse.json({ success: true })
@@ -160,7 +160,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const { error } = await supabase.from(table).update(updateData).eq('id', body.id)
+    const { error } = await supabase.from(table as any).update(updateData).eq('id' as any, body.id as any)
     if (error) throw error
 
     return NextResponse.json({ success: true })
@@ -193,7 +193,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid entity or ID' }, { status: 400 })
     }
 
-    const { error } = await supabase.from(table).delete().eq('id', id)
+    const { error } = await supabase.from(table as any).delete().eq('id' as any, id as any)
     if (error) throw error
 
     return NextResponse.json({ success: true })

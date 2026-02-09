@@ -12,25 +12,25 @@ const ACTIVITY_CODES = [
 
 const FIELD_SOURCE_MAP: Record<string, { table: string; valueCol: string; displayCol: string }> = {
   'COMP_CODE': { table: 'company_codes', valueCol: 'company_code', displayCol: 'company_name' },
-  'BUKRS': { table: 'company_codes', valueCol: 'company_code', displayCol: 'company_name' },
   'PLANT': { table: 'plants', valueCol: 'plant_code', displayCol: 'plant_name' },
-  'WERKS': { table: 'plants', valueCol: 'plant_code', displayCol: 'plant_name' },
-  'LGORT': { table: 'storage_locations', valueCol: 'sloc_code', displayCol: 'sloc_name' },
+  'STORAGE_LOC': { table: 'storage_locations', valueCol: 'sloc_code', displayCol: 'sloc_name' },
   'DEPT': { table: 'departments', valueCol: 'dept_code', displayCol: 'name' },
-  'KOSTL': { table: 'cost_centers', valueCol: 'cost_center_code', displayCol: 'cost_center_name' },
-  'EKORG': { table: 'purchasing_organizations', valueCol: 'porg_code', displayCol: 'porg_name' }
+  'COST_CENTER': { table: 'cost_centers', valueCol: 'cost_center_code', displayCol: 'cost_center_name' },
+  'PURCH_ORG': { table: 'purchasing_organizations', valueCol: 'porg_code', displayCol: 'porg_name' },
+  'PROJ_TYPE': { table: 'projects', valueCol: 'project_type', displayCol: 'project_type' },
+  'MR_TYPE': { table: 'material_requests', valueCol: 'mr_type', displayCol: 'mr_type' },
+  'PR_TYPE': { table: 'purchase_requisitions', valueCol: 'pr_type', displayCol: 'pr_type' },
+  'MAT_TYPE': { table: 'materials', valueCol: 'material_type', displayCol: 'material_type' }
 }
 
 const STATIC_VALUES: Record<string, Array<{ value: string; label: string }>> = {
   'ACTVT': ACTIVITY_CODES,
   'PO_TYPE': [
-    { value: 'standard', label: 'Standard' },
-    { value: 'blanket', label: 'Blanket' },
-    { value: '*', label: '* - All' }
-  ],
-  'MAT_TYPE': [
-    { value: 'FERT', label: 'Finished' },
-    { value: 'ROH', label: 'Raw Material' },
+    { value: 'STANDARD', label: 'Standard PO' },
+    { value: 'BLANKET', label: 'Blanket PO' },
+    { value: 'CONTRACT', label: 'Contract PO' },
+    { value: 'SUBCONTRACT', label: 'Subcontract PO' },
+    { value: 'EMERGENCY', label: 'Emergency PO' },
     { value: '*', label: '* - All' }
   ]
 }
@@ -72,10 +72,22 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     
     if (error) throw error
     
-    const values = (data || []).map(row => ({
-      value: row[sourceConfig.valueCol],
-      label: `${row[sourceConfig.valueCol]} - ${row[sourceConfig.displayCol]}`
-    }))
+    // For PROJ_TYPE, MR_TYPE, PR_TYPE, MAT_TYPE - get distinct enum values
+    let values
+    if (['PROJ_TYPE', 'MR_TYPE', 'PR_TYPE', 'MAT_TYPE'].includes(fieldName)) {
+      const distinctTypes = Array.from(new Set(
+        (data || []).map(row => row[sourceConfig.valueCol]).filter(Boolean)
+      ))
+      values = distinctTypes.map(type => ({
+        value: type,
+        label: type
+      }))
+    } else {
+      values = (data || []).map(row => ({
+        value: row[sourceConfig.valueCol],
+        label: `${row[sourceConfig.valueCol]} - ${row[sourceConfig.displayCol]}`
+      }))
+    }
     
     values.push({ value: '*', label: '* - All' })
     

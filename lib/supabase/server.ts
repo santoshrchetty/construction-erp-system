@@ -18,3 +18,7 @@ export async function createServiceClient() {
     }
   )
 }
+
+// Alias exports for backward compatibility
+export const createServerSupabaseClient = createServiceClient
+export const createClient = createServiceClient
