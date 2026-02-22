@@ -20,6 +20,7 @@ export enum Module {
   PURCHASE_ORDERS = 'purchase_orders',
   GOODS_RECEIPTS = 'goods_receipts',
   STORES = 'stores',
+  MATERIALS = 'materials',
   COSTING = 'costing',
   CTC = 'ctc',
   PROGRESS = 'progress',

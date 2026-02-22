@@ -13,6 +13,13 @@ export interface MaterialRequestItem {
   storage_location?: string
   preferred_vendor?: string
   delivery_date?: string
+  // Account Assignment (Cost Booked To)
+  account_assignment_code?: string
+  cost_center?: string
+  wbs_element?: string
+  activity_code?: string
+  asset_number?: string
+  order_number?: string
 }
 
 export interface MaterialRequest {
@@ -119,11 +126,18 @@ class UnifiedMaterialRequestService {
           base_uom: item.base_uom || item.unit,
           estimated_price: item.estimated_price,
           currency_code: item.currency_code || 'USD',
-          required_date: item.required_date, // Item-level required date
-          priority: item.priority || 'MEDIUM', // Item-level priority
+          required_date: item.required_date,
+          priority: item.priority || 'MEDIUM',
           delivery_date: item.delivery_date,
           notes: item.notes,
           storage_location: item.storage_location,
+          // Account Assignment
+          account_assignment_code: item.account_assignment_code,
+          cost_center: item.cost_center,
+          wbs_element: item.wbs_element,
+          activity_code: item.activity_code,
+          asset_number: item.asset_number,
+          order_number: item.order_number,
           tenant_id: tenantId
         }))
 

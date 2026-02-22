@@ -1,9 +1,9 @@
 -- Material Request System Database Schema
--- Updated to support all MR types and features discussed
+-- Updated to support all MR types including PRODUCTION and QUALITY
 
 -- Update material_requests table to include MR type and additional fields
 ALTER TABLE material_requests 
-ADD COLUMN IF NOT EXISTS mr_type VARCHAR(20) DEFAULT 'PROJECT' CHECK (mr_type IN ('PROJECT', 'MAINTENANCE', 'OFFICE', 'SAFETY', 'EQUIPMENT', 'GENERAL')),
+ADD COLUMN IF NOT EXISTS mr_type VARCHAR(20) DEFAULT 'PROJECT' CHECK (mr_type IN ('PROJECT', 'MAINTENANCE', 'OFFICE', 'SAFETY', 'EQUIPMENT', 'GENERAL', 'PRODUCTION', 'QUALITY')),
 ADD COLUMN IF NOT EXISTS department_code VARCHAR(20),
 ADD COLUMN IF NOT EXISTS delivery_location VARCHAR(50),
 ADD COLUMN IF NOT EXISTS total_value DECIMAL(15,2) DEFAULT 0,

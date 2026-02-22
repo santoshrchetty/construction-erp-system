@@ -48,6 +48,11 @@ export default function UnifiedMaterialRequest() {
   const [wbsElements, setWbsElements] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
   const [costCenters, setCostCenters] = useState<any[]>([])
+  
+  // MR Type and Account Assignment
+  const [mrType, setMrType] = useState('')
+  const [mrTypes, setMrTypes] = useState<any[]>([])
+  const [allowedAccountAssignments, setAllowedAccountAssignments] = useState<any[]>([])
 
   const [formData, setFormData] = useState<MaterialRequestFormData>({
     request_number: '', // Will be generated after submission
@@ -71,7 +76,19 @@ export default function UnifiedMaterialRequest() {
       base_uom: 'PCS', 
       available_stock: 0,
       priority: 'MEDIUM',
-      required_date: ''
+      required_date: '',
+      status: 'PENDING',
+      requested_by: '',
+      requested_date: new Date().toISOString().split('T')[0],
+      company_code: '',
+      plant_code: '',
+      department_code: '',
+      delivery_location: '',
+      purpose: '',
+      justification: '',
+      notes: '',
+      total_value: 0,
+      currency: 'GBP'
     }]
   })
 
@@ -81,17 +98,17 @@ export default function UnifiedMaterialRequest() {
     { code: 'HIGH', name: 'High', color: 'bg-orange-100 text-orange-800' },
     { code: 'URGENT', name: 'Urgent', color: 'bg-red-100 text-red-800' }
   ]
-  
-  const accountAssignmentTypes = [
-    { code: 'P', name: 'Project', icon: Icons.Briefcase },
-    { code: 'K', name: 'Others', icon: Icons.Building },
-    { code: 'M', name: 'Maintenance Order', icon: Icons.Wrench },
-    { code: 'F', name: 'Production Order', icon: Icons.Factory }
-  ]
 
   useEffect(() => {
     loadProjectsOnDemand()
+    loadMRTypes()
   }, [])
+
+  useEffect(() => {
+    if (mrType) {
+      loadAllowedAccountAssignments(mrType)
+    }
+  }, [mrType])
 
   useEffect(() => {
     if (formData.project_code) {
@@ -302,6 +319,39 @@ export default function UnifiedMaterialRequest() {
     }
   }
 
+  const loadMRTypes = async () => {
+    try {
+      const response = await fetch('/api/account-assignments?action=mrTypes')
+      if (!response.ok) return
+      const data = await response.json()
+      if (data.success) {
+        setMrTypes(data.data || [])
+      }
+    } catch (error) {
+      console.error('Failed to load MR types:', error)
+    }
+  }
+
+  const loadAllowedAccountAssignments = async (mrType: string) => {
+    try {
+      const response = await fetch(`/api/account-assignments?mrType=${mrType}`)
+      if (!response.ok) return
+      const data = await response.json()
+      if (data.success) {
+        setAllowedAccountAssignments(data.data || [])
+        // Auto-select default account assignment
+        const defaultAssignment = data.data?.find((a: any) => a.is_default)
+        if (defaultAssignment) {
+          formData.items.forEach((_, index) => {
+            updateMaterialItem(index, 'account_assignment_code', defaultAssignment.account_assignment_code)
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load account assignments:', error)
+    }
+  }
+
   const loadCostCentersOnDemand = async (companyCode: string) => {
     try {
       const response = await fetch(`/api/cost-centers?companyCode=${companyCode}`)
@@ -368,6 +418,7 @@ export default function UnifiedMaterialRequest() {
   }
 
   const addMaterialItem = () => {
+    const defaultAssignment = allowedAccountAssignments.find(a => a.is_default)
     const newItem: MaterialRequestItem = {
       line_number: formData.items.length + 1,
       material_code: '',
@@ -376,7 +427,25 @@ export default function UnifiedMaterialRequest() {
       base_uom: 'PCS',
       available_stock: 0,
       priority: 'MEDIUM',
-      required_date: ''
+      required_date: '',
+      status: 'PENDING',
+      requested_by: '',
+      requested_date: new Date().toISOString().split('T')[0],
+      company_code: formData.company_code,
+      plant_code: formData.plant_code,
+      department_code: '',
+      delivery_location: formData.storage_location,
+      purpose: '',
+      justification: '',
+      notes: '',
+      total_value: 0,
+      currency: 'GBP',
+      account_assignment_code: defaultAssignment?.account_assignment_code || '',
+      cost_center: '',
+      wbs_element: '',
+      activity_code: '',
+      asset_number: '',
+      order_number: ''
     }
     setFormData(prev => ({ ...prev, items: [...prev.items, newItem] }))
   }
@@ -592,7 +661,25 @@ export default function UnifiedMaterialRequest() {
         base_uom: 'PCS', 
         available_stock: 0,
         priority: 'MEDIUM',
-        required_date: ''
+        required_date: '',
+        status: 'PENDING',
+        requested_by: '',
+        requested_date: new Date().toISOString().split('T')[0],
+        company_code: '',
+        plant_code: '',
+        department_code: '',
+        delivery_location: '',
+        purpose: '',
+        justification: '',
+        notes: '',
+        total_value: 0,
+        currency: 'GBP',
+        account_assignment_code: '',
+        cost_center: '',
+        wbs_element: '',
+        activity_code: '',
+        asset_number: '',
+        order_number: ''
       }]
     })
     
@@ -603,6 +690,10 @@ export default function UnifiedMaterialRequest() {
       submittedAt: null,
       isReadOnly: false
     })
+    
+    // Reset MR Type and account assignments
+    setMrType('')
+    setAllowedAccountAssignments([])
     
     // Clear dependent dropdowns
     setWbsElements([])
@@ -623,7 +714,7 @@ export default function UnifiedMaterialRequest() {
       const response = await fetch('/api/material-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, mr_type: mrType })
       })
       
       const data = await response.json()
@@ -671,76 +762,33 @@ export default function UnifiedMaterialRequest() {
         {/* Main Card */}
         <div className="bg-white rounded-lg shadow-lg border-0 overflow-hidden">
           <div className="p-8 space-y-8">
-            {/* Requested for */}
+            {/* MR Type Selection */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-lg font-semibold text-slate-800">
-                  <Icons.Target className="h-5 w-5 text-blue-600" />
-                  <span>Requested for</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  {formData.request_number && (
-                    <div className="text-sm text-slate-600">
-                      <span className="font-medium">MR Number:</span> {formData.request_number}
-                    </div>
-                  )}
-                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    formState.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
-                    formState.status === 'SUBMITTED' ? 'bg-blue-100 text-blue-800' :
-                    formState.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {formState.status}
-                  </div>
-                </div>
+              <div className="flex items-center space-x-2 text-lg font-semibold text-slate-800">
+                <Icons.Target className="h-5 w-5 text-blue-600" />
+                <span>Material Request Type</span>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {accountAssignmentTypes.map(type => {
-                  const IconComponent = type.icon
-                  return (
-                    <button
-                      key={type.code}
-                      type="button"
-                      className={`h-16 flex flex-col items-center justify-center space-y-1 border rounded-md transition-colors ${
-                        formData.account_assignment === type.code 
-                          ? 'bg-blue-600 text-white border-blue-600' 
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                      } ${formState.isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onClick={() => !formState.isReadOnly && handleFormChange('account_assignment', type.code)}
-                      disabled={formState.isReadOnly}
-                    >
-                      <IconComponent className="h-5 w-5" />
-                      <span className="text-xs">{type.name}</span>
-                    </button>
-                  )
-                })}
-              </div>
-
-
-
-              {/* Cost Center Assignment */}
-              {formData.account_assignment === 'K' && (
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      Cost Center <span className="text-red-500">*</span>
-                    </label>
-                    <select 
-                      value={formData.cost_center} 
-                      onChange={(e) => handleFormChange('cost_center', e.target.value)}
-                      className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select cost center</option>
-                      {costCenters.map(costCenter => (
-                        <option key={costCenter.cost_center_code} value={costCenter.cost_center_code}>
-                          {costCenter.cost_center_code} - {costCenter.cost_center_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    MR Type <span className="text-red-500">*</span>
+                  </label>
+                  <select 
+                    value={mrType} 
+                    onChange={(e) => setMrType(e.target.value)}
+                    disabled={formState.isReadOnly}
+                    className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select MR Type</option>
+                    {mrTypes.map(type => (
+                      <option key={type.mr_type} value={type.mr_type}>
+                        {type.mr_type}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
+              </div>
             </div>
 
             <div className="border-t border-slate-200 my-8"></div>
@@ -1020,6 +1068,187 @@ export default function UnifiedMaterialRequest() {
                         >
                           <Icons.Trash2 className="h-4 w-4" />
                         </button>
+                      </div>
+                    </div>
+                    
+                    {/* Account Assignment per Line Item */}
+                    {mrType && allowedAccountAssignments.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-slate-200">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-slate-700">
+                              Account Assignment <span className="text-red-500">*</span>
+                            </label>
+                            <select 
+                              value={item.account_assignment_code || ''} 
+                              onChange={(e) => updateMaterialItem(index, 'account_assignment_code', e.target.value)}
+                              className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">Select account assignment</option>
+                              {allowedAccountAssignments.map(aa => (
+                                <option key={aa.account_assignment_code} value={aa.account_assignment_code}>
+                                  {aa.account_assignment_code} - {aa.account_assignment_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          {/* Conditional fields based on account assignment type */}
+                          {item.account_assignment_code === 'CC' && (
+                            <div className="space-y-2">
+                              <label className="block text-sm font-medium text-slate-700">
+                                Cost Center <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                value={item.cost_center || ''}
+                                onChange={(e) => updateMaterialItem(index, 'cost_center', e.target.value)}
+                                placeholder="Enter cost center"
+                                className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                          )}
+                          
+                          {(item.account_assignment_code === 'WB' || item.account_assignment_code === 'WA') && (
+                            <>
+                              <div className="space-y-2">
+                                <label className="block text-sm font-medium text-slate-700">
+                                  WBS Element <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  value={item.wbs_element || ''}
+                                  onChange={(e) => updateMaterialItem(index, 'wbs_element', e.target.value)}
+                                  placeholder="Enter WBS element"
+                                  className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              </div>
+                              {item.account_assignment_code === 'WA' && (
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium text-slate-700">
+                                    Activity Code <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    value={item.activity_code || ''}
+                                    onChange={(e) => updateMaterialItem(index, 'activity_code', e.target.value)}
+                                    placeholder="Enter activity code"
+                                    className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                </div>
+                              )}
+                            </>
+                          )}
+                          
+                          {item.account_assignment_code === 'AS' && (
+                            <div className="space-y-2">
+                              <label className="block text-sm font-medium text-slate-700">
+                                Asset Number <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                value={item.asset_number || ''}
+                                onChange={(e) => updateMaterialItem(index, 'asset_number', e.target.value)}
+                                placeholder="Enter asset number"
+                                className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                          )}
+                          
+                          {(item.account_assignment_code === 'OM' || item.account_assignment_code === 'OP' || item.account_assignment_code === 'OQ') && (
+                            <div className="space-y-2">
+                              <label className="block text-sm font-medium text-slate-700">
+                                Order Number <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                value={item.order_number || ''}
+                                onChange={(e) => updateMaterialItem(index, 'order_number', e.target.value)}
+                                placeholder="Enter order number"
+                                className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Additional Line Item Fields */}
+                    <div className="mt-4 pt-4 border-t border-slate-200">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-slate-700">
+                            Requested By
+                          </label>
+                          <input
+                            value={item.requested_by || ''}
+                            onChange={(e) => updateMaterialItem(index, 'requested_by', e.target.value)}
+                            placeholder="Enter requester name"
+                            className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-slate-700">
+                            Department Code
+                          </label>
+                          <input
+                            value={item.department_code || ''}
+                            onChange={(e) => updateMaterialItem(index, 'department_code', e.target.value)}
+                            placeholder="Enter department code"
+                            className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-slate-700">
+                            Delivery Location
+                          </label>
+                          <input
+                            value={item.delivery_location || ''}
+                            onChange={(e) => updateMaterialItem(index, 'delivery_location', e.target.value)}
+                            placeholder="Enter delivery location"
+                            className="w-full h-11 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-slate-700">
+                            Purpose
+                          </label>
+                          <textarea
+                            value={item.purpose || ''}
+                            onChange={(e) => updateMaterialItem(index, 'purpose', e.target.value)}
+                            placeholder="Enter purpose for this item"
+                            rows={2}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-slate-700">
+                            Justification
+                          </label>
+                          <textarea
+                            value={item.justification || ''}
+                            onChange={(e) => updateMaterialItem(index, 'justification', e.target.value)}
+                            placeholder="Enter justification for this item"
+                            rows={2}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-slate-700">
+                            Notes
+                          </label>
+                          <textarea
+                            value={item.notes || ''}
+                            onChange={(e) => updateMaterialItem(index, 'notes', e.target.value)}
+                            placeholder="Enter any additional notes for this item"
+                            rows={2}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

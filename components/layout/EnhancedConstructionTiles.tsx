@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/contexts/AuthContext'
 import { DataPreloaderProvider, usePreloadedData } from '@/contexts/DataPreloaderContext'
 import * as Icons from 'lucide-react'
 import ProjectForm from '../ui/forms/ProjectForm'
+import { useRouter } from 'next/navigation'
 
 // Single supabase instance
 import { createClient } from '@/lib/supabase/client'
@@ -69,6 +70,10 @@ const ScheduleManagement = lazy(() => import('../features/projects/ScheduleManag
 const CostManagement = lazy(() => import('../features/projects/CostManagementWithSelector'))
 const ResourcePlanningManager = lazy(() => import('../features/projects/ResourcePlanningWithSelector'))
 
+// Document Governance
+const ContractManagement = lazy(() => import('../features/document-governance/ContractManagement'))
+const RFIManagement = lazy(() => import('../features/document-governance/RFIManagement'))
+
 interface ConstructionTile {
   id: string
   title: string
@@ -82,22 +87,28 @@ interface ConstructionTile {
   auth_object?: string
 }
 
-export default function EnhancedConstructionTiles() {
+interface EnhancedConstructionTilesProps {
+  tiles?: ConstructionTile[]
+  filterCategory?: string
+}
+
+export default function EnhancedConstructionTiles({ tiles: propTiles, filterCategory }: EnhancedConstructionTilesProps = {}) {
   const { user, signOut, loading: authLoading } = useAuth()
-  const [tiles, setTiles] = useState<ConstructionTile[]>([])
-  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const [tiles, setTiles] = useState<ConstructionTile[]>(propTiles || [])
+  const [loading, setLoading] = useState(!propTiles)
   const [loggingOut, setLoggingOut] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedCategory, setSelectedCategory] = useState<string>(filterCategory || 'all')
   const [activeComponent, setActiveComponent] = useState<string | null>(null)
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [selectedProjectName, setSelectedProjectName] = useState<string>('')
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!propTiles && !authLoading && user) {
       fetchTiles()
     }
-  }, [user, authLoading])
+  }, [user, authLoading, propTiles])
 
   const fetchTiles = async () => {
     try {
@@ -159,6 +170,7 @@ export default function EnhancedConstructionTiles() {
     'Procurement': '🛒',
     'Warehouse': '🏪',
     'Project Management': '📋',
+    'Document Governance': '📄',
     'Quality': '✅',
     'Safety': '🛡️',
     'Human Resources': '👥',
@@ -173,10 +185,11 @@ export default function EnhancedConstructionTiles() {
     'Procurement': 5,
     'Warehouse': 6,
     'Project Management': 7,
-    'Quality': 8,
-    'Safety': 9,
-    'Human Resources': 10,
-    'Reporting': 11
+    'Document Governance': 8,
+    'Quality': 9,
+    'Safety': 10,
+    'Human Resources': 11,
+    'Reporting': 12
   }
 
   const uniqueCategories = Array.from(new Set(tiles.map(t => t.tile_category).filter(Boolean)))
@@ -196,6 +209,12 @@ export default function EnhancedConstructionTiles() {
     : tiles.filter(tile => tile.tile_category === selectedCategory)
 
   const handleTileClick = (tile: ConstructionTile) => {
+    // If tile has a route that starts with /, navigate directly
+    if (tile.route && tile.route.startsWith('/')) {
+      router.push(tile.route)
+      return
+    }
+    // Otherwise, render component inline
     setActiveComponent(tile.title)
   }
 
@@ -305,7 +324,8 @@ export default function EnhancedConstructionTiles() {
         return <InventoryAdjustments />
       case 'Material Requests':
       case 'Unified Material Request':
-        return <UnifiedMaterialRequest />
+        const MaterialRequestFormV2 = lazy(() => import('../features/materials/MaterialRequestFormV2'))
+        return <MaterialRequestFormV2 />
       case 'Material Request List':
         const { MaterialRequestList } = require('../features/materials/MaterialRequestList')
         return <MaterialRequestList onNavigateToCreate={() => setActiveComponent('Unified Material Request')} />
@@ -571,6 +591,24 @@ export default function EnhancedConstructionTiles() {
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold mb-4">{activeComponent}</h2>
               <p className="text-gray-600">Feature available - Implementation in progress</p>
+            </div>
+          </div>
+        )
+      
+      // Document Governance
+      case 'Contract Management':
+        return <ContractManagement />
+      case 'RFI Management':
+        return <RFIManagement />
+      case 'Master Data Documents':
+      case 'Specifications':
+      case 'Submittal Management':
+      case 'Change Order Management':
+        return (
+          <div className="p-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">{activeComponent}</h2>
+              <p className="text-gray-600">Document governance module - Implementation in progress</p>
             </div>
           </div>
         )

@@ -37,10 +37,12 @@ export interface WorkflowInstance {
   object_type: string;
   object_id: string;
   requester_id: string;
+  tenant_id?: string;
   context_data: any;
   status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   current_step_sequence: number;
   created_at: string;
+  updated_at?: string;
   completed_at?: string;
 }
 
@@ -109,8 +111,6 @@ export class WorkflowRepository {
 
     const sanitizedInstance = {
       ...instance,
-      object_id: instance.object_id?.substring(0, 50),
-      requester_id: instance.requester_id?.substring(0, 20),
       status: 'ACTIVE',
       current_step_sequence: 1,
       created_at: new Date().toISOString()
@@ -152,6 +152,26 @@ export class WorkflowRepository {
     }
   }
 
+  static async createRoleAssignment(data: any): Promise<any> {
+    const { data: assignment, error } = await supabase
+      .from('role_assignments')
+      .insert({ ...data, is_active: true })
+      .select()
+      .single()
+    
+    if (error) throw new Error(`Failed to create role assignment: ${error.message}`)
+    return assignment
+  }
+
+  static async deleteRoleAssignment(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('role_assignments')
+      .delete()
+      .eq('id', id)
+    
+    if (error) throw new Error(`Failed to delete role assignment: ${error.message}`)
+  }
+
   static async getOrganizationalHierarchy(): Promise<any[]> {
     try {
       const { data, error } = await supabase
@@ -171,29 +191,38 @@ export class WorkflowRepository {
 
   static async getRoleAssignments(roleCode?: string): Promise<any[]> {
     try {
+      // Fetch role assignments
       let query = supabase
         .from('role_assignments')
-        .select(`
-          *,
-          org_hierarchy (
-            employee_name,
-            position_title,
-            department_code,
-            plant_code
-          )
-        `)
+        .select('*')
         .eq('is_active', true);
 
       if (roleCode) {
         query = query.eq('role_code', roleCode);
       }
 
-      const { data, error } = await query
+      const { data: assignments, error: assignError } = await query
         .order('role_code')
         .order('employee_id');
       
-      if (error) throw new Error(`Database error: ${error.message}`);
-      return data || [];
+      if (assignError) throw new Error(`Database error: ${assignError.message}`);
+      if (!assignments || assignments.length === 0) return [];
+
+      // Fetch org_hierarchy data for these employees
+      const employeeIds = assignments.map(a => a.employee_id);
+      const { data: employees, error: empError } = await supabase
+        .from('org_hierarchy')
+        .select('employee_id, employee_name, position_title, department_code, plant_code')
+        .in('employee_id', employeeIds);
+      
+      if (empError) throw new Error(`Database error: ${empError.message}`);
+
+      // Merge the data
+      const employeeMap = new Map(employees?.map(e => [e.employee_id, e]) || []);
+      return assignments.map(assignment => ({
+        ...assignment,
+        org_hierarchy: employeeMap.get(assignment.employee_id)
+      }));
     } catch (error) {
       console.error('Failed to get role assignments:', error);
       return [];
@@ -201,34 +230,8 @@ export class WorkflowRepository {
   }
 
   static async getResponsibilityAssignments(responsibilityCode?: string): Promise<any[]> {
-    try {
-      let query = supabase
-        .from('responsibility_assignments')
-        .select(`
-          *,
-          org_hierarchy (
-            employee_name,
-            position_title,
-            department_code,
-            plant_code
-          )
-        `)
-        .eq('is_active', true);
-
-      if (responsibilityCode) {
-        query = query.eq('responsibility_code', responsibilityCode);
-      }
-
-      const { data, error } = await query
-        .order('responsibility_code')
-        .order('employee_id');
-      
-      if (error) throw new Error(`Database error: ${error.message}`);
-      return data || [];
-    } catch (error) {
-      console.error('Failed to get responsibility assignments:', error);
-      return [];
-    }
+    // Not implemented - use role_assignments instead
+    return [];
   }
 
   static async createStepInstance(stepInstance: any): Promise<any> {
@@ -374,7 +377,15 @@ export class WorkflowRepository {
       .select()
       .single();
     
-    if (error) throw new Error(`Failed to update workflow instance: ${error.message}`);
+    if (error) {
+      console.error('Workflow instance update failed:', { instanceId, updates, error });
+      throw new Error(`Failed to update workflow instance: ${error.message}`);
+    }
+    
+    if (!data) {
+      throw new Error(`Workflow instance not found: ${instanceId}`);
+    }
+    
     return data;
   }
 
@@ -425,6 +436,65 @@ export class WorkflowRepository {
     } catch (error) {
       console.error('Failed to get workflow metrics:', error);
       return [];
+    }
+  }
+
+  static async createWorkflowStep(data: any): Promise<any> {
+    const { data: step, error } = await supabase
+      .from('workflow_steps')
+      .insert(data)
+      .select()
+      .single()
+    
+    if (error) throw new Error(`Failed to create step: ${error.message}`)
+    return step
+  }
+
+  static async updateWorkflowStep(stepId: string, updates: any): Promise<any> {
+    const { data: step, error } = await supabase
+      .from('workflow_steps')
+      .update(updates)
+      .eq('id', stepId)
+      .select()
+      .single()
+    
+    if (error) throw new Error(`Failed to update step: ${error.message}`)
+    return step
+  }
+
+  static async createStepAgent(data: any): Promise<any> {
+    const { data: agent, error } = await supabase
+      .from('step_agents')
+      .insert(data)
+      .select()
+      .single()
+    
+    if (error) throw new Error(`Failed to create step agent: ${error.message}`)
+    return agent
+  }
+
+  static async deleteStepAgent(stepAgentId: string): Promise<void> {
+    const { error } = await supabase
+      .from('step_agents')
+      .delete()
+      .eq('id', stepAgentId)
+    
+    if (error) throw new Error(`Failed to delete step agent: ${error.message}`)
+  }
+
+  static async updateMaterialRequestStatus(requestId: string, status: string): Promise<void> {
+    if (!requestId || !status) {
+      throw new Error('Request ID and status required');
+    }
+
+    const { error } = await supabase
+      .from('material_requests')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', requestId);
+    
+    if (error) {
+      console.error('Failed to update material request status:', error);
+      throw new Error(`Failed to update material request status: ${error.message}`);
     }
   }
 }

@@ -3,6 +3,65 @@
 ## Overview
 Multi-tenant architecture implementation for Construction ERP system with complete data isolation.
 
+## Multi-Tenant User Model
+
+### Architecture Decision
+**Users table changed from single-tenant to multi-tenant model:**
+- One user record per tenant (not one record per user)
+- Composite unique key: `(email, tenant_id)`
+- Same email can exist across multiple tenants with different user IDs
+- Dropped `user_tenants` junction table (redundant)
+
+### User Table Structure
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    email VARCHAR NOT NULL,
+    tenant_id UUID NOT NULL REFERENCES tenants(id),
+    role_id UUID REFERENCES roles(id),
+    first_name VARCHAR,
+    last_name VARCHAR,
+    is_active BOOLEAN DEFAULT true,
+    UNIQUE(email, tenant_id)  -- Allows same email across tenants
+);
+```
+
+### Authentication Flow
+1. User authenticates via Supabase Auth (single auth.users record)
+2. User selects tenant at login
+3. Query users table by `email` AND `tenant_id`
+4. Fetch tenant-specific user record with role and permissions
+5. Set tenant session cookie
+6. Middleware validates tenant access on each request
+
+### Key Changes
+- **Removed**: Foreign key constraint from `users.id` to `auth.users.id`
+- **Removed**: Unique constraint on `users.email`
+- **Added**: Composite unique constraint on `(email, tenant_id)`
+- **Dropped**: `user_tenants` table
+
+### Migration Scripts
+- `migrate_users_multi_tenant.sql` - Converts users table to multi-tenant
+- `fix_auth_objects_tenant_specific.sql` - Makes authorization objects tenant-specific
+
+## Authorization System
+
+### Tenant-Specific Authorization Objects
+```sql
+CREATE TABLE authorization_objects (
+    id UUID PRIMARY KEY,
+    object_name VARCHAR NOT NULL,
+    tenant_id UUID NOT NULL REFERENCES tenants(id),
+    module VARCHAR,
+    UNIQUE(object_name, tenant_id)  -- Same object name per tenant
+);
+```
+
+### Role-Based Access Control
+- Roles are tenant-specific (role.tenant_id must match user.tenant_id)
+- Authorization objects are tenant-specific
+- Role-authorization mappings include tenant_id for validation
+
 ## Database Schema Changes
 
 ### Tenant ID Column Addition
@@ -78,7 +137,11 @@ CREATE TABLE tenants (
 - **Query Filtering**: All queries must include tenant context
 
 ## Next Steps
-1. Complete migration script
-2. Add indexes on tenant_id columns
-3. Implement RLS policies
-4. Update application queries
+1. ✅ Complete migration script
+2. ✅ Implement multi-tenant user model
+3. ✅ Make authorization objects tenant-specific
+4. ✅ Update authentication flow for tenant selection
+5. ✅ Fix middleware to query by email + tenant_id
+6. Add indexes on tenant_id columns
+7. Implement RLS policies
+8. Update application queries

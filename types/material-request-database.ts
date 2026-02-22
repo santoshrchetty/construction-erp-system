@@ -37,7 +37,7 @@ export interface Database {
         Row: {
           id: string
           request_number: string
-          mr_type: 'PROJECT' | 'MAINTENANCE' | 'OFFICE' | 'SAFETY' | 'EQUIPMENT' | 'GENERAL'
+          mr_type: 'PROJECT' | 'MAINTENANCE' | 'OFFICE' | 'SAFETY' | 'EQUIPMENT' | 'GENERAL' | 'PRODUCTION' | 'QUALITY'
           request_type: 'RESERVATION' | 'PURCHASE_REQ' | 'MATERIAL_REQ'
           status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CONVERTED' | 'FULFILLED' | 'CANCELLED'
           priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
@@ -70,7 +70,7 @@ export interface Database {
         Insert: {
           id?: string
           request_number: string
-          mr_type: 'PROJECT' | 'MAINTENANCE' | 'OFFICE' | 'SAFETY' | 'EQUIPMENT' | 'GENERAL'
+          mr_type: 'PROJECT' | 'MAINTENANCE' | 'OFFICE' | 'SAFETY' | 'EQUIPMENT' | 'GENERAL' | 'PRODUCTION' | 'QUALITY'
           request_type: 'RESERVATION' | 'PURCHASE_REQ' | 'MATERIAL_REQ'
           status?: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CONVERTED' | 'FULFILLED' | 'CANCELLED'
           priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
@@ -95,7 +95,7 @@ export interface Database {
           created_by: string
         }
         Update: {
-          mr_type?: 'PROJECT' | 'MAINTENANCE' | 'OFFICE' | 'SAFETY' | 'EQUIPMENT' | 'GENERAL'
+          mr_type?: 'PROJECT' | 'MAINTENANCE' | 'OFFICE' | 'SAFETY' | 'EQUIPMENT' | 'GENERAL' | 'PRODUCTION' | 'QUALITY'
           request_type?: 'RESERVATION' | 'PURCHASE_REQ' | 'MATERIAL_REQ'
           status?: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CONVERTED' | 'FULFILLED' | 'CANCELLED'
           priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
@@ -140,6 +140,15 @@ export interface Database {
           batch_number: string | null
           serial_number: string | null
           notes: string | null
+          priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | null
+          requested_by: string | null
+          requested_date: string | null
+          required_date: string | null
+          department_code: string | null
+          delivery_location: string | null
+          purpose: string | null
+          justification: string | null
+          total_value: number | null
           
           // Organizational Units
           company_code: string | null
@@ -196,6 +205,15 @@ export interface Database {
           batch_number?: string | null
           serial_number?: string | null
           notes?: string | null
+          priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | null
+          requested_by?: string | null
+          requested_date?: string | null
+          required_date?: string | null
+          department_code?: string | null
+          delivery_location?: string | null
+          purpose?: string | null
+          justification?: string | null
+          total_value?: number | null
           
           // Organizational Units
           company_code?: string | null
@@ -244,6 +262,15 @@ export interface Database {
           batch_number?: string | null
           serial_number?: string | null
           notes?: string | null
+          priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | null
+          requested_by?: string | null
+          requested_date?: string | null
+          required_date?: string | null
+          department_code?: string | null
+          delivery_location?: string | null
+          purpose?: string | null
+          justification?: string | null
+          total_value?: number | null
           
           // Organizational Units
           company_code?: string | null

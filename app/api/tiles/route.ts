@@ -15,8 +15,8 @@ export const GET = withMediumRiskRecovery(async (request: NextRequest) => {
     const search = searchParams.get('search')
     const accountType = searchParams.get('account_type')
     
-    // Handle tiles list request (no category/action)
-    if (!category && !action) {
+    // Handle tiles list request
+    if (!action) {
       const { createServiceClient } = await import('@/lib/supabase/server')
       const supabase = await createServiceClient()
       
@@ -62,11 +62,18 @@ export const GET = withMediumRiskRecovery(async (request: NextRequest) => {
         return NextResponse.json({ success: true, tiles: [] })
       }
       
-      const { data: tiles, error: tilesError } = await supabase
+      let query = supabase
         .from('tiles')
         .select('*')
         .eq('is_active', true)
         .in('id', authorizedTileIds)
+      
+      // Filter by category if provided
+      if (category) {
+        query = query.eq('tile_category', category)
+      }
+      
+      const { data: tiles, error: tilesError } = await query
         .order('tile_category', { ascending: true })
         .order('sequence_order', { ascending: true })
       

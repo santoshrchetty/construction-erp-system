@@ -23,10 +23,11 @@ export function IndustrialDashboard() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [activeTile, setActiveTile] = useState<DatabaseTile | null>(null)
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0)
 
   useEffect(() => {
     fetchAuthorizedTiles()
+    fetchPendingApprovalsCount()
   }, [userRole])
 
   const fetchAuthorizedTiles = async () => {
@@ -47,6 +48,18 @@ export function IndustrialDashboard() {
     }
   }
 
+  const fetchPendingApprovalsCount = async () => {
+    try {
+      const response = await fetch('/api/approvals/count')
+      const data = await response.json()
+      if (data.success) {
+        setPendingApprovalsCount(data.count)
+      }
+    } catch (error) {
+      console.error('Error fetching approvals count:', error)
+    }
+  }
+
   const hasModuleAccess = (moduleCode: string): boolean => {
     const moduleMap: Record<string, any> = {
       'MM': 'procurement',
@@ -63,11 +76,8 @@ export function IndustrialDashboard() {
   }
 
   const handleTileClick = (tile: DatabaseTile) => {
-    setActiveTile(tile)
-  }
-
-  const closeTile = () => {
-    setActiveTile(null)
+    // Navigate directly to the route instead of opening modal
+    window.location.href = tile.route
   }
 
   const filteredTiles = tiles.filter(tile => {
@@ -147,24 +157,56 @@ export function IndustrialDashboard() {
 
       {/* Content */}
       <div className="p-4">
+        {/* My Pending Approvals */}
+        {pendingApprovalsCount > 0 && (
+          <div className="mb-6">
+            <div 
+              onClick={() => window.location.href = '/approvals/inbox'}
+              className="bg-gradient-to-r from-green-600 to-green-700 rounded-lg shadow-sm p-6 text-white cursor-pointer hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center mb-2">
+                    <Icons.CheckSquare className="w-6 h-6 mr-2" />
+                    <h3 className="text-lg font-semibold">My Pending Approvals</h3>
+                    <span className="ml-2 bg-white text-green-700 text-sm px-3 py-1 rounded-full font-bold">
+                      {pendingApprovalsCount}
+                    </span>
+                  </div>
+                  <p className="text-green-100 text-sm">
+                    You have {pendingApprovalsCount} pending approval{pendingApprovalsCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <Icons.ArrowRight className="w-5 h-5 ml-4" />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Quick actions */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Quick Actions</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { icon: Icons.Plus, label: 'New Request', color: 'bg-blue-500' },
-              { icon: Icons.CheckSquare, label: 'Approvals', color: 'bg-green-500' },
+              { icon: Icons.CheckSquare, label: 'Approvals', color: 'bg-green-500', route: '/approvals/inbox' },
               { icon: Icons.BarChart3, label: 'Reports', color: 'bg-purple-500' },
               { icon: Icons.Users, label: 'Team', color: 'bg-orange-500' }
             ].map((action, index) => (
               <button
                 key={index}
-                className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow"
+                onClick={() => action.route && (window.location.href = action.route)}
+                className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow relative"
               >
                 <div className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center mb-2`}>
                   <action.icon className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-sm font-medium text-gray-900">{action.label}</p>
+                {action.label === 'Approvals' && pendingApprovalsCount > 0 && (
+                  <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                    {pendingApprovalsCount}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -269,40 +311,6 @@ export function IndustrialDashboard() {
 
       {/* Add bottom padding for mobile navigation */}
       <div className="h-20 sm:hidden"></div>
-
-      {/* Tile Modal */}
-      {activeTile && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">{activeTile.title}</h2>
-                <p className="text-sm text-gray-600">{activeTile.subtitle}</p>
-              </div>
-              <button
-                onClick={closeTile}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <Icons.X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-              {renderTileComponent(activeTile)}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function renderTileComponent(tile: DatabaseTile) {
-  // Temporarily disabled - components not available
-  return (
-    <div className="p-8 text-center">
-      <Icons.AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-      <p className="text-gray-600">Component not yet implemented</p>
-      <p className="text-sm text-gray-500 mt-2">Action: {tile.construction_action}</p>
     </div>
   )
 }

@@ -26,8 +26,19 @@ export default function TenantSelection({ userId, onTenantSelected }: TenantSele
 
   const fetchUserTenants = async () => {
     try {
+      // First get the user's email from auth
+      const { data: authData } = await supabase.auth.getUser()
+      const userEmail = authData?.user?.email
+
+      if (!userEmail) {
+        console.error('No user email found')
+        setTenants([])
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
-        .from('user_tenants')
+        .from('users')
         .select(`
           tenant_id,
           tenants!inner (
@@ -36,7 +47,7 @@ export default function TenantSelection({ userId, onTenantSelected }: TenantSele
             code
           )
         `)
-        .eq('user_id', userId)
+        .eq('email', userEmail)
         .eq('is_active', true)
 
       if (error) {
@@ -45,12 +56,12 @@ export default function TenantSelection({ userId, onTenantSelected }: TenantSele
       }
 
       if (!data || data.length === 0) {
-        console.log('No tenant data found for user:', userId)
+        console.log('No tenant data found for user:', userEmail)
         setTenants([])
         return
       }
 
-      const userTenants = data.map(ut => ut.tenants).filter(Boolean)
+      const userTenants = data.map(u => u.tenants).filter(Boolean)
       setTenants(userTenants)
     } catch (error) {
       console.error('Error fetching tenants:', error)
@@ -69,7 +80,7 @@ export default function TenantSelection({ userId, onTenantSelected }: TenantSele
   const handleTenantSelect = async (tenantId: string) => {
     setSelecting(true)
     try {
-      // Store selected tenant in session/localStorage
+      // Store selected tenant BEFORE calling onTenantSelected
       localStorage.setItem('selectedTenant', tenantId)
       onTenantSelected(tenantId)
     } catch (error) {

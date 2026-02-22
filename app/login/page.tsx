@@ -95,13 +95,21 @@ export default function LoginPage() {
     setError('')
     
     try {
+      console.log('Starting login with:', { email, tenantId, isSubdomainMode })
       const { session, profile } = await signIn(email, password, isSubdomainMode ? undefined : tenantId)
+      console.log('SignIn returned:', { session: !!session, profile: !!profile })
       
       if (session && profile) {
+        console.log('Login successful, redirecting to:', redirectTo)
         await new Promise(resolve => setTimeout(resolve, 100))
         window.location.replace(redirectTo)
+      } else {
+        console.error('Login failed: missing session or profile')
+        setError('Login failed. Please try again.')
+        setLoading(false)
       }
     } catch (err: any) {
+      console.error('Login error:', err)
       setAttempts(prev => prev + 1)
       setLoading(false)
       

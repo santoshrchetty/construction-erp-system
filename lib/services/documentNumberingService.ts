@@ -62,7 +62,8 @@ export class DocumentNumberingService {
       p_company_code: companyCode,
       p_document_type: config.documentType,
       p_number_range_group: subtype,
-      p_fiscal_year: currentYear
+      p_fiscal_year: currentYear,
+      p_tenant_id: tenantId
     })
     
     if (error || !data) {

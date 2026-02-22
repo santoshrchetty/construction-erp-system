@@ -183,7 +183,32 @@ export function MaterialRequestList({ onNavigateToCreate }: MaterialRequestListP
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 px-6 pt-6">
+      <div className="px-6 pt-6">
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <button
+                onClick={() => window.location.href = '/erp-modules'}
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                </svg>
+                Modules
+              </button>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+                </svg>
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">Material Requests</span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+      </div>
+      <div className="flex gap-2 px-6">
         <button 
           onClick={() => setShowColumnSettings(!showColumnSettings)}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -337,7 +362,11 @@ export function MaterialRequestList({ onNavigateToCreate }: MaterialRequestListP
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {items.map((item) => (
-                  <tr key={`${item.request_id}-${item.item_id}`} className="hover:bg-gray-50">
+                  <tr 
+                    key={`${item.request_id}-${item.item_id}`} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => window.location.href = `/materials/requests/${item.request_id}`}
+                  >
                     {ALL_COLUMNS.filter(col => visibleColumns.includes(col.key)).map(col => (
                       <td key={col.key} className="px-3 py-2 text-gray-900 whitespace-nowrap">
                         {renderCell(item, col.key)}

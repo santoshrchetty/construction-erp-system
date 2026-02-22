@@ -33,15 +33,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { user } } = await supabase.auth.getUser()
         
         if (!mounted) return
         
+        const { data: { session } } = await supabase.auth.getSession()
         setSession(session)
-        setUser(session?.user ?? null)
+        setUser(user)
         
-        if (session?.user) {
-          fetchUserProfile(session.user.id)
+        if (user) {
+          fetchUserProfile(user.id)
         }
       } catch (error) {
         console.error('Auth init error:', error)
@@ -83,50 +84,104 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data } = await supabase
-        .from('users')
-        .select('*, roles(*)')
-        .eq('id', userId)
-        .single()
+      // Get user email from auth
+      const { data: authData, error: authError } = await supabase.auth.getUser()
       
-      if (data) setProfile(data)
+      if (authError || !authData?.user?.email) {
+        console.error('Auth error in fetchUserProfile:', authError)
+        return
+      }
+      
+      const userEmail = authData.user.email
+      console.log('Fetching profile for:', userEmail)
+      
+      // Get selected tenant from cookie (set by login)
+      const tenantCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('tenant-id='))
+        ?.split('=')[1]
+      
+      const selectedTenant = localStorage.getItem('selectedTenant') || tenantCookie
+      console.log('Selected tenant:', selectedTenant)
+      
+      if (!selectedTenant) {
+        // If no tenant selected, get first user record
+        const { data, error } = await supabase
+          .from('users')
+          .select('*, roles(*), tenants(*)')
+          .eq('email', userEmail)
+          .limit(1)
+          .single()
+        
+        console.log('First user record:', { data, error })
+        
+        if (data) {
+          setProfile(data)
+          setCurrentTenantState(data.tenant_id)
+          localStorage.setItem('selectedTenant', data.tenant_id)
+        }
+      } else {
+        // Fetch user for selected tenant
+        const { data, error } = await supabase
+          .from('users')
+          .select('*, roles(*), tenants(*)')
+          .eq('email', userEmail)
+          .eq('tenant_id', selectedTenant)
+          .single()
+        
+        console.log('Tenant-specific user record:', { data, error, selectedTenant })
+        
+        if (data) {
+          setProfile(data)
+          setCurrentTenantState(data.tenant_id)
+        } else if (error) {
+          console.error('Failed to fetch user for tenant:', error)
+          // Clear invalid tenant selection
+          localStorage.removeItem('selectedTenant')
+        }
+      }
     } catch (error) {
       console.error('Profile fetch error:', error)
     }
   }
 
   const signIn = async (email: string, password: string, selectedTenantId?: string) => {
+    console.log('SignIn called with:', { email, selectedTenantId })
+    
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     
-    // Fetch user profile
+    // Determine which tenant to use
+    const tenantId = selectedTenantId || localStorage.getItem('selectedTenant')
+    console.log('Using tenantId:', tenantId)
+    
+    if (!tenantId) {
+      throw new Error('No tenant selected')
+    }
+    
+    // Fetch user profile for the selected tenant
     const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('*, roles(*), tenants!inner(id, tenant_code, tenant_name, subdomain)')
-      .eq('id', data.user.id)
+      .eq('email', email)
+      .eq('tenant_id', tenantId)
       .single()
     
+    console.log('User profile fetch result:', { userProfile, profileError })
+    
     if (profileError || !userProfile) {
-      throw new Error('Failed to fetch user profile')
+      await supabase.auth.signOut()
+      throw new Error('You do not have access to this organization')
     }
     
     // Get subdomain from URL
     const hostname = window.location.hostname
     const subdomain = isLocalDevelopment(hostname) ? null : extractSubdomain(hostname)
     
-    // Validate tenant access
-    let tenantId = selectedTenantId || userProfile.tenant_id
-    
     // If subdomain exists, validate it matches user's tenant
     if (subdomain && userProfile.tenants?.subdomain !== subdomain) {
       await supabase.auth.signOut()
       throw new Error('You do not have access to this organization')
-    }
-    
-    // If tenant selection provided, validate it
-    if (selectedTenantId && userProfile.tenant_id !== selectedTenantId) {
-      await supabase.auth.signOut()
-      throw new Error('You do not have access to the selected organization')
     }
     
     // Set tenant session server-side
@@ -136,6 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ tenantId })
     })
     
+    console.log('Tenant session response:', tenantResponse.status)
+    
     if (!tenantResponse.ok) {
       await supabase.auth.signOut()
       throw new Error('Failed to establish tenant session')
@@ -143,6 +200,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     setProfile(userProfile)
     setCurrentTenantState(userProfile.tenant_id)
+    localStorage.setItem('selectedTenant', userProfile.tenant_id)
+    
+    console.log('Login successful, tenant set to:', userProfile.tenant_id)
     
     return { session: data.session, profile: userProfile }
   }

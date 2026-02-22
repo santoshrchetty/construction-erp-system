@@ -83,7 +83,8 @@ export async function middleware(req: NextRequest) {
     const { data: profile } = await supabase
       .from('users')
       .select('tenant_id, tenants!inner(subdomain)')
-      .eq('id', session.user.id)
+      .eq('email', session.user.email)
+      .eq('tenant_id', tenantCookie)
       .single()
     
     if (profile && tenantCookie && profile.tenant_id !== tenantCookie) {

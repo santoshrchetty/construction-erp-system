@@ -1,0 +1,282 @@
+-- ============================================================================
+-- TERMINOLOGY UPDATE: "Account Assignment" → "Cost Booked To"
+-- ============================================================================
+
+/*
+USER-FRIENDLY TERMINOLOGY:
+- Technical: "Account Assignment"
+- User-Facing: "Cost Booked To"
+
+This makes it clearer to end users where the cost will be charged.
+*/
+
+-- ============================================================================
+-- DATABASE: Keep technical terms (no change)
+-- ============================================================================
+
+-- Table/Column names remain technical:
+account_assignment_types
+account_assignment_code
+cost_center
+wbs_element
+etc.
+
+-- ============================================================================
+-- UI LABELS: Use business-friendly terms
+-- ============================================================================
+
+/*
+BEFORE (Technical):
+┌─────────────────────────────────────┐
+│ Account Assignment Type: [WB ▼]    │
+│ WBS Element: [WBS-001-001 ▼]       │
+└─────────────────────────────────────┘
+
+AFTER (User-Friendly):
+┌─────────────────────────────────────┐
+│ Cost Booked To: [Project ▼]        │
+│ WBS Element: [WBS-001-001 ▼]       │
+└─────────────────────────────────────┘
+*/
+
+-- ============================================================================
+-- UI LABEL MAPPING
+-- ============================================================================
+
+/*
+┌──────────────────────────────────────────────────────────────────┐
+│ Database Code → UI Display Label                                 │
+├──────────────────────────────────────────────────────────────────┤
+│ CC            → Cost Center                                      │
+│ WB            → Project (WBS)                                    │
+│ AS            → Asset                                            │
+│ WA            → Project with Activity                            │
+│ OP            → Production Order                                 │
+│ OM            → Maintenance Order                                │
+│ OQ            → Quality Order                                    │
+└──────────────────────────────────────────────────────────────────┘
+*/
+
+-- Update display names in database
+UPDATE account_assignment_types SET name = 'Cost Center' WHERE code = 'CC';
+UPDATE account_assignment_types SET name = 'Project (WBS)' WHERE code = 'WB';
+UPDATE account_assignment_types SET name = 'Asset' WHERE code = 'AS';
+UPDATE account_assignment_types SET name = 'Project with Activity' WHERE code = 'WA';
+UPDATE account_assignment_types SET name = 'Production Order' WHERE code = 'OP';
+UPDATE account_assignment_types SET name = 'Maintenance Order' WHERE code = 'OM';
+UPDATE account_assignment_types SET name = 'Quality Order' WHERE code = 'OQ';
+
+-- ============================================================================
+-- UPDATED UI MOCKUP
+-- ============================================================================
+
+/*
+┌─────────────────────────────────────────────────────────────────┐
+│ Create Material Request                                         │
+├─────────────────────────────────────────────────────────────────┤
+│ HEADER SECTION                                                  │
+│                                                                 │
+│ Request Type:   [Project ▼]                                    │
+│ Company:        [1000 - Main Company ▼]                        │
+│ Plant:          [P001 - Main Plant ▼]                          │
+│ Priority:       [Medium ▼]                                     │
+│ Required Date:  [2024-01-15]                                   │
+│ Purpose:        [Construction materials for Phase 1]           │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ LINE ITEMS                                                      │
+│                                                                 │
+│ Line 1                                              [▼ Expand]  │
+│ ┌─────────────────────────────────────────────────────────────┐│
+│ │ Material:       [MAT-001 - Cement ▼]                       ││
+│ │ Quantity:       [100.00]  UOM: [TON ▼]                     ││
+│ │ Storage:        [WH-001 - Main Warehouse ▼]                ││
+│ │                                                             ││
+│ │ ┌─────────────────────────────────────────────────────────┐││
+│ │ │ 💰 COST BOOKED TO                                       │││
+│ │ │                                                         │││
+│ │ │ [Project (WBS) ▼]                                       │││
+│ │ │                                                         │││
+│ │ │ WBS Element: [WBS-001-001 - Foundation Work ▼]         │││
+│ │ └─────────────────────────────────────────────────────────┘││
+│ └─────────────────────────────────────────────────────────────┘│
+│                                                                 │
+│ [+ Add Material]                                                │
+│                                                                 │
+│                                    [Save Draft] [Submit]        │
+└─────────────────────────────────────────────────────────────────┘
+
+DROPDOWN OPTIONS (Based on MR Type: Project):
+┌─────────────────────────────────────┐
+│ Cost Booked To:                     │
+│ ○ Project (WBS)          ← Default  │
+│ ○ Project with Activity             │
+└─────────────────────────────────────┘
+
+CONDITIONAL FIELDS:
+
+If "Project (WBS)" selected:
+┌─────────────────────────────────────┐
+│ Cost Booked To: [Project (WBS) ▼]  │
+│ WBS Element: [WBS-001-001 ▼] *     │
+└─────────────────────────────────────┘
+
+If "Project with Activity" selected:
+┌─────────────────────────────────────┐
+│ Cost Booked To: [Project with Activity ▼] │
+│ WBS Element:   [WBS-001-001 ▼] *   │
+│ Activity Code: [ACT-100 ▼] *       │
+└─────────────────────────────────────┘
+
+If "Cost Center" selected:
+┌─────────────────────────────────────┐
+│ Cost Booked To: [Cost Center ▼]    │
+│ Cost Center: [CC-001 - Admin ▼] *  │
+└─────────────────────────────────────┘
+
+If "Asset" selected:
+┌─────────────────────────────────────┐
+│ Cost Booked To: [Asset ▼]          │
+│ Asset Number: [ASSET-12345 ▼] *    │
+└─────────────────────────────────────┘
+
+If "Maintenance Order" selected:
+┌─────────────────────────────────────┐
+│ Cost Booked To: [Maintenance Order ▼] │
+│ Order Number: [MO-12345 ▼] *       │
+└─────────────────────────────────────┘
+*/
+
+-- ============================================================================
+-- REACT COMPONENT LABELS
+-- ============================================================================
+
+/*
+const LABELS = {
+  // Section Headers
+  costBookedToSection: "Cost Booked To",
+  costBookedToLabel: "Cost Booked To",
+  
+  // Dropdown Options (from database)
+  CC: "Cost Center",
+  WB: "Project (WBS)",
+  AS: "Asset",
+  WA: "Project with Activity",
+  OP: "Production Order",
+  OM: "Maintenance Order",
+  OQ: "Quality Order",
+  
+  // Field Labels
+  costCenter: "Cost Center",
+  wbsElement: "WBS Element",
+  activityCode: "Activity Code",
+  assetNumber: "Asset Number",
+  orderNumber: "Order Number",
+  
+  // Help Text
+  costBookedToHelp: "Select where the cost of this material will be charged",
+  wbsElementHelp: "Select the WBS element for project cost tracking",
+  costCenterHelp: "Select the cost center for overhead expenses"
+}
+
+// Usage in component
+<div className="cost-booked-to-section">
+  <label>{LABELS.costBookedToLabel}</label>
+  <select>
+    {allowedOptions.map(option => (
+      <option value={option.code}>
+        {LABELS[option.code] || option.name}
+      </option>
+    ))}
+  </select>
+  <span className="help-text">{LABELS.costBookedToHelp}</span>
+</div>
+*/
+
+-- ============================================================================
+-- VALIDATION MESSAGES (User-Friendly)
+-- ============================================================================
+
+/*
+BEFORE (Technical):
+"Account assignment type is required"
+"WBS element required for account assignment type P"
+
+AFTER (User-Friendly):
+"Please select where the cost should be booked"
+"WBS Element is required when booking cost to a project"
+"Cost Center is required when booking cost to overhead"
+"Asset Number is required when booking cost to an asset"
+*/
+
+-- ============================================================================
+-- COLUMN HEADERS IN LIST VIEWS
+-- ============================================================================
+
+/*
+Material Request List:
+┌────────┬──────────┬──────────┬─────────────────┬──────────┐
+│ MR #   │ Material │ Quantity │ Cost Booked To  │ Status   │
+├────────┼──────────┼──────────┼─────────────────┼──────────┤
+│ MR-001 │ Cement   │ 100 TON  │ WBS-001-001     │ Approved │
+│ MR-002 │ Steel    │  50 TON  │ CC-ADMIN        │ Pending  │
+│ MR-003 │ Tools    │  10 EA   │ ASSET-12345     │ Approved │
+└────────┴──────────┴──────────┴─────────────────┴──────────┘
+
+Display Format:
+- If WB/WA: Show WBS Element code
+- If CC: Show Cost Center code
+- If AS: Show Asset Number
+- If OM/OP/OQ: Show Order Number
+*/
+
+-- ============================================================================
+-- APPROVAL MODAL DISPLAY
+-- ============================================================================
+
+/*
+┌─────────────────────────────────────────────────────────────┐
+│ Review Material Request: MR-001                             │
+├─────────────────────────────────────────────────────────────┤
+│ Line Items:                                                 │
+│                                                             │
+│ 1. Cement (100 TON)                                         │
+│    Cost Booked To: Project (WBS)                            │
+│    WBS Element: WBS-001-001 - Foundation Work               │
+│                                                             │
+│ 2. Steel (50 TON)                                           │
+│    Cost Booked To: Project with Activity                    │
+│    WBS Element: WBS-001-002 - Structural Work               │
+│    Activity: ACT-100 - Steel Erection                       │
+│                                                             │
+│ 3. Office Supplies (10 EA)                                  │
+│    Cost Booked To: Cost Center                              │
+│    Cost Center: CC-ADMIN - Administration                   │
+│                                                             │
+│                                    [Reject] [Approve]       │
+└─────────────────────────────────────────────────────────────┘
+*/
+
+-- ============================================================================
+-- SUMMARY: TERMINOLOGY MAPPING
+-- ============================================================================
+
+/*
+┌────────────────────────────────────────────────────────────────┐
+│ Context              │ Technical Term      │ User-Facing Term  │
+├────────────────────────────────────────────────────────────────┤
+│ Database Column      │ account_assignment  │ (no change)       │
+│ UI Label             │ Account Assignment  │ Cost Booked To    │
+│ Section Header       │ Account Assignment  │ Cost Booked To    │
+│ Help Text            │ Select account...   │ Select where...   │
+│ Validation Message   │ Account assignment  │ Cost booking      │
+│ List Column Header   │ Account Assignment  │ Cost Booked To    │
+│ API Response         │ account_assignment  │ (no change)       │
+└────────────────────────────────────────────────────────────────┘
+
+KEY PRINCIPLE:
+- Backend/Database: Keep technical SAP terminology
+- Frontend/UI: Use business-friendly terminology
+- This makes the system easier for end users while maintaining
+  technical accuracy in the data layer
+*/

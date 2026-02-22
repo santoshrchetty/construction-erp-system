@@ -1,0 +1,343 @@
+/*
+============================================================================
+MATERIAL REQUEST UI CHANGES - ACCOUNT ASSIGNMENT
+============================================================================
+
+CHANGE SUMMARY:
+1. Move account assignment from HEADER to LINE ITEMS
+2. Add account assignment dropdown per line item
+3. Show/hide cost object fields based on selection
+4. Auto-suggest based on MR Type
+
+============================================================================
+BEFORE: Current MR Form
+============================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Create Material Request                                         │
+├─────────────────────────────────────────────────────────────────┤
+│ HEADER SECTION                                                  │
+│                                                                 │
+│ MR Type:        [PROJECT ▼]                                    │
+│ Company:        [1000 - Main Company ▼]                        │
+│ Plant:          [P001 - Main Plant ▼]                          │
+│ Project:        [PRJ-001 ▼]              ← REMOVE FROM HEADER  │
+│ WBS Element:    [WBS-001-001 ▼]          ← REMOVE FROM HEADER  │
+│ Cost Center:    [CC-001 ▼]               ← REMOVE FROM HEADER  │
+│ Priority:       [MEDIUM ▼]                                     │
+│ Required Date:  [2024-01-15]                                   │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ LINE ITEMS                                                      │
+│                                                                 │
+│ ┌───┬──────────┬─────────────┬────────┬─────┬──────────────┐  │
+│ │ # │ Material │ Description │ Qty    │ UOM │ Storage Loc  │  │
+│ ├───┼──────────┼─────────────┼────────┼─────┼──────────────┤  │
+│ │ 1 │ MAT-001  │ Cement      │ 100.00 │ TON │ WH-001       │  │
+│ │ 2 │ MAT-002  │ Steel       │  50.00 │ TON │ WH-001       │  │
+│ └───┴──────────┴─────────────┴────────┴─────┴──────────────┘  │
+│                                                                 │
+│ [+ Add Line]                                                    │
+│                                                                 │
+│                                    [Save Draft] [Submit]        │
+└─────────────────────────────────────────────────────────────────┘
+
+============================================================================
+AFTER: New MR Form with Line-Level Account Assignment
+============================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Create Material Request                                         │
+├─────────────────────────────────────────────────────────────────┤
+│ HEADER SECTION (Organizational Data Only)                      │
+│                                                                 │
+│ MR Type:        [PROJECT ▼]          ← Triggers default AA     │
+│ Company:        [1000 - Main Company ▼]                        │
+│ Plant:          [P001 - Main Plant ▼]                          │
+│ Priority:       [MEDIUM ▼]                                     │
+│ Required Date:  [2024-01-15]                                   │
+│ Purpose:        [Construction materials for Phase 1]           │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ LINE ITEMS (with Account Assignment)                           │
+│                                                                 │
+│ Line 1                                              [▼ Expand]  │
+│ ┌─────────────────────────────────────────────────────────────┐│
+│ │ Material:       [MAT-001 - Cement ▼]                       ││
+│ │ Quantity:       [100.00]  UOM: [TON ▼]                     ││
+│ │ Storage Loc:    [WH-001 - Main Warehouse ▼]                ││
+│ │                                                             ││
+│ │ ┌─────────────────────────────────────────────────────────┐││
+│ │ │ ACCOUNT ASSIGNMENT                                      │││
+│ │ │                                                         │││
+│ │ │ Type: [WB - WBS Element ▼]  ← Auto-filled based on MR  │││
+│ │ │                                Type, user can change    │││
+│ │ │ WBS Element: [WBS-001-001 ▼]  ← Required for WB        │││
+│ │ │                                                         │││
+│ │ │ Options: WB (WBS Element), WA (WBS + Activity)         │││
+│ │ └─────────────────────────────────────────────────────────┘││
+│ └─────────────────────────────────────────────────────────────┘│
+│                                                                 │
+│ Line 2                                              [▼ Expand]  │
+│ ┌─────────────────────────────────────────────────────────────┐│
+│ │ Material:       [MAT-002 - Steel ▼]                        ││
+│ │ Quantity:       [50.00]  UOM: [TON ▼]                      ││
+│ │ Storage Loc:    [WH-001 - Main Warehouse ▼]                ││
+│ │                                                             ││
+│ │ ┌─────────────────────────────────────────────────────────┐││
+│ │ │ ACCOUNT ASSIGNMENT                                      │││
+│ │ │                                                         │││
+│ │ │ Type: [WA - WBS + Activity ▼]  ← User changed from WB  │││
+│ │ │                                                         │││
+│ │ │ WBS Element:   [WBS-001-002 ▼]  ← Required for WA      │││
+│ │ │ Activity Code: [ACT-100 ▼]      ← Required for WA      │││
+│ │ └─────────────────────────────────────────────────────────┘││
+│ └─────────────────────────────────────────────────────────────┘│
+│                                                                 │
+│ [+ Add Line]                                                    │
+│                                                                 │
+│                                    [Save Draft] [Submit]        │
+└─────────────────────────────────────────────────────────────────┘
+
+============================================================================
+CONDITIONAL FIELD DISPLAY (Based on Account Assignment Code)
+============================================================================
+
+IF accountAssignmentCode = 'CC' (Cost Center):
+┌─────────────────────────────────────────┐
+│ Type: [CC - Cost Center ▼]             │
+│ Cost Center: [CC-001 - Admin ▼] *      │
+└─────────────────────────────────────────┘
+
+IF accountAssignmentCode = 'WB' (WBS Element):
+┌─────────────────────────────────────────┐
+│ Type: [WB - WBS Element ▼]             │
+│ WBS Element: [WBS-001-001 ▼] *         │
+└─────────────────────────────────────────┘
+
+IF accountAssignmentCode = 'AS' (Asset):
+┌─────────────────────────────────────────┐
+│ Type: [AS - Asset ▼]                   │
+│ Asset Number: [ASSET-12345 ▼] *        │
+└─────────────────────────────────────────┘
+
+IF accountAssignmentCode = 'WA' (WBS + Activity):
+┌─────────────────────────────────────────┐
+│ Type: [WA - WBS + Activity ▼]          │
+│ WBS Element:   [WBS-001-001 ▼] *       │
+│ Activity Code: [ACT-100 ▼] *           │
+└─────────────────────────────────────────┘
+
+IF accountAssignmentCode = 'OM' (Maintenance Order):
+┌─────────────────────────────────────────┐
+│ Type: [OM - Maintenance Order ▼]       │
+│ Order Number: [MO-12345 ▼] *           │
+└─────────────────────────────────────────┘
+
+* = Required field
+
+============================================================================
+USER INTERACTION FLOW
+============================================================================
+
+STEP 1: User selects MR Type
+├─ User selects: "PROJECT"
+└─ System action: Fetches allowed account assignments for PROJECT
+    └─ Returns: WB (default), WA (allowed)
+
+STEP 2: User adds line item
+├─ User clicks [+ Add Line]
+└─ System action: Pre-fills account assignment
+    ├─ accountAssignmentCode: 'WB' (default for PROJECT)
+    └─ Shows: WBS Element field (required for WB)
+
+STEP 3: User fills account assignment
+├─ User sees: Account Assignment Type dropdown
+│   └─ Options: WB (WBS Element) ✓, WA (WBS + Activity)
+├─ User selects: WB
+└─ System shows: WBS Element dropdown (required)
+
+STEP 4: User can override per line
+├─ Line 1: Uses WB (WBS Element)
+├─ Line 2: User changes to WA (WBS + Activity)
+│   └─ System shows: WBS Element + Activity Code fields
+└─ Line 3: Uses WB (WBS Element)
+
+STEP 5: Validation on submit
+├─ System validates each line:
+│   ├─ Account assignment code selected?
+│   ├─ Required cost object provided?
+│   └─ Cost object exists in master data?
+└─ If valid: Submit for approval
+
+============================================================================
+REACT COMPONENT STRUCTURE (Pseudo-code)
+============================================================================
+
+const MaterialRequestCreate = () => {
+  const [mrType, setMrType] = useState('PROJECT')
+  const [allowedAccountAssignments, setAllowedAccountAssignments] = useState([])
+  const [lineItems, setLineItems] = useState([])
+  
+  // When MR Type changes
+  useEffect(() => {
+    fetchAllowedAccountAssignments(mrType).then(data => {
+      setAllowedAccountAssignments(data)
+      // Auto-fill new lines with default
+      const defaultAA = data.find(aa => aa.is_default)
+      setDefaultAccountAssignment(defaultAA.code)
+    })
+  }, [mrType])
+  
+  // Add line item with default account assignment
+  const addLineItem = () => {
+    const newLine = {
+      materialCode: '',
+      quantity: 0,
+      uom: '',
+      storageLocation: '',
+      accountAssignmentCode: defaultAccountAssignment, // Pre-filled
+      costCenter: null,
+      wbsElement: null,
+      activityCode: null,
+      assetNumber: null,
+      orderNumber: null
+    }
+    setLineItems([...lineItems, newLine])
+  }
+  
+  // Render account assignment fields based on code
+  const renderAccountAssignmentFields = (lineItem, index) => {
+    const aaType = accountAssignmentTypes.find(
+      aa => aa.code === lineItem.accountAssignmentCode
+    )
+    
+    return (
+      <div className="account-assignment-section">
+        <select 
+          value={lineItem.accountAssignmentCode}
+          onChange={(e) => updateLineItem(index, 'accountAssignmentCode', e.target.value)}
+        >
+          {allowedAccountAssignments.map(aa => (
+            <option key={aa.code} value={aa.code}>
+              {aa.code} - {aa.name}
+            </option>
+          ))}
+        </select>
+        
+        {aaType.requires_cost_center && (
+          <CostCenterDropdown 
+            value={lineItem.costCenter}
+            onChange={(val) => updateLineItem(index, 'costCenter', val)}
+            required
+          />
+        )}
+        
+        {aaType.requires_wbs_element && (
+          <WBSElementDropdown 
+            value={lineItem.wbsElement}
+            onChange={(val) => updateLineItem(index, 'wbsElement', val)}
+            required
+          />
+        )}
+        
+        {aaType.requires_activity_code && (
+          <ActivityCodeDropdown 
+            value={lineItem.activityCode}
+            onChange={(val) => updateLineItem(index, 'activityCode', val)}
+            required
+          />
+        )}
+        
+        {aaType.requires_asset_number && (
+          <AssetNumberDropdown 
+            value={lineItem.assetNumber}
+            onChange={(val) => updateLineItem(index, 'assetNumber', val)}
+            required
+          />
+        )}
+        
+        {aaType.requires_order_number && (
+          <OrderNumberInput 
+            value={lineItem.orderNumber}
+            onChange={(val) => updateLineItem(index, 'orderNumber', val)}
+            required
+          />
+        )}
+      </div>
+    )
+  }
+  
+  return (
+    <form>
+      {/* Header Section */}
+      <MRTypeDropdown value={mrType} onChange={setMrType} />
+      <CompanyDropdown />
+      <PlantDropdown />
+      
+      {/* Line Items */}
+      {lineItems.map((item, index) => (
+        <LineItemCard key={index}>
+          <MaterialDropdown />
+          <QuantityInput />
+          <UOMDropdown />
+          <StorageLocationDropdown />
+          
+          {/* Account Assignment Section */}
+          {renderAccountAssignmentFields(item, index)}
+        </LineItemCard>
+      ))}
+      
+      <button onClick={addLineItem}>+ Add Line</button>
+      <button onClick={handleSubmit}>Submit</button>
+    </form>
+  )
+}
+
+============================================================================
+API ENDPOINTS NEEDED
+============================================================================
+
+1. GET /api/account-assignments/allowed?mrType=PROJECT
+   Returns: [{ code: 'WB', name: 'WBS Element', is_default: true }, ...]
+
+2. GET /api/account-assignments/requirements?code=WA
+   Returns: { requires_wbs_element: true, requires_activity_code: true, ... }
+
+3. GET /api/wbs-elements?projectCode=PRJ-001
+   Returns: [{ code: 'WBS-001-001', description: '...' }, ...]
+
+4. GET /api/cost-centers?active=true
+   Returns: [{ code: 'CC-001', name: 'Admin', ... }, ...]
+
+5. GET /api/assets?active=true
+   Returns: [{ number: 'ASSET-12345', description: '...' }, ...]
+
+============================================================================
+VALIDATION RULES
+============================================================================
+
+1. Account Assignment Code is required for each line item
+2. Required cost object must be provided based on AA code
+3. Cost object must exist in master data
+4. Account assignment must be allowed for selected MR Type
+5. All line items must have valid account assignment before submit
+
+============================================================================
+SUMMARY OF CHANGES
+============================================================================
+
+MINIMAL CHANGES:
+✓ Remove project/WBS/cost center from header
+✓ Add account assignment dropdown to each line item
+✓ Add conditional cost object fields per line item
+✓ Auto-fill account assignment based on MR Type
+✓ Validate required fields on submit
+
+NO CHANGES TO:
+- Material selection
+- Quantity/UOM entry
+- Storage location selection
+- Approval workflow
+- List/view screens (until we add AA column)
+*/

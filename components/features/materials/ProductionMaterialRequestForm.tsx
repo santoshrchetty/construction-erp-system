@@ -479,9 +479,10 @@ export default function ProductionMaterialRequestForm({
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit Cost</th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Urgency</th>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Required Date</th>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requested By</th>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
                     {canEdit && <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>}
                   </tr>
                 </thead>
@@ -535,35 +536,56 @@ export default function ProductionMaterialRequestForm({
                       </td>
                       <td className="px-3 py-4">
                         {canEdit ? (
-                          <input
-                            type="number"
-                            value={item.estimated_unit_cost || ''}
-                            onChange={(e) => updateItem(index, 'estimated_unit_cost', parseFloat(e.target.value) || 0)}
+                          <select
+                            value={item.priority || 'MEDIUM'}
+                            onChange={(e) => updateItem(index, 'priority', e.target.value)}
                             className="w-24 border rounded px-2 py-1 text-sm"
-                            min="0"
-                            step="0.01"
-                          />
+                          >
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HIGH">High</option>
+                            <option value="URGENT">Urgent</option>
+                          </select>
                         ) : (
-                          <div className="text-sm">${(item.estimated_unit_cost || 0).toFixed(2)}</div>
+                          <div className="text-sm">{item.priority || 'MEDIUM'}</div>
                         )}
-                      </td>
-                      <td className="px-3 py-4 text-sm font-medium">
-                        ${(item.estimated_total_cost || 0).toFixed(2)}
                       </td>
                       <td className="px-3 py-4">
                         {canEdit ? (
-                          <select
-                            value={item.urgency_level}
-                            onChange={(e) => updateItem(index, 'urgency_level', parseInt(e.target.value))}
-                            className="w-16 border rounded px-2 py-1 text-sm"
-                          >
-                            <option value={1}>1</option>
-                            <option value={2}>2</option>
-                            <option value={3}>3</option>
-                            <option value={4}>4</option>
-                          </select>
+                          <input
+                            type="date"
+                            value={item.required_date || ''}
+                            onChange={(e) => updateItem(index, 'required_date', e.target.value)}
+                            className="w-32 border rounded px-2 py-1 text-sm"
+                          />
                         ) : (
-                          <div className="text-sm">{item.urgency_level}</div>
+                          <div className="text-sm">{item.required_date || 'N/A'}</div>
+                        )}
+                      </td>
+                      <td className="px-3 py-4">
+                        {canEdit ? (
+                          <input
+                            type="text"
+                            value={item.requested_by || ''}
+                            onChange={(e) => updateItem(index, 'requested_by', e.target.value)}
+                            className="w-32 border rounded px-2 py-1 text-sm"
+                            placeholder="Name"
+                          />
+                        ) : (
+                          <div className="text-sm">{item.requested_by || 'N/A'}</div>
+                        )}
+                      </td>
+                      <td className="px-3 py-4">
+                        {canEdit ? (
+                          <input
+                            type="text"
+                            value={item.department_code || ''}
+                            onChange={(e) => updateItem(index, 'department_code', e.target.value)}
+                            className="w-24 border rounded px-2 py-1 text-sm"
+                            placeholder="Dept"
+                          />
+                        ) : (
+                          <div className="text-sm">{item.department_code || 'N/A'}</div>
                         )}
                       </td>
                       {canEdit && (

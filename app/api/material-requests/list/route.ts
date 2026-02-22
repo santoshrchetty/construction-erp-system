@@ -44,12 +44,8 @@ export async function GET(request: NextRequest) {
         request_type,
         status,
         priority,
-        project_code,
-        wbs_element,
-        wbs_id,
         company_code,
-        plant_code,
-        cost_center,
+        requested_by,
         created_at,
         created_by,
         material_request_items(
@@ -65,7 +61,13 @@ export async function GET(request: NextRequest) {
           delivery_date,
           storage_location,
           priority,
-          required_date
+          required_date,
+          project_id,
+          wbs_element,
+          wbs_element_id,
+          plant_code,
+          cost_center,
+          activity_code
         )
       `)
       .order('created_at', { ascending: false })
@@ -77,7 +79,6 @@ export async function GET(request: NextRequest) {
     // Apply filters
     if (status) query = query.eq('status', status)
     if (requestType) query = query.eq('request_type', requestType)
-    if (projectCode) query = query.eq('project_code', projectCode)
     if (requestNumber) query = query.ilike('request_number', `%${requestNumber}%`)
     if (dateFrom) query = query.gte('created_at', dateFrom)
     if (dateTo) query = query.lte('created_at', dateTo)

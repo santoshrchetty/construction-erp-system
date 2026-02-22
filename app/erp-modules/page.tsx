@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import EnhancedConstructionTiles from '@/components/layout/EnhancedConstructionTiles'
 
 function LoadingFallback() {
@@ -14,10 +15,17 @@ function LoadingFallback() {
   )
 }
 
+function ERPModulesContent() {
+  const searchParams = useSearchParams()
+  const category = searchParams.get('category')
+  
+  return <EnhancedConstructionTiles filterCategory={category || undefined} />
+}
+
 export default function ERPModulesPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <EnhancedConstructionTiles />
+      <ERPModulesContent />
     </Suspense>
   )
 }

@@ -1,8 +1,10 @@
-# MR Account Assignment Types - NOT Always Project-Driven
+# MR Account Assignment Types - Including PRODUCTION and QUALITY
 
 ## Key Concept: MRs Can Have Different Account Assignments
 
 Material Requests are **NOT always project-driven**. They can be assigned to different cost objects based on the business need.
+
+**NEW: Added PRODUCTION and QUALITY MR types with OP (Production Order) and OQ (Quality Order) account assignments.**
 
 ---
 
@@ -139,6 +141,38 @@ Items:
   - Line 3: Paint (100 liters) → Stock Replenishment
 ```
 
+### **6. Production Order (Category = OP) - NEW**
+**Materials for production orders**
+
+**Examples:**
+- Raw materials for manufacturing
+- Components for assembly
+- Consumables for production line
+
+**Schema:**
+```sql
+account_assignment_category = 'OP'
+production_order_number = 'PO-2024-001'
+operation_number = '0010'
+work_center = 'WC-ASSEMBLY'
+```
+
+### **7. Quality Order (Category = OQ) - NEW**
+**Materials for quality inspection and testing**
+
+**Examples:**
+- Testing materials
+- Calibration standards
+- Quality control consumables
+
+**Schema:**
+```sql
+account_assignment_category = 'OQ'
+quality_order_number = 'QO-2024-001'
+inspection_lot = 'IL-001'
+quality_level = 'Q1'
+```
+
 ---
 
 ## Distribution by Type (Construction Industry)
@@ -150,6 +184,8 @@ Items:
 | **Stock (S)** | 5-10% | Store Keeper | Warehouse replenishment |
 | **Asset (A)** | 3-5% | Equipment Manager | New equipment purchase |
 | **Internal Order (O)** | 2-3% | Various | Training, events, campaigns |
+| **Production (OP)** | 3-5% | Production Manager | Raw materials for manufacturing |
+| **Quality (OQ)** | 1-2% | Quality Manager | Testing materials, calibration |
 
 ---
 

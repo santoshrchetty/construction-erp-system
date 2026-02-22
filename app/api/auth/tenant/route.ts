@@ -22,29 +22,22 @@ export async function POST(request: NextRequest) {
       }
     )
     
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
     // Fetch user profile to validate tenant access
     const { data: profile, error } = await supabase
       .from('users')
-      .select('tenant_id')
-      .eq('id', session.user.id)
+      .select('tenant_id, email')
+      .eq('email', user.email)
+      .eq('tenant_id', tenantId)
       .single()
     
     if (error || !profile) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
-    }
-    
-    // Validate tenant access
-    if (tenantId && profile.tenant_id !== tenantId) {
-      return NextResponse.json(
-        { error: 'You do not have access to this tenant' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'You do not have access to this tenant' }, { status: 403 })
     }
     
     // Set tenant cookie (server-side)

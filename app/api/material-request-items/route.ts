@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from('material_request_items')
       .select('*')
-      .eq('request_id', requestId)
+      .eq('material_request_id', requestId)
       .order('line_number')
 
     if (error) throw error

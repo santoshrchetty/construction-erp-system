@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth } from '@/lib/authMiddleware'
-import { unifiedMaterialRequestService } from '@/domains/materials/unifiedMaterialRequestService'
+import { materialRequestService } from '@/domains/materials/materialRequestService'
 
 export const GET = withAuth(async (request: NextRequest, context) => {
   try {
@@ -13,7 +13,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     }
     
     if (id) {
-      const result = await unifiedMaterialRequestService.getMaterialRequestById(id, tenantId)
+      const result = await materialRequestService.getMaterialRequestById(id, tenantId)
       if (!result.success) {
         return NextResponse.json({ success: false, error: result.error }, { status: 500 })
       }
@@ -31,7 +31,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
       tenant_id: tenantId
     }
     
-    const result = await unifiedMaterialRequestService.getMaterialRequests(filters)
+    const result = await materialRequestService.getMaterialRequests(filters)
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 500 })
     }
@@ -55,7 +55,7 @@ export const POST = withAuth(async (request: NextRequest, context) => {
       return NextResponse.json({ success: false, error: 'Tenant ID required' }, { status: 400 })
     }
     
-    const result = await unifiedMaterialRequestService.createMaterialRequest(body, context.user.id, tenantId)
+    const result = await materialRequestService.createMaterialRequest(body, context.user.id, tenantId)
     
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 500 })
@@ -86,13 +86,14 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
       return NextResponse.json({ success: false, error: 'Tenant ID required' }, { status: 400 })
     }
 
-    // For status updates
+    // For status updates - now handled by materialRequestService
     if (body.status) {
-      const result = await unifiedMaterialRequestService.updateRequestStatus(
+      const result = await materialRequestService.updateMaterialRequestStatus(
         id, 
         body.status, 
         context.user.id, 
-        body.comments
+        body.comments,
+        tenantId
       )
       
       if (!result.success) {
